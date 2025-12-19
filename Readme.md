@@ -79,12 +79,12 @@ Press `?` anytime to see the full list of shortcuts and features.
 | **Google Chrome** | ✅ **Supported** | Recommended - Full file management features |
 | **Microsoft Edge** | ✅ **Supported** | Recommended - Full file management features |
 | **Opera** | ✅ **Supported** | Works out of the box - Full file management features |
-| **Firefox** | ✅ **Supported (v3.3)** | Use `apps/Guru Universal Node Version 3.3.html` - View-only mode (no file operations) |
+| **Firefox** | ✅ **Supported (v3.3)** | Use `Guru Universal Node Version 3.3.html` - View-only mode (no file operations) |
 | **Safari** | ❌ **Not Supported** | Missing API support. |
 
 ### Firefox Edition (v3.3)
 
-The **Firefox Edition** (`apps/Guru Universal Node Version 3.3.html`) provides the same UI/UX experience as v4.0, but without file management features (since Firefox doesn't support the File System Access API).
+The **Firefox Edition** (`Guru Universal Node Version 3.3.html`) provides the same UI/UX experience as v4.0, but without file management features (since Firefox doesn't support the File System Access API).
 
 **✅ Available in Firefox Edition:**
 - ⭐ Favorites system with filter
@@ -152,4 +152,5 @@ Feel free to fork this repository and submit Pull Requests.
 
 **License:** MIT
 **Created by:** The Community & The AI Assistant
+
 

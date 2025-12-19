@@ -59,15 +59,52 @@
         }
         .backdrop.active { opacity: 1; pointer-events: auto; }
 
-        /* SIDEBAR */
-        aside { 
-            width: 600px; background: #0c0c0e; border-left: 1px solid var(--border); 
-            display: flex; flex-direction: column; 
-            position: fixed; right: 0; top: 0; bottom: 0; z-index: 70; 
-            transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: -20px 0 50px rgba(0,0,0,0.5); 
+        /* DETAIL VIEW - Full Screen Image + Metadata Panel */
+        .detail-view { 
+            position: fixed; inset: 0; background: #000; z-index: 70; 
+            display: flex; flex-direction: row; visibility: hidden; opacity: 0;
+            transition: opacity 0.3s ease;
         }
-        aside.active { transform: translateX(0); }
+        .detail-view.active { visibility: visible; opacity: 1; }
+        
+        .detail-image-container { 
+            flex: 1; display: flex; align-items: center; justify-content: center; 
+            background: #09090b; position: relative; overflow: hidden;
+        }
+        .detail-image-container img { 
+            max-width: 100%; max-height: 100%; object-fit: contain; 
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+        .nav-btn { 
+            position: absolute; top: 50%; transform: translateY(-50%); 
+            background: rgba(0,0,0,0.6); color: #fff; border: none; 
+            width: 50px; height: 50px; border-radius: 50%; cursor: pointer; 
+            font-size: 1.5rem; display: flex; align-items: center; justify-content: center; 
+            z-index: 10; transition: all 0.2s;
+        }
+        .nav-btn:hover { background: var(--accent); }
+        .nav-prev { left: 20px; }
+        .nav-next { right: 20px; }
+        .back-btn { 
+            position: absolute; top: 20px; left: 20px; 
+            background: rgba(0,0,0,0.6); color: #fff; padding: 8px 16px; 
+            border-radius: 20px; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); 
+            z-index: 10; font-size: 0.9rem;
+        }
+        .back-btn:hover { background: rgba(0,0,0,0.8); }
+        .favorite-star { 
+            position: absolute; top: 20px; right: 20px; 
+            font-size: 2rem; cursor: pointer; z-index: 10; 
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            transition: transform 0.2s;
+        }
+        .favorite-star:hover { transform: scale(1.2); }
+
+        /* SIDEBAR - Metadata Panel */
+        aside { 
+            width: 450px; background: #0c0c0e; border-left: 1px solid var(--border); 
+            display: flex; flex-direction: column; flex-shrink: 0;
+        }
         
         .sidebar-header { min-height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; background: rgba(12, 12, 14, 0.95); backdrop-filter: blur(10px); flex-shrink: 0; gap: 10px; }
         .sidebar-title-group { display: flex; flex-direction: column; overflow: hidden; }
@@ -78,9 +115,6 @@
         .close-btn:hover { color: white; background: rgba(255,255,255,0.1); }
 
         .sidebar-content { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
-        
-        .preview-wrapper { flex-shrink: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background-color: #000; width: 100%; display: block; }
-        .preview-wrapper img { width: 100%; height: auto; display: block; max-height: 50vh; object-fit: contain; }
 
         /* Stats Inputs */
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
@@ -136,6 +170,35 @@
         .loader { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.875rem; display: none; }
         .loader.active { display: block; }
         
+        /* Favorites */
+        .card.favorite { border-color: #fbbf24; box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.3); }
+        .favorite-star-small { position: absolute; top: 8px; right: 8px; font-size: 1.2rem; z-index: 5; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
+        .btn-icon.active { background: rgba(139, 92, 246, 0.2); border-color: var(--accent); }
+        
+        /* Theme Toggle */
+        .btn-icon { background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 8px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .btn-icon:hover { background: rgba(255,255,255,0.1); border-color: var(--accent); }
+        
+        /* Help Overlay */
+        .help-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: all 0.3s; }
+        .help-overlay.active { visibility: visible; opacity: 1; }
+        .help-content { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 30px; max-width: 900px; max-height: 85vh; overflow-y: auto; width: 90%; }
+        
+        /* Sort Dropdown */
+        .sort-select { background: #121214; border: 1px solid var(--border); color: var(--text-main); padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; }
+        
+        /* Light Theme */
+        [data-theme="light"] {
+            --bg: #ffffff;
+            --header-bg: rgba(255, 255, 255, 0.95);
+            --card-bg: #f5f5f5;
+            --border: #e5e5e5;
+            --accent: #8b5cf6;
+            --text-main: #18181b;
+            --text-muted: #52525b;
+            --input-bg: #ffffff;
+        }
+        
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 99px; }
@@ -145,13 +208,23 @@
 <body>
 
     <header>
-        <h1>History<span>Guru</span> <span class="version">Editor Mode</span></h1>
+        <h1>History<span>Guru</span> <span class="version">Firefox Edition</span></h1>
         
         <div class="search-container">
             <svg class="search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             <input type="text" id="search" class="search-input" placeholder="Search prompts, models, seeds...">
             <span id="count" class="count-badge"></span>
         </div>
+
+        <select id="sortSelect" class="sort-select" title="Sort By">
+            <option value="date">Date Modified</option>
+            <option value="name">Name</option>
+            <option value="created">Date Created</option>
+        </select>
+
+        <button class="btn-icon" id="themeToggle" title="Toggle Theme">🌙</button>
+        <button class="btn-icon" id="helpBtn" title="Help">❓</button>
+        <button class="btn-icon" id="favFilterBtn" title="Show Only Favorites">⭐</button>
 
         <label class="btn">
             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
@@ -172,20 +245,24 @@
         <div id="loader" class="loader">Loading more images...</div>
     </main>
 
-    <div id="backdrop" class="backdrop" onclick="toggleSidebar(false)"></div>
-
-    <aside id="sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-title-group">
-                <span class="sidebar-title">Metadata Inspector</span>
-                <span id="fileName" class="file-name">filename.png</span>
-            </div>
-            <button class="close-btn" onclick="toggleSidebar(false)">✕</button>
+    <!-- Detail View: Full Screen Image + Metadata Panel -->
+    <div id="detailView" class="detail-view">
+        <div class="detail-image-container">
+            <button class="back-btn" onclick="closeDetailView()">← Back (Esc)</button>
+            <button class="nav-btn nav-prev" onclick="navigateDetail(-1)">‹</button>
+            <img id="detailImage" src="" alt="Detail View">
+            <button class="nav-btn nav-next" onclick="navigateDetail(1)">›</button>
+            <div id="detailFavorite" class="favorite-star" onclick="toggleFavoriteCurrent()">☆</div>
         </div>
-        <div class="sidebar-content">
-            <div class="preview-wrapper">
-                <img id="sidePreview" src="">
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title-group">
+                    <span class="sidebar-title">Metadata Inspector</span>
+                    <span id="fileName" class="file-name">filename.png</span>
+                </div>
+                <button class="close-btn" onclick="closeDetailView()">✕</button>
             </div>
+            <div class="sidebar-content">
 
             <div class="stats-grid">
                 <div class="stat-item"><div class="stat-label">Model</div><input id="metaModel" class="stat-input" placeholder="?"></div>
@@ -223,22 +300,48 @@
                     <span>💾</span> Fix & Download Image
                 </button>
             </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Help Overlay -->
+    <div id="helpOverlay" class="help-overlay" onclick="if(event.target.id==='helpOverlay')hideHelp()">
+        <div class="help-content" onclick="event.stopPropagation()">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 style="color:var(--accent);margin:0;">❓ Help & Shortcuts</h2>
+                <button class="close-btn" onclick="hideHelp()">✕</button>
+            </div>
+            <div id="helpContent"></div>
         </div>
-    </aside>
+    </div>
 
     <script>
         let allItems = [];
         let filteredItems = [];
         let visibleCount = 0;
-        let currentItem = null; // Store currently open item
+        let currentItem = null;
+        let currentIndex = -1; // Index in filteredItems for navigation
+        let favorites = new Set();
+        let showFavoritesOnly = false;
+        let sortBy = 'date';
         const BATCH_SIZE = 50;
         const LORA_REGEX = /<lora:([^:>]+)(?::([^:>]+))?(?::([^:>]+))?>/g;
+        
+        // Load favorites from localStorage
+        (function() {
+            const saved = localStorage.getItem('guru-favorites');
+            if (saved) favorites = new Set(JSON.parse(saved));
+            const theme = localStorage.getItem('guru-theme') || 'dark';
+            document.body.setAttribute('data-theme', theme);
+            const toggleBtn = document.getElementById('themeToggle');
+            if (toggleBtn) toggleBtn.textContent = theme === 'dark' ? '🌙' : '☀️';
+        })();
 
         const grid = document.getElementById('grid');
         const mainScroll = document.getElementById('mainScroll');
         const loader = document.getElementById('loader');
-        const sidebar = document.getElementById('sidebar');
-        const backdrop = document.getElementById('backdrop');
+        const detailView = document.getElementById('detailView');
+        const detailImage = document.getElementById('detailImage');
 
         // --- CRC32 Table for PNG writing ---
         const crcTable = [];
@@ -275,11 +378,13 @@
             const fragment = document.createDocumentFragment();
             const nextBatch = filteredItems.slice(visibleCount, visibleCount + BATCH_SIZE);
             
-            nextBatch.forEach(item => {
+            nextBatch.forEach((item, idx) => {
                 const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `<img src="${item.url}" loading="lazy" decoding="async">`;
-                card.onclick = () => openSidebar(item);
+                const globalIdx = visibleCount + idx;
+                const isFavorite = favorites.has(item.file.name);
+                card.className = `card${isFavorite ? ' favorite' : ''}`;
+                card.innerHTML = `<img src="${item.url}" loading="lazy" decoding="async">${isFavorite ? '<div class="favorite-star-small">⭐</div>' : ''}`;
+                card.onclick = () => openDetailView(globalIdx);
                 fragment.appendChild(card);
             });
             
@@ -290,18 +395,8 @@
             if (visibleCount >= filteredItems.length) loader.classList.remove('active');
         }
 
-        document.getElementById('search').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            filteredItems = allItems.filter(item => {
-                const text = (item.pos + " " + item.neg).toLowerCase();
-                const res = item.resources.map(r => r.name.toLowerCase()).join(" ");
-                const model = item.meta.model.toLowerCase();
-                const seed = item.meta.seed.toString();
-                return text.includes(term) || res.includes(term) || model.includes(term) || seed.includes(term);
-            });
-            grid.innerHTML = '';
-            visibleCount = 0;
-            renderBatch();
+        document.getElementById('search').addEventListener('input', () => {
+            applyFilters();
         });
 
         async function decompressZlib(data) {
@@ -331,7 +426,14 @@
             document.getElementById('welcome').style.display = 'none';
             grid.innerHTML = '';
             
-            files.sort((a, b) => b.lastModified - a.lastModified);
+            // Sort by selected option
+            if (sortBy === 'name') {
+                files.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (sortBy === 'created') {
+                files.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
+            } else {
+                files.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
+            }
             allItems = [];
 
             const chunkSize = 15;
@@ -342,15 +444,18 @@
                 
                 if (i === 0) {
                     filteredItems = allItems;
+                    applySort();
                     renderBatch();
                 } else {
                     filteredItems = allItems;
+                    applySort();
                     if (visibleCount < BATCH_SIZE) renderBatch();
                 }
                 
                 document.getElementById('count').innerText = `Scanning ${allItems.length}`;
                 await new Promise(r => setTimeout(r, 0));
             }
+            applyFilters(); // Final filter application
         });
 
         async function processFile(file) {
@@ -378,68 +483,88 @@
         async function extractText(buffer) {
             const view = new DataView(buffer);
             let fullText = "";
-            
-            if (view.getUint32(0) === 0x89504E47) {
-                let offset = 8;
-                while (offset < view.byteLength) {
-                    if (offset + 4 > view.byteLength) break;
-                    
-                    const len = view.getUint32(offset);
-                    const type = String.fromCharCode(...new Uint8Array(buffer, offset + 4, 4));
-                    
-                    if (offset + 8 + len > view.byteLength) break;
-
-                    const data = new Uint8Array(buffer, offset + 8, len);
-
-                    if (type === 'tEXt' || type === 'iTXt') {
-                        fullText += new TextDecoder().decode(data).replace(/\0/g, '') + "\n";
-                    } else if (type === 'zTXt') {
-                        const inflated = await decompressZlib(data);
-                        if (inflated) fullText += inflated + "\n";
+            try {
+                if (view.getUint32(0) === 0x89504E47) {
+                    let offset = 8;
+                    while (offset < view.byteLength) {
+                        if (offset + 4 > view.byteLength) break;
+                        const len = view.getUint32(offset);
+                        const type = String.fromCharCode(...new Uint8Array(buffer, offset + 4, 4));
+                        if (offset + 8 + len > view.byteLength) break;
+                        const data = new Uint8Array(buffer, offset + 8, len);
+                        if (type === 'tEXt' || type === 'iTXt') {
+                            try {
+                                fullText += new TextDecoder('utf-8').decode(data).replace(/\0/g, '') + "\n";
+                            } catch(e) {
+                                fullText += new TextDecoder('latin1').decode(data).replace(/\0/g, '') + "\n";
+                            }
+                        } else if (type === 'zTXt') {
+                            const inflated = await decompressZlib(data);
+                            if (inflated) fullText += inflated + "\n";
+                        }
+                        offset += len + 12;
+                        if (type === 'IEND') break;
                     }
-                    offset += len + 12;
-                    if (type === 'IEND') break;
+                } else if (view.getUint32(0) === 0x52494646 || view.getUint16(0) === 0xFFD8) {
+                    fullText = new TextDecoder().decode(new Uint8Array(buffer));
                 }
-            } 
-            else if (view.getUint32(0) === 0x52494646) {
-                fullText = new TextDecoder().decode(new Uint8Array(buffer));
-            }
-            else if (view.getUint16(0) === 0xFFD8) {
-                fullText = new TextDecoder().decode(new Uint8Array(buffer));
+            } catch(e) {
+                console.warn('Metadata extraction error:', e);
             }
             return fullText;
         }
 
         function parseMetadata(text) {
-            function extractJSON(str) {
-                const start = str.indexOf('{');
+            function extractJSON(str, startPos = 0) {
+                const start = str.indexOf('{', startPos);
                 if (start === -1) return null;
-                
-                let count = 0;
-                let end = -1;
-                
+                let count = 0, end = -1;
                 for (let i = start; i < str.length; i++) {
                     if (str[i] === '{') count++;
                     else if (str[i] === '}') count--;
-                    
-                    if (count === 0) {
-                        end = i;
-                        break;
-                    }
+                    if (count === 0) { end = i; break; }
                 }
-                
                 if (end !== -1) {
                     try {
-                        return JSON.parse(str.substring(start, end + 1));
+                        return {json: JSON.parse(str.substring(start, end + 1)), end: end + 1};
                     } catch(e) { return null; }
                 }
                 return null;
             }
-
+            let comfyResult = null;
             if (text.includes('"class_type"') && text.includes('"inputs"')) {
-                const json = extractJSON(text);
-                if (json) return parseComfy(json);
+                let pos = 0;
+                while (true) {
+                    const result = extractJSON(text, pos);
+                    if (!result) break;
+                    const json = result.json;
+                    pos = result.end;
+                    if (json && (json.class_type || json.nodes || Object.values(json).some(v => v && typeof v === 'object' && (v.class_type || v.type)))) {
+                        const parsed = parseComfy(json);
+                        if (parsed && (parsed.pos || parsed.meta.model !== "?")) {
+                            comfyResult = parsed;
+                            break;
+                        }
+                    }
+                }
             }
+            if (!comfyResult && (text.includes('"class_type"') || text.includes('"type"') || (text.includes('"inputs"') && (text.includes('KSampler') || text.includes('CLIPTextEncode') || text.includes('SaveImage') || text.includes('CLIPLoader') || text.includes('VAELoader'))))) {
+                let pos = 0;
+                while (true) {
+                    const result = extractJSON(text, pos);
+                    if (!result) break;
+                    const json = result.json;
+                    pos = result.end;
+                    if (json && (json.class_type || json.nodes || json.type || Object.values(json).some(v => v && typeof v === 'object' && (v.class_type || v.type)))) {
+                        const parsed = parseComfy(json);
+                        if (parsed && (parsed.pos || parsed.meta.model !== "?")) {
+                            comfyResult = parsed;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (comfyResult) return comfyResult;
             return parseA1111(text);
         }
 
@@ -447,109 +572,119 @@
             let pos = "", neg = "";
             let meta = { model: "?", size: "?", seed: "?", steps: "?", cfg: "?", sampler: "?" };
             let resources = [];
-            const nodes = Object.values(json);
-
-            const findUpstreamText = (link, depth = 0) => {
-                if (depth > 10 || !link || !Array.isArray(link)) return "";
-                const nodeId = link[0];
-                const node = json[nodeId];
-                if (!node || !node.inputs) return "";
-
-                if (typeof node.inputs.text === 'string') return node.inputs.text;
-                if (typeof node.inputs.text_g === 'string') return node.inputs.text_g; 
-                if (typeof node.inputs.text_l === 'string') return node.inputs.text_l; 
-                if (node.inputs.string_field && typeof node.inputs.string_field === 'string') return node.inputs.string_field;
-
-                const connections = ['positive', 'negative', 'conditioning', 'clip', 'prompt'];
-                for (const key of connections) {
-                    if (node.inputs[key]) {
-                        const res = findUpstreamText(node.inputs[key], depth + 1);
-                        if (res) return res;
+            let nodes = [];
+            let nodeMap = {};
+            if (json.nodes && Array.isArray(json.nodes)) {
+                nodes = json.nodes.map(n => {
+                    const node = {class_type: n.type || n.data?.class_type || "", inputs: n.inputs || n.data?.inputs || (n.widgets_values ? {} : {})};
+                    if (n.id !== undefined) nodeMap[n.id] = node;
+                    return node;
+                }).filter(n => n.class_type || n.inputs);
+            } else {
+                const vals = Object.values(json);
+                nodes = vals.filter(n => n && typeof n === 'object' && (n.class_type || n.inputs));
+                vals.forEach((n, i) => {
+                    if (n && typeof n === 'object' && (n.class_type || n.inputs)) {
+                        const key = Object.keys(json)[i];
+                        if (key && !isNaN(key)) nodeMap[key] = n;
                     }
-                }
-                return "";
-            };
-
-            const findUpstreamModel = (link, depth = 0) => {
-                if (depth > 10 || !link || !Array.isArray(link)) return "";
-                const nodeId = link[0];
-                const node = json[nodeId];
-                if (!node || !node.inputs) return "";
-
-                if (node.inputs.ckpt_name) return node.inputs.ckpt_name;
-                if (node.inputs.unet_name) return node.inputs.unet_name;
-                if (node.inputs.model) return findUpstreamModel(node.inputs.model, depth + 1);
-                return "";
-            };
-
-            const ksampler = nodes.find(n => n.class_type && (n.class_type.includes("KSampler") || n.class_type === "SamplerCustom"));
-            
-            if (ksampler && ksampler.inputs) {
-                meta.seed = ksampler.inputs.seed || ksampler.inputs.noise_seed || "?";
-                meta.steps = ksampler.inputs.steps || "?";
-                meta.cfg = ksampler.inputs.cfg || "?";
-                let sName = ksampler.inputs.sampler_name || "";
-                if(ksampler.inputs.scheduler) sName += " " + ksampler.inputs.scheduler;
-                meta.sampler = sName || "?";
-                pos = findUpstreamText(ksampler.inputs.positive);
-                neg = findUpstreamText(ksampler.inputs.negative);
-                let foundModel = findUpstreamModel(ksampler.inputs.model);
-                if (foundModel) meta.model = foundModel.replace(/\.(safetensors|ckpt)$/, "");
+                });
             }
 
-            // Universal Resource Scanner (including Power Lora)
+            const findUpstreamText = (l, d = 0) => {
+                if (d > 10 || !l || !Array.isArray(l)) return "";
+                let n = null;
+                if (typeof l[0] === 'string' || typeof l[0] === 'number') {
+                    n = json[l[0]] || nodeMap[l[0]];
+                } else if (typeof l[0] === 'object') {
+                    n = l[0];
+                }
+                if (!n) return "";
+                const inputs = n.inputs || {};
+                if (!inputs && !n.widgets_values) return "";
+                let t = "";
+                if (Array.isArray(n.widgets_values) && n.widgets_values.length > 0 && typeof n.widgets_values[0] === 'string') t += n.widgets_values[0];
+                if (typeof inputs.text === 'string') t += (t ? ", " : "") + inputs.text;
+                if (typeof inputs.text_g === 'string') t += (t ? ", " : "") + inputs.text_g;
+                if (typeof inputs.text_l === 'string') t += (t ? ", " : "") + inputs.text_l;
+                if (inputs.string_field) t += (t ? ", " : "") + inputs.string_field;
+                if (inputs.trigger_words_display && Array.isArray(inputs.trigger_words_display.__value__)) {
+                    const tags = inputs.trigger_words_display.__value__.filter(x => x.active).map(x => x.text).join(", ");
+                    if (tags) t += (t ? ", " : "") + tags;
+                }
+                const keys = ['positive', 'negative', 'conditioning', 'clip', 'prompt', 'trigger_words'];
+                for (const k of keys) if (inputs[k]) {
+                    const r = findUpstreamText(inputs[k], d + 1);
+                    if (r) t += (t ? ", " : "") + r;
+                }
+                return t;
+            };
+
+            const findUpstreamModel = (l, d = 0) => {
+                if (d > 10 || !l || !Array.isArray(l)) return "";
+                let n = null;
+                if (typeof l[0] === 'string' || typeof l[0] === 'number') {
+                    n = json[l[0]] || nodeMap[l[0]];
+                } else if (typeof l[0] === 'object') {
+                    n = l[0];
+                }
+                if (!n) return "";
+                const inputs = n.inputs || {};
+                if (inputs.ckpt_name) return inputs.ckpt_name;
+                if (inputs.unet_name) return inputs.unet_name;
+                if (inputs.checkpoint_name) return inputs.checkpoint_name;
+                if (inputs.model_name) return inputs.model_name;
+                if (inputs.model) return findUpstreamModel(inputs.model, d + 1);
+                return "";
+            };
+
+            const samplerTypes = ["KSampler", "KSamplerAdvanced", "SamplerCustom", "SamplerEulerAncestralCFGPP", "SamplerLCM"];
+            const ksampler = nodes.find(n => n.class_type && samplerTypes.some(type => n.class_type.includes(type)));
+            if (ksampler) {
+                const inputs = ksampler.inputs || {};
+                meta.seed = inputs.seed || inputs.noise_seed || "?";
+                meta.steps = inputs.steps || "?";
+                meta.cfg = inputs.cfg || "?";
+                meta.sampler = inputs.sampler_name || ksampler.class_type || "?";
+                if (inputs.scheduler) meta.sampler += " " + inputs.scheduler;
+                if (inputs.positive) pos = findUpstreamText(inputs.positive);
+                if (inputs.negative) neg = findUpstreamText(inputs.negative);
+                if (inputs.model) meta.model = findUpstreamModel(inputs.model).replace(/\.(safetensors|ckpt)$/, "");
+            }
+
             nodes.forEach(n => {
-                // Standard
-                if (n.inputs && n.inputs.lora_name && typeof n.inputs.lora_name === 'string') {
-                    const name = n.inputs.lora_name.replace(/\.(safetensors|ckpt)$/, "");
-                    const str = n.inputs.strength_model || 1.0;
-                    resources.push({ type: 'LoRA', name: name, str: str });
+                const nodeType = n.class_type || "";
+                const inputs = n.inputs || {};
+                if (inputs.lora_name) {
+                    resources.push({ type: 'LoRA', name: inputs.lora_name.replace(/\.(safetensors|ckpt)$/, ""), str: inputs.strength_model });
                 }
-                // LoraManager
-                if (n.inputs && n.inputs.loras && n.inputs.loras.__value__) {
-                    const loras = n.inputs.loras.__value__;
-                    if (Array.isArray(loras)) {
-                        loras.forEach(l => {
-                            if(l.name && l.active !== false) {
-                                resources.push({ type: 'LoRA', name: l.name, str: l.strength || 1.0 });
-                            }
-                        });
-                    }
-                }
-                // Power Lora Loader
-                if (n.class_type && n.class_type.includes("Power Lora Loader")) {
-                    for (const [key, val] of Object.entries(n.inputs)) {
-                        if (key.startsWith('lora_') && typeof val === 'object' && val !== null) {
-                            if (val.on && val.lora) {
-                                resources.push({ 
-                                    type: 'LoRA', 
-                                    name: val.lora.replace(/\.(safetensors|ckpt)$/, ""), 
-                                    str: val.strength || 1.0 
-                                });
-                            }
+                if (nodeType.includes("Power Lora Loader")) {
+                    for (const [k, v] of Object.entries(inputs)) {
+                        if (k.startsWith('lora_') && v && v.on) {
+                            resources.push({ type: 'LoRA', name: v.lora.replace(/\.(safetensors|ckpt)$/, ""), str: v.strength });
                         }
                     }
                 }
-                // Text tags
-                if (n.inputs) {
-                    for (const [key, val] of Object.entries(n.inputs)) {
-                        if (typeof val === 'string' && val.includes('<lora:')) {
-                            let match;
-                            LORA_REGEX.lastIndex = 0;
-                            while ((match = LORA_REGEX.exec(val)) !== null) {
-                                const name = match[1];
-                                if (!resources.some(r => r.name === name)) {
-                                    resources.push({ type: 'LoRA', name: name, str: match[2] || "1.0" });
-                                }
-                            }
+                if (inputs.loras && Array.isArray(inputs.loras.__value__)) {
+                    inputs.loras.__value__.forEach(l => {
+                        if (l.name && l.active !== false) {
+                            resources.push({ type: 'LoRA', name: l.name, str: l.strength });
                         }
-                    }
+                    });
+                }
+                if (nodeType.includes("ControlNet") && inputs.control_net_name) {
+                    resources.push({ type: 'ControlNet', name: inputs.control_net_name, str: inputs.strength || "1.0" });
+                }
+                if (nodeType.includes("IPAdapter") && inputs.ipadapter_file) {
+                    resources.push({ type: 'IP-Adapter', name: inputs.ipadapter_file, str: inputs.weight || "1.0" });
                 }
             });
 
-            const sizeNode = nodes.find(n => n.class_type == "EmptyLatentImage");
-            if (sizeNode && sizeNode.inputs) {
-                meta.size = `${sizeNode.inputs.width}x${sizeNode.inputs.height}`;
+            const sizeNodes = ["EmptyLatentImage", "LatentUpscale", "LatentComposite", "EmptySD3LatentImage"];
+            const sizeNode = nodes.find(n => sizeNodes.includes(n.class_type));
+            if (sizeNode) {
+                const inputs = sizeNode.inputs || {};
+                if (inputs.width && inputs.height) meta.size = `${inputs.width}x${inputs.height}`;
             }
 
             return { pos, neg, meta, resources };
@@ -603,35 +738,42 @@
             return { pos, neg, resources, meta };
         }
 
-        function toggleSidebar(show) {
-            if (show) {
-                sidebar.classList.add('active');
-                backdrop.classList.add('active');
-            } else {
-                sidebar.classList.remove('active');
-                backdrop.classList.remove('active');
-            }
+        function openDetailView(index) {
+            if (index < 0 || index >= filteredItems.length) return;
+            currentIndex = index;
+            currentItem = filteredItems[index];
+            updateDetailView();
+            detailView.classList.add('active');
         }
 
-        function openSidebar(item) {
-            currentItem = item;
-            document.getElementById('sidePreview').src = item.url;
-            document.getElementById('fileName').innerText = item.file.name;
+        function closeDetailView() {
+            detailView.classList.remove('active');
+            currentIndex = -1;
+        }
+
+        function updateDetailView() {
+            if (!currentItem) return;
+            detailImage.src = currentItem.url;
+            document.getElementById('fileName').innerText = currentItem.file.name;
+            
+            // Update favorite star
+            const favStar = document.getElementById('detailFavorite');
+            favStar.textContent = favorites.has(currentItem.file.name) ? '⭐' : '☆';
             
             // Populate Inputs
-            document.getElementById('metaModel').value = item.meta.model || "";
-            document.getElementById('metaSize').value = item.meta.size || "";
-            document.getElementById('metaSampler').value = item.meta.sampler || "";
-            document.getElementById('metaSeed').value = item.meta.seed || "";
-            document.getElementById('metaSteps').value = item.meta.steps || "";
-            document.getElementById('metaCFG').value = item.meta.cfg || "";
-            document.getElementById('posPrompt').value = item.pos || "";
-            document.getElementById('negPrompt').value = item.neg || "";
+            document.getElementById('metaModel').value = currentItem.meta.model || "";
+            document.getElementById('metaSize').value = currentItem.meta.size || "";
+            document.getElementById('metaSampler').value = currentItem.meta.sampler || "";
+            document.getElementById('metaSeed').value = currentItem.meta.seed || "";
+            document.getElementById('metaSteps').value = currentItem.meta.steps || "";
+            document.getElementById('metaCFG').value = currentItem.meta.cfg || "";
+            document.getElementById('posPrompt').value = currentItem.pos || "";
+            document.getElementById('negPrompt').value = currentItem.neg || "";
 
             // Resource Chips
             const tagContainer = document.getElementById('resourceTags');
             tagContainer.innerHTML = '';
-            item.resources.forEach(res => {
+            currentItem.resources.forEach(res => {
                 const chip = document.createElement('div');
                 chip.className = `chip ${res.type === 'Model' ? 'chip-model' : 'chip-lora'}`;
                 chip.innerHTML = `<span>${res.type}</span> ${res.name} <span class="strength-badge">${res.str || "1.0"}</span>`;
@@ -642,9 +784,132 @@
                 };
                 tagContainer.appendChild(chip);
             });
-
-            toggleSidebar(true);
         }
+
+        function navigateDetail(direction) {
+            if (currentIndex === -1) return;
+            const newIndex = currentIndex + direction;
+            if (newIndex >= 0 && newIndex < filteredItems.length) {
+                openDetailView(newIndex);
+            }
+        }
+
+        function toggleFavoriteCurrent() {
+            if (!currentItem) return;
+            const name = currentItem.file.name;
+            if (favorites.has(name)) {
+                favorites.delete(name);
+            } else {
+                favorites.add(name);
+            }
+            localStorage.setItem('guru-favorites', JSON.stringify([...favorites]));
+            updateDetailView();
+            renderBatch(); // Re-render to update star icons
+        }
+
+        // Theme Toggle
+        document.getElementById('themeToggle').onclick = function() {
+            const current = document.body.getAttribute('data-theme') || 'dark';
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('guru-theme', newTheme);
+            this.textContent = newTheme === 'dark' ? '🌙' : '☀️';
+        };
+
+        // Help System
+        function showHelp() {
+            const content = document.getElementById('helpContent');
+            content.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;">
+                <div><h3 style="color:var(--accent);margin-top:0;">⌨️ Keyboard Shortcuts</h3>
+                <div style="display:grid;gap:8px;font-size:0.9rem;">
+                <div><kbd>Arrow Left/Right</kbd> Navigate images in detail view</div>
+                <div><kbd>Esc</kbd> Close detail view</div>
+                <div><kbd>T</kbd> Toggle theme</div>
+                <div><kbd>?</kbd> Show this help</div>
+                <div><kbd>F</kbd> Focus search</div>
+                </div></div>
+                <div><h3 style="color:var(--accent);margin-top:0;">🖱️ Mouse Actions</h3>
+                <div style="display:grid;gap:8px;font-size:0.9rem;">
+                <div><strong>Click</strong> Image to view full-screen</div>
+                <div><strong>Click Star</strong> ⭐ to favorite/unfavorite</div>
+                <div><strong>Sort</strong> Use dropdown to sort by name/date</div>
+                </div></div>
+                <div><h3 style="color:var(--accent);margin-top:0;">📋 Features</h3>
+                <div style="display:grid;gap:8px;font-size:0.9rem;">
+                <div><strong>Favorites</strong> Star images for quick access</div>
+                <div><strong>Theme</strong> Switch dark/light mode</div>
+                <div><strong>Sort</strong> By name, date modified, or created</div>
+                <div><strong>Search</strong> Filter by prompt, model, seed</div>
+                </div></div></div>`;
+            document.getElementById('helpOverlay').classList.add('active');
+        }
+        function hideHelp() {
+            document.getElementById('helpOverlay').classList.remove('active');
+        }
+        document.getElementById('helpBtn').onclick = showHelp;
+
+        // Favorites Filter
+        document.getElementById('favFilterBtn').onclick = function() {
+            showFavoritesOnly = !showFavoritesOnly;
+            this.classList.toggle('active', showFavoritesOnly);
+            applyFilters();
+        };
+
+        // Sort
+        document.getElementById('sortSelect').onchange = function() {
+            sortBy = this.value;
+            applySort();
+            grid.innerHTML = '';
+            visibleCount = 0;
+            renderBatch();
+        };
+
+        function applySort() {
+            if (sortBy === 'name') {
+                filteredItems.sort((a, b) => a.file.name.localeCompare(b.file.name));
+            } else if (sortBy === 'created') {
+                filteredItems.sort((a, b) => (b.file.lastModified || 0) - (a.file.lastModified || 0));
+            } else { // date (modified)
+                filteredItems.sort((a, b) => (b.file.lastModified || 0) - (a.file.lastModified || 0));
+            }
+        }
+
+        function applyFilters() {
+            const term = document.getElementById('search').value.toLowerCase();
+            filteredItems = allItems.filter(item => {
+                if (showFavoritesOnly && !favorites.has(item.file.name)) return false;
+                const text = (item.pos + " " + item.neg).toLowerCase();
+                const res = item.resources.map(r => r.name.toLowerCase()).join(" ");
+                const model = item.meta.model.toLowerCase();
+                const seed = item.meta.seed.toString();
+                return !term || text.includes(term) || res.includes(term) || model.includes(term) || seed.includes(term);
+            });
+            applySort();
+            grid.innerHTML = '';
+            visibleCount = 0;
+            renderBatch();
+        }
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                if (e.key === 'Escape') {
+                    e.target.blur();
+                    hideHelp();
+                }
+                return;
+            }
+            if (detailView.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') navigateDetail(-1);
+                if (e.key === 'ArrowRight') navigateDetail(1);
+                if (e.key === 'Escape') closeDetailView();
+                return;
+            }
+            if (e.key === 'Escape') hideHelp();
+            if (e.key === '?' || e.key === '/') { e.preventDefault(); showHelp(); }
+            if (e.key === 't' || e.key === 'T') { e.preventDefault(); document.getElementById('themeToggle').click(); }
+            if (e.key === 'f' || e.key === 'F') { if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); document.getElementById('search').focus(); } }
+        });
 
         function downloadSidecar() {
             if (!currentItem) return;

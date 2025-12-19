@@ -1,4 +1,4 @@
-# History Guru 🧘‍♂️ v4.0 (The Manager Update)
+# History Guru 🧘‍♂️ v6.10 (The Manager Update)
 
 > **The 100% Offline, Single-File File Manager & Metadata Viewer for AI Images.**
 
@@ -152,3 +152,4 @@ Feel free to fork this repository and submit Pull Requests.
 
 **License:** MIT
 **Created by:** The Community & The AI Assistant
+

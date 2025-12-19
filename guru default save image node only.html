@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History Guru v31 | LoraManager Support</title>
+    <style>
+        :root {
+            --bg: #09090b;
+            --header-bg: rgba(9, 9, 11, 0.95);
+            --card-bg: #18181b;
+            --border: #27272a;
+            --accent: #8b5cf6;
+            --text-main: #e4e4e7;
+            --text-muted: #a1a1aa;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; background-color: var(--bg); color: var(--text-main); font-family: system-ui, -apple-system, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* Header */
+        header { height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; background: var(--header-bg); backdrop-filter: blur(4px); z-index: 50; gap: 20px; flex-shrink: 0; }
+        h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.03em; margin: 0; display: flex; align-items: center; gap: 8px; }
+        h1 span { color: var(--accent); }
+        .version { font-size: 0.7rem; background: rgba(139, 92, 246, 0.1); color: #c4b5fd; padding: 2px 6px; border-radius: 4px; font-weight: 600; letter-spacing: 0.05em; }
+
+        /* Search */
+        .search-container { flex: 1; max-width: 600px; position: relative; }
+        .search-input { width: 100%; background: #121214; border: 1px solid var(--border); color: var(--text-main); padding: 10px 16px 10px 44px; border-radius: 12px; outline: none; transition: all 0.2s; font-size: 0.9rem; }
+        .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1); background: var(--card-bg); }
+        .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; height: 18px; pointer-events: none; }
+        .count-badge { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 0.75rem; color: var(--text-muted); font-family: monospace; font-weight: 600; background: #27272a; padding: 2px 6px; border-radius: 4px; }
+
+        /* Button */
+        .btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); }
+        .btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .btn:active { transform: scale(0.98); }
+
+        /* Main Grid */
+        main { flex: 1; overflow-y: auto; padding: 24px; scroll-behavior: smooth; position: relative; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; padding-bottom: 100px; }
+        .card { 
+            aspect-ratio: 1; background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; 
+            overflow: hidden; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .card:hover { transform: translateY(-6px); border-color: var(--accent); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); z-index: 10; }
+        .card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+        .card:hover img { transform: scale(1.05); }
+
+        .welcome { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); gap: 20px; }
+        .welcome svg { width: 80px; height: 80px; color: #27272a; }
+
+        /* CLICK BLOCKER */
+        .backdrop { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); 
+            backdrop-filter: blur(3px); z-index: 60; opacity: 0; pointer-events: none; 
+            transition: opacity 0.3s ease; 
+        }
+        .backdrop.active { opacity: 1; pointer-events: auto; }
+
+        /* SIDEBAR */
+        aside { 
+            width: 550px; background: #0c0c0e; border-left: 1px solid var(--border); 
+            display: flex; flex-direction: column; 
+            position: fixed; right: 0; top: 0; bottom: 0; z-index: 70; 
+            transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: -20px 0 50px rgba(0,0,0,0.5); 
+        }
+        aside.active { transform: translateX(0); }
+        
+        .sidebar-header { height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; background: rgba(12, 12, 14, 0.95); backdrop-filter: blur(10px); flex-shrink: 0; }
+        .sidebar-title { font-size: 0.8rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); }
+        .close-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+        .close-btn:hover { color: white; background: rgba(255,255,255,0.1); }
+
+        .sidebar-content { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+        
+        /* IMAGE PREVIEW FIX */
+        .preview-wrapper { 
+            flex-shrink: 0; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            border: 1px solid var(--border); 
+            background-color: #000;
+            width: 100%;
+            display: block;
+        }
+
+        .preview-wrapper img { 
+            width: 100%; 
+            height: auto; 
+            display: block; 
+            max-height: 80vh; 
+            object-fit: contain; 
+        }
+
+        /* Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .stat-item { background: #121214; border: 1px solid var(--border); padding: 10px; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; }
+        .stat-item.empty { opacity: 0.4; }
+        .stat-label { font-size: 0.65rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+        .stat-value { font-size: 0.85rem; font-family: 'JetBrains Mono', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+        .stat-value.seed { color: #86efac; cursor: pointer; text-decoration: underline; text-decoration-color: rgba(134, 239, 172, 0.3); text-underline-offset: 4px; }
+
+        /* Prompts */
+        .prompt-group { display: flex; flex-direction: column; gap: 10px; }
+        .prompt-header { display: flex; justify-content: space-between; align-items: center; }
+        .prompt-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; }
+        .pos-label .dot { background: #4ade80; box-shadow: 0 0 8px rgba(74, 222, 128, 0.4); }
+        .pos-label { color: #4ade80; }
+        .neg-label .dot { background: #f87171; box-shadow: 0 0 8px rgba(248, 113, 113, 0.4); }
+        .neg-label { color: #f87171; }
+
+        .copy-btn { font-size: 0.65rem; background: #27272a; color: #a1a1aa; padding: 4px 10px; border-radius: 6px; cursor: pointer; text-transform: uppercase; font-weight: 700; border: 1px solid transparent; transition: all 0.2s; }
+        .copy-btn:hover { background: #3f3f46; color: white; }
+        .copy-btn.copied { background: var(--accent); color: white; }
+
+        .prompt-text { background: #121214; border: 1px solid var(--border); border-radius: 10px; padding: 14px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.6; color: #d4d4d8; white-space: pre-wrap; word-break: break-word; }
+        
+        /* Chips */
+        .chips-container { display: flex; flex-wrap: wrap; gap: 8px; }
+        .chip { font-size: 0.75rem; padding: 6px 12px; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; border: 1px solid transparent; font-family: 'JetBrains Mono', monospace; }
+        .chip-lora { background: rgba(139, 92, 246, 0.1); color: #c4b5fd; border-color: rgba(139, 92, 246, 0.25); }
+        .chip-model { background: rgba(59, 130, 246, 0.1); color: #93c5fd; border-color: rgba(59, 130, 246, 0.25); }
+        .chip:hover { transform: translateY(-2px); filter: brightness(1.2); }
+        .strength-badge { background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.7em; }
+
+        .loader { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.875rem; display: none; }
+        .loader.active { display: block; }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>History<span>Guru</span> <span class="version">Default Save Image Node</span></h1>
+        
+        <div class="search-container">
+            <svg class="search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" id="search" class="search-input" placeholder="Search prompts, models, seeds...">
+            <span id="count" class="count-badge"></span>
+        </div>
+
+        <label class="btn">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Load Folder
+            <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none">
+        </label>
+    </header>
+
+    <main id="mainScroll">
+        <div id="welcome" class="welcome">
+            <svg class="welcome-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <div style="text-align:center">
+                <h2 style="font-size:1.5rem; font-weight:700; margin-bottom:8px; color:white;">Ready to Scan</h2>
+                <p>Select your local ComfyUI or A1111 output folder.</p>
+            </div>
+        </div>
+        <div id="grid" class="grid"></div>
+        <div id="loader" class="loader">Loading more images...</div>
+    </main>
+
+    <div id="backdrop" class="backdrop" onclick="toggleSidebar(false)"></div>
+
+    <aside id="sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-title">Metadata Inspector</span>
+            <button class="close-btn" onclick="toggleSidebar(false)">✕</button>
+        </div>
+        <div class="sidebar-content">
+            <div class="preview-wrapper">
+                <img id="sidePreview" src="">
+            </div>
+
+            <div class="stats-grid">
+                <div id="boxModel" class="stat-item"><div class="stat-label">Model</div><div id="metaModel" class="stat-value model">?</div></div>
+                <div id="boxSize" class="stat-item"><div class="stat-label">Size</div><div id="metaSize" class="stat-value">?</div></div>
+                <div id="boxSampler" class="stat-item"><div class="stat-label">Sampler</div><div id="metaSampler" class="stat-value">?</div></div>
+                <div id="boxSeed" class="stat-item"><div class="stat-label">Seed</div><div id="metaSeed" class="stat-value seed" onclick="copyText('metaSeed', this)">?</div></div>
+                <div id="boxSteps" class="stat-item"><div class="stat-label">Steps</div><div id="metaSteps" class="stat-value">?</div></div>
+                <div id="boxCFG" class="stat-item"><div class="stat-label">CFG</div><div id="metaCFG" class="stat-value">?</div></div>
+            </div>
+
+            <div class="prompt-group">
+                <div class="prompt-header">
+                    <span class="prompt-label pos-label"><span class="dot"></span> Positive</span>
+                    <button class="copy-btn" onclick="copyText('posPrompt', this)">Copy</button>
+                </div>
+                <div id="posPrompt" class="prompt-text"></div>
+            </div>
+
+            <div class="prompt-group">
+                <div class="prompt-header">
+                    <span class="prompt-label neg-label"><span class="dot"></span> Negative</span>
+                    <button class="copy-btn" onclick="copyText('negPrompt', this)">Copy</button>
+                </div>
+                <div id="negPrompt" class="prompt-text"></div>
+            </div>
+
+            <div class="prompt-group">
+                <div class="prompt-header"><span class="prompt-label" style="color:#c4b5fd">Resources</span></div>
+                <div id="resourceTags" class="chips-container"></div>
+            </div>
+        </div>
+    </aside>
+
+    <script>
+        let allItems = [];
+        let filteredItems = [];
+        let visibleCount = 0;
+        const BATCH_SIZE = 50;
+        const LORA_REGEX = /<lora:([^:>]+)(?::([^:>]+))?(?::([^:>]+))?>/g;
+
+        const grid = document.getElementById('grid');
+        const mainScroll = document.getElementById('mainScroll');
+        const loader = document.getElementById('loader');
+        const sidebar = document.getElementById('sidebar');
+        const backdrop = document.getElementById('backdrop');
+
+        mainScroll.addEventListener('scroll', () => {
+            if (mainScroll.scrollTop + mainScroll.clientHeight >= mainScroll.scrollHeight - 500) {
+                renderBatch();
+            }
+        });
+
+        function renderBatch() {
+            if (visibleCount >= filteredItems.length) {
+                loader.classList.remove('active');
+                return;
+            }
+            loader.classList.add('active');
+            
+            const fragment = document.createDocumentFragment();
+            const nextBatch = filteredItems.slice(visibleCount, visibleCount + BATCH_SIZE);
+            
+            nextBatch.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `<img src="${item.url}" loading="lazy" decoding="async">`;
+                card.onclick = () => openSidebar(item);
+                fragment.appendChild(card);
+            });
+            
+            grid.appendChild(fragment);
+            visibleCount += nextBatch.length;
+            document.getElementById('count').innerText = `${visibleCount} / ${filteredItems.length}`;
+            
+            if (visibleCount >= filteredItems.length) loader.classList.remove('active');
+        }
+
+        document.getElementById('search').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            filteredItems = allItems.filter(item => {
+                const text = (item.pos + " " + item.neg).toLowerCase();
+                const res = item.resources.map(r => r.name.toLowerCase()).join(" ");
+                const model = item.meta.model.toLowerCase();
+                const seed = item.meta.seed.toString();
+                return text.includes(term) || res.includes(term) || model.includes(term) || seed.includes(term);
+            });
+            grid.innerHTML = '';
+            visibleCount = 0;
+            renderBatch();
+        });
+
+        async function decompressZlib(data) {
+            try {
+                const ds = new DecompressionStream('deflate-raw');
+                const writer = ds.writable.getWriter();
+                writer.write(data.slice(2, data.length - 4));
+                writer.close();
+                const output = await new Response(ds.readable).arrayBuffer();
+                return new TextDecoder().decode(output);
+            } catch (e) {
+                try {
+                    const ds = new DecompressionStream('deflate');
+                    const writer = ds.writable.getWriter();
+                    writer.write(data);
+                    writer.close();
+                    const output = await new Response(ds.readable).arrayBuffer();
+                    return new TextDecoder().decode(output);
+                } catch(e2) { return null; }
+            }
+        }
+
+        document.getElementById('folderInput').addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files).filter(f => /\.(png|webp|jpeg|jpg)$/i.test(f.name));
+            if(files.length === 0) return;
+
+            document.getElementById('welcome').style.display = 'none';
+            grid.innerHTML = '';
+            
+            files.sort((a, b) => b.lastModified - a.lastModified);
+            allItems = [];
+
+            const chunkSize = 15;
+            for (let i = 0; i < files.length; i += chunkSize) {
+                const chunk = files.slice(i, i + chunkSize);
+                const results = await Promise.all(chunk.map(processFile));
+                allItems.push(...results);
+                
+                if (i === 0) {
+                    filteredItems = allItems;
+                    renderBatch();
+                } else {
+                    filteredItems = allItems;
+                    if (visibleCount < BATCH_SIZE) renderBatch();
+                }
+                
+                document.getElementById('count').innerText = `Scanning ${allItems.length}`;
+                await new Promise(r => setTimeout(r, 0));
+            }
+        });
+
+        async function processFile(file) {
+            try {
+                let text = "";
+                try {
+                    const buffer = await file.arrayBuffer();
+                    text = await extractText(buffer);
+                } catch (e) { console.error("Text extraction failed", file.name, e); }
+                
+                const data = parseMetadata(text);
+                return { file, url: URL.createObjectURL(file), ...data };
+            } catch (err) {
+                console.error("Critical failure parsing file:", file.name, err);
+                return { 
+                    file, 
+                    url: URL.createObjectURL(file), 
+                    pos: "", neg: "", resources: [], 
+                    meta: { model: "?", size: "?", seed: "?", steps: "?", cfg: "?", sampler: "?" } 
+                };
+            }
+        }
+
+        async function extractText(buffer) {
+            const view = new DataView(buffer);
+            let fullText = "";
+            
+            if (view.getUint32(0) === 0x89504E47) {
+                let offset = 8;
+                while (offset < view.byteLength) {
+                    if (offset + 4 > view.byteLength) break;
+                    
+                    const len = view.getUint32(offset);
+                    const type = String.fromCharCode(...new Uint8Array(buffer, offset + 4, 4));
+                    
+                    if (offset + 8 + len > view.byteLength) break;
+
+                    const data = new Uint8Array(buffer, offset + 8, len);
+
+                    if (type === 'tEXt' || type === 'iTXt') {
+                        fullText += new TextDecoder().decode(data).replace(/\0/g, '') + "\n";
+                    } else if (type === 'zTXt') {
+                        const inflated = await decompressZlib(data);
+                        if (inflated) fullText += inflated + "\n";
+                    }
+                    offset += len + 12;
+                    if (type === 'IEND') break;
+                }
+            } 
+            else if (view.getUint32(0) === 0x52494646) {
+                fullText = new TextDecoder().decode(new Uint8Array(buffer));
+            }
+            else if (view.getUint16(0) === 0xFFD8) {
+                fullText = new TextDecoder().decode(new Uint8Array(buffer));
+            }
+            return fullText;
+        }
+
+        function parseMetadata(text) {
+            function extractJSON(str) {
+                const start = str.indexOf('{');
+                if (start === -1) return null;
+                
+                let count = 0;
+                let end = -1;
+                
+                for (let i = start; i < str.length; i++) {
+                    if (str[i] === '{') count++;
+                    else if (str[i] === '}') count--;
+                    
+                    if (count === 0) {
+                        end = i;
+                        break;
+                    }
+                }
+                
+                if (end !== -1) {
+                    try {
+                        return JSON.parse(str.substring(start, end + 1));
+                    } catch(e) { return null; }
+                }
+                return null;
+            }
+
+            if (text.includes('"class_type"') && text.includes('"inputs"')) {
+                const json = extractJSON(text);
+                if (json) return parseComfy(json);
+            }
+            return parseA1111(text);
+        }
+
+        function parseComfy(json) {
+            let pos = "", neg = "";
+            let meta = { model: "?", size: "?", seed: "?", steps: "?", cfg: "?", sampler: "?" };
+            let resources = [];
+            
+            const nodes = Object.values(json);
+            
+            // KSampler Logic
+            const ksampler = nodes.find(n => n.class_type && (n.class_type.includes("KSampler") || n.class_type === "SamplerCustom"));
+            
+            if (ksampler && ksampler.inputs) {
+                meta.seed = ksampler.inputs.seed || ksampler.inputs.noise_seed || "?";
+                meta.steps = ksampler.inputs.steps || "?";
+                meta.cfg = ksampler.inputs.cfg || "?";
+                meta.sampler = ksampler.inputs.sampler_name || "?";
+                if(ksampler.inputs.scheduler) meta.sampler += " " + ksampler.inputs.scheduler;
+                
+                const getLinkedText = (link) => {
+                    if(!link || !Array.isArray(link)) return "";
+                    const nodeId = link[0];
+                    const node = json[nodeId];
+                    if(!node) return "";
+                    
+                    // Simple text inputs
+                    if(node.inputs && (node.inputs.text || node.inputs.text_g || node.inputs.text_l)) {
+                        return node.inputs.text || node.inputs.text_g || node.inputs.text_l;
+                    }
+                    return "";
+                };
+
+                pos = getLinkedText(ksampler.inputs.positive);
+                neg = getLinkedText(ksampler.inputs.negative);
+            }
+
+            // Checkpoint Loader
+            const loader = nodes.find(n => n.class_type && n.class_type.includes("CheckpointLoader"));
+            if (loader && loader.inputs) {
+                meta.model = loader.inputs.ckpt_name || "?";
+                meta.model = meta.model.replace(/\.(safetensors|ckpt)$/, "");
+                resources.push({ type: 'Model', name: meta.model });
+            }
+
+            // --- UNIVERSAL LoRA SCANNER (FIXED) ---
+            nodes.forEach(n => {
+                // 1. Standard LoRA nodes
+                if (n.inputs && n.inputs.lora_name) {
+                    const name = n.inputs.lora_name.replace(/\.(safetensors|ckpt)$/, "");
+                    const str = n.inputs.strength_model || 1.0;
+                    resources.push({ type: 'LoRA', name: name, str: str });
+                }
+                
+                // 2. LoraManager List detection (Node 56 in your data)
+                if (n.inputs && n.inputs.loras && n.inputs.loras.__value__) {
+                    const loras = n.inputs.loras.__value__;
+                    if (Array.isArray(loras)) {
+                        loras.forEach(l => {
+                            if(l.name && l.active !== false) {
+                                resources.push({ type: 'LoRA', name: l.name, str: l.strength || 1.0 });
+                            }
+                        });
+                    }
+                }
+
+                // 3. Fallback: Scan ALL text fields for <lora:...> tags
+                if (n.inputs) {
+                    for (const [key, val] of Object.entries(n.inputs)) {
+                        if (typeof val === 'string' && val.includes('<lora:')) {
+                            let match;
+                            // Reset regex index to ensure it catches multiple tags
+                            LORA_REGEX.lastIndex = 0;
+                            while ((match = LORA_REGEX.exec(val)) !== null) {
+                                const name = match[1];
+                                if (!resources.some(r => r.name === name)) {
+                                    resources.push({ type: 'LoRA', name: name, str: match[2] || "1.0" });
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            // --------------------------------------
+
+            const sizeNode = nodes.find(n => n.class_type == "EmptyLatentImage");
+            if (sizeNode && sizeNode.inputs) {
+                meta.size = `${sizeNode.inputs.width}x${sizeNode.inputs.height}`;
+            }
+
+            return { pos, neg, meta, resources };
+        }
+
+        function parseA1111(text) {
+            let pos = "", neg = "";
+            let resources = [];
+            let meta = { model: "?", size: "?", seed: "?", steps: "?", cfg: "?", sampler: "?" };
+
+            let match;
+            LORA_REGEX.lastIndex = 0;
+            while ((match = LORA_REGEX.exec(text)) !== null) {
+                resources.push({ type: 'LoRA', name: match[1], str: match[2] || "1.0" });
+            }
+
+            const negMarker = "Negative prompt:";
+            const stepsMarker = "Steps:";
+            
+            const negIdx = text.indexOf(negMarker);
+            const stepsIdx = text.indexOf(stepsMarker);
+
+            if (negIdx !== -1 && stepsIdx !== -1) {
+                pos = text.substring(0, negIdx).replace(/parameters\s*/i, "").trim();
+                neg = text.substring(negIdx + negMarker.length, stepsIdx).trim();
+            } else if (stepsIdx !== -1) {
+                pos = text.substring(0, stepsIdx).replace(/parameters\s*/i, "").trim();
+            } else {
+                if(text.includes('"widgets_values"')) {
+                    const parts = text.split(/"text":\s*"/);
+                    if(parts.length > 1) pos = parts[1].split('"')[0];
+                } else {
+                    pos = text.trim();
+                }
+            }
+
+            if (stepsIdx !== -1) {
+                const block = text.substring(stepsIdx);
+                const get = (k) => {
+                    const r = new RegExp(`${k}:\\s*([^,]+)`);
+                    const m = block.match(r);
+                    return m ? m[1].trim() : "?";
+                }
+                meta.steps = get("Steps");
+                meta.sampler = get("Sampler");
+                meta.cfg = get("CFG scale");
+                meta.seed = get("Seed");
+                meta.size = get("Size");
+                meta.model = get("Model");
+                
+                if (meta.model !== "?" && !resources.some(r => r.name === meta.model)) {
+                    resources.push({ type: 'Model', name: meta.model });
+                }
+            }
+
+            resources = resources.filter((v,i,a) => a.findIndex(t => t.name === v.name) === i);
+            return { pos, neg, resources, meta };
+        }
+
+        function toggleSidebar(show) {
+            if (show) {
+                sidebar.classList.add('active');
+                backdrop.classList.add('active');
+            } else {
+                sidebar.classList.remove('active');
+                backdrop.classList.remove('active');
+            }
+        }
+
+        function openSidebar(item) {
+            document.getElementById('sidePreview').src = item.url;
+            
+            const set = (id, val, boxId) => {
+                const el = document.getElementById(id);
+                const box = document.getElementById(boxId);
+                el.innerText = val;
+                el.title = val;
+                
+                if (val === "?" || val === "") {
+                    box.classList.add('empty');
+                } else {
+                    box.classList.remove('empty');
+                }
+            };
+            
+            set('metaModel', item.meta.model, 'boxModel');
+            set('metaSize', item.meta.size, 'boxSize');
+            set('metaSampler', item.meta.sampler, 'boxSampler');
+            set('metaSeed', item.meta.seed, 'boxSeed');
+            set('metaSteps', item.meta.steps, 'boxSteps');
+            set('metaCFG', item.meta.cfg, 'boxCFG');
+
+            document.getElementById('posPrompt').innerText = item.pos || "No data";
+            document.getElementById('negPrompt').innerText = item.neg || "-";
+
+            const tagContainer = document.getElementById('resourceTags');
+            tagContainer.innerHTML = '';
+            item.resources.forEach(res => {
+                const chip = document.createElement('div');
+                chip.className = `chip ${res.type === 'Model' ? 'chip-model' : 'chip-lora'}`;
+                chip.innerHTML = `<span>${res.type}</span> ${res.name} <span class="strength-badge">${res.str || "1.0"}</span>`;
+                chip.onclick = () => {
+                    const search = document.getElementById('search');
+                    search.value = res.name;
+                    search.dispatchEvent(new Event('input'));
+                };
+                tagContainer.appendChild(chip);
+            });
+
+            toggleSidebar(true);
+        }
+
+        function copyText(id, btn) {
+            const text = document.getElementById(id).innerText;
+            if (text === "?" || text === "No data") return;
+            
+            navigator.clipboard.writeText(text);
+            
+            const originalText = btn.innerText;
+            btn.innerText = "Copied!";
+            btn.classList.add('copied');
+            
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.remove('copied');
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

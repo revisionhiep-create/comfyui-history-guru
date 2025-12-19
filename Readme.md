@@ -35,12 +35,24 @@ You can now **organize, sort, move, and fix** your AI generations without ever l
 
 ## 🚀 Quick Start
 
-1.  **Download** the `Guru Manager.html` file from this repository.
+### For Chrome/Edge/Opera Users (Full Features)
+
+1.  **Download** the `apps/Guru Manager.html` file from this repository.
 2.  **Open** the file in **Chrome, Edge, or Opera**.
 3.  Click **"Open Folder"** and select your ComfyUI/Output directory.
 4.  **Grant Permission:** Your browser will ask if the site can "View and Edit" files. You **must click "Edit"** (or Allow) for the file manager features to work.
 5.  **Organize:** Right-click the sidebar to create folders. Drag and drop images to move them. Click images to view metadata.
 6.  **Explore:** Use keyboard shortcuts (press `?` for help), star favorites, sort by different criteria, and view statistics.
+
+### For Firefox Users (View-Only Mode)
+
+1.  **Download** the `apps/Guru Universal Node Version 3.3.html` file from this repository.
+2.  **Open** the file in **Firefox**.
+3.  Click **"Load Folder"** and select your ComfyUI/Output directory.
+4.  **Browse:** Click images to view metadata in full-screen detail view. Use arrow keys to navigate between images.
+5.  **Explore:** Use keyboard shortcuts (press `?` for help), star favorites, sort by different criteria, and view statistics.
+
+**Note:** The Firefox edition provides all viewing and metadata features, but does not support file operations (create, move, delete) due to browser API limitations.
 
 ## ⌨️ Keyboard Shortcuts
 
@@ -64,11 +76,35 @@ Press `?` anytime to see the full list of shortcuts and features.
 
 | Browser | Status | Notes |
 | :--- | :--- | :--- |
-| **Google Chrome** | ✅ **Supported** | Recommended |
-| **Microsoft Edge** | ✅ **Supported** | Recommended |
-| **Opera** | ✅ **Supported** | Works out of the box |
-| **Firefox** | ❌ **Not Supported** | Firefox does not allow web pages to move files. Please use v3.3. |
+| **Google Chrome** | ✅ **Supported** | Recommended - Full file management features |
+| **Microsoft Edge** | ✅ **Supported** | Recommended - Full file management features |
+| **Opera** | ✅ **Supported** | Works out of the box - Full file management features |
+| **Firefox** | ✅ **Supported (v3.3)** | Use `apps/Guru Universal Node Version 3.3.html` - View-only mode (no file operations) |
 | **Safari** | ❌ **Not Supported** | Missing API support. |
+
+### Firefox Edition (v3.3)
+
+The **Firefox Edition** (`apps/Guru Universal Node Version 3.3.html`) provides the same UI/UX experience as v4.0, but without file management features (since Firefox doesn't support the File System Access API).
+
+**✅ Available in Firefox Edition:**
+- ⭐ Favorites system with filter
+- 🔍 Full metadata search and parsing
+- 📊 Sort by name, date modified, or date created
+- 🌓 Theme toggle (dark/light)
+- ⌨️ Keyboard shortcuts (press `?` for help)
+- 🖼️ Full-screen detail view with arrow key navigation
+- ❓ Help system overlay
+- 🚀 Enhanced metadata parsing (ComfyUI, Civitai, A1111)
+- 📈 Statistics dashboard
+- 📱 Multiple view modes (Grid, List, Statistics)
+
+**❌ Not Available in Firefox Edition:**
+- File/folder creation
+- Drag-and-drop file moving
+- Direct file deletion
+- Metadata fixing/saving (requires File System Access API)
+
+**Usage:** Open `apps/Guru Universal Node Version 3.3.html` in Firefox, click "Load Folder" to select your image directory.
 
 ## 🔧 Technical Details
 
@@ -97,6 +133,18 @@ History Guru v4 uses a hybrid engine:
 * **IndexedDB Caching:** Metadata is cached for instant subsequent loads
 * **Debounced Events:** Scroll and resize events are optimized for performance
 * **Lazy Image Loading:** Images load on-demand as you scroll
+
+## 📁 Project Structure
+
+Files are organized into folders:
+- `apps/` - Main HTML applications
+- `tools/` - AI development tools (Python scripts)
+- `docs/` - Documentation files
+- `data/` - Reference databases (JSON)
+- `test-data/` - Test images
+- `backup/` - Automatic backups
+
+See `INDEX.md` for a complete file index.
 
 ## 🤝 Contributing
 

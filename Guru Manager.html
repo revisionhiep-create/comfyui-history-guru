@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>History Guru v6.7 (Move Fixed)</title>
+<style>
+:root{--bg:#09090b;--head:rgba(9,9,11,0.98);--side:#0c0c0e;--card:#18181b;--bd:#27272a;--acc:#8b5cf6;--txt:#e4e4e7;--mut:#a1a1aa}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+header{height:60px;border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 20px;background:var(--head);gap:16px;z-index:50}
+h1{font-size:1.1rem;font-weight:800;margin:0;white-space:nowrap}h1 span{color:var(--acc)}
+.s-box{flex:1;max-width:500px;position:relative}.s-in{width:100%;background:#121214;border:1px solid var(--bd);color:var(--txt);padding:8px 12px 8px 36px;border-radius:8px;outline:none}
+.s-in:focus{border-color:var(--acc)}.btn{background:var(--acc);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-weight:600;cursor:pointer;font-size:0.85rem}
+.btn-icon{padding:8px;background:transparent;border:1px solid var(--bd);color:var(--mut);border-radius:6px;cursor:pointer;display:flex}.btn-icon.active{background:var(--card);border-color:var(--acc);color:#fff}
+.layout{display:flex;flex:1;overflow:hidden;position:relative}
+.sidebar{width:240px;background:var(--side);border-right:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;transition:margin-left 0.2s}
+.sidebar.collapsed{margin-left:-240px}.tree{flex:1;overflow-y:auto;padding:8px 0}
+.folder{padding:6px 16px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--mut);white-space:nowrap;overflow:hidden;border:1px solid transparent}
+.folder:hover{background:#27272a;color:var(--txt)}.folder.active{background:#3f3f46;color:#fff;border-left:3px solid var(--acc)}
+.folder.drag-over{background:rgba(139,92,246,0.2);border-color:var(--acc);color:#fff}
+.stage{flex:1;position:relative;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.toolbar{padding:8px 20px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;font-size:0.85rem}
+.grid-scroll{flex:1;overflow-y:auto;padding:20px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;padding-bottom:100px}
+.card{aspect-ratio:1;background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden;cursor:pointer;position:relative}
+.card:hover{border-color:var(--acc);transform:translateY(-4px)}.card img,.card video{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.list-head{display:grid;grid-template-columns:50px 3fr 2fr 1.5fr 1fr;gap:12px;padding:10px 16px;border-bottom:1px solid var(--bd);font-size:0.75rem;color:var(--mut);font-weight:700;position:sticky;top:0;background:var(--bg);z-index:10}
+.list-row{display:grid;grid-template-columns:50px 3fr 2fr 1.5fr 1fr;gap:12px;padding:6px 16px;border-bottom:1px solid #1f1f22;align-items:center;font-size:0.85rem;cursor:pointer;height:48px}
+.list-row:hover{background:#27272a}.list-img{width:32px;height:32px;border-radius:4px;object-fit:cover;background:#000}
+.detail-layer{position:absolute;inset:0;background:#000;z-index:2000;display:flex;flex-direction:column;visibility:hidden;opacity:0;transition:opacity 0.2s}
+.detail-layer.active{visibility:visible;opacity:1}
+.detail-mid{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:#09090b}
+.detail-media{max-width:100%;max-height:100%;object-fit:contain;box-shadow:0 0 50px rgba(0,0,0,0.5)}
+.nav-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;width:50px;height:50px;border-radius:50%;cursor:pointer;font-size:1.5rem;display:flex;align-items:center;justify-content:center;z-index:2010}
+.nav-btn:hover{background:var(--acc)}.nav-prev{left:20px}.nav-next{right:20px}
+.back-pill{position:absolute;top:20px;left:20px;background:rgba(0,0,0,0.6);color:#fff;padding:8px 16px;border-radius:20px;cursor:pointer;border:1px solid rgba(255,255,255,0.2);z-index:2010}
+.inspector{width:400px;background:var(--side);border-left:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;z-index:95;transition:transform 0.3s}
+body.mode-grid .inspector{position:fixed;right:0;top:60px;bottom:0;transform:translateX(100%)} body.mode-grid .inspector.open{transform:translateX(0)}
+body.mode-detail .inspector{position:relative;transform:none;border-left:1px solid #333}
+.insp-head{height:60px;padding:0 20px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;background:var(--head);flex-shrink:0}
+.insp-scroll{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.stats-box{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat-cell{background:#121214;border:1px solid var(--bd);padding:8px;border-radius:8px}
+.lbl{font-size:0.65rem;color:var(--mut);font-weight:700;text-transform:uppercase;display:block;margin-bottom:4px}
+.val{width:100%;background:transparent;border:none;color:#fff;font-family:monospace;font-size:0.8rem;outline:none}
+.prompt-area{background:#121214;border:1px solid var(--bd);border-radius:8px;padding:12px;font-family:monospace;font-size:0.8rem;line-height:1.5;color:#d4d4d8;width:100%;min-height:100px;resize:vertical;outline:none}
+.chip{font-size:0.75rem;padding:4px 10px;border-radius:6px;background:rgba(139,92,246,0.15);color:#c4b5fd;border:1px solid rgba(139,92,246,0.3);display:inline-block;margin:2px}
+.bot-bar{display:flex;gap:10px}.btn-full{flex:1;padding:12px;border-radius:8px;background:#27272a;color:#fff;border:none;cursor:pointer;font-weight:600}.btn-pri{background:var(--acc)}
+.overlay{position:fixed;inset:0;background:rgba(9,9,11,0.95);z-index:3000;display:flex;flex-direction:column;align-items:center;justify-content:center}.hidden{display:none}
+.spin{width:40px;height:40px;border:4px solid #333;border-top-color:var(--acc);border-radius:50%;animation:s 1s linear infinite;margin-bottom:20px}@keyframes s{to{transform:rotate(360deg)}}
+body.mode-detail .folder-sidebar,body.mode-detail .toolbar{display:none} body.mode-grid .detail-layer{display:none}
+</style>
+</head>
+<body class="mode-grid">
+<header>
+    <h1>History<span>Guru</span> <span class="version">v6.7</span></h1>
+    <div class="s-box"><input type="text" id="sIn" class="s-in" placeholder="Search..."></div>
+    <button class="btn" onclick="initFileSystem()">Open Folder</button>
+    <button class="btn" style="background:transparent;border:1px solid #333" onclick="fullRescan()">↻</button>
+    <div style="width:1px;height:24px;background:#333"></div>
+    <button id="bGrid" class="btn-icon active" onclick="setView('grid')">▦</button>
+    <button id="bList" class="btn-icon" onclick="setView('list')">☰</button>
+</header>
+<div class="layout">
+    <aside id="sidebar" class="sidebar">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;color:var(--mut);font-weight:700;font-size:0.75rem"><span>DIRECTORIES</span><span style="cursor:pointer;font-size:1.2rem" onclick="mkDir()">+</span></div>
+        <div id="tree" class="tree"></div>
+    </aside>
+    <div class="stage">
+        <div id="gridToolbar" class="toolbar"><div id="pathDisplay">Root</div><span id="fCount" style="color:var(--mut)">0 items</span></div>
+        <div class="grid-scroll"><div id="grid" class="grid"></div></div>
+        <div id="detailView" class="detail-layer">
+            <button class="back-pill" onclick="exitDetail()">← Back (Esc)</button>
+            <div class="detail-mid">
+                <button class="nav-btn nav-prev" onclick="nav(-1)">‹</button>
+                <div id="mediaCon" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center"></div>
+                <button class="nav-btn nav-next" onclick="nav(1)">›</button>
+            </div>
+        </div>
+    </div>
+    <aside id="inspector" class="inspector">
+        <div class="insp-head">
+            <div><span class="lbl">METADATA</span><div id="mFile" style="font-family:monospace;font-size:0.85rem">filename.png</div></div>
+            <button onclick="togInsp(false)" style="background:none;border:none;color:#fff;cursor:pointer">✕</button>
+        </div>
+        <div class="insp-scroll">
+            <div class="stats-box">
+                <div class="stat-cell"><span class="lbl">Model</span><input id="mModel" class="val" placeholder="?"></div>
+                <div class="stat-cell"><span class="lbl">Size</span><input id="mSize" class="val" placeholder="?"></div>
+                <div class="stat-cell"><span class="lbl">Sampler</span><input id="mSamp" class="val" placeholder="?"></div>
+                <div class="stat-cell"><span class="lbl">Seed</span><input id="mSeed" class="val" placeholder="?"></div>
+                <div class="stat-cell"><span class="lbl">Steps</span><input id="mSteps" class="val" placeholder="?"></div>
+                <div class="stat-cell"><span class="lbl">CFG</span><input id="mCfg" class="val" placeholder="?"></div>
+            </div>
+            <div><span class="lbl" style="color:#4ade80">Positive</span><textarea id="mPos" class="prompt-area" spellcheck="false"></textarea></div>
+            <div><span class="lbl" style="color:#f87171">Negative</span><textarea id="mNeg" class="prompt-area" spellcheck="false"></textarea></div>
+            <div><span class="lbl">Resources</span><div id="mRes"></div></div>
+            <div class="bot-bar"><button class="btn-full" onclick="saveJSON()">JSON</button><button class="btn-full btn-pri" onclick="fixSave()">Fix & Save</button></div>
+        </div>
+    </aside>
+</div>
+<div id="load" class="overlay hidden"><div class="spin"></div><h3>Processing...</h3></div>
+<div id="wel" class="overlay"><h2>History Guru v6.7</h2><p style="color:#888;margin-bottom:20px">Move & Sort Enabled</p><button class="btn" onclick="initFileSystem()">Open Folder</button></div>
+
+<script>
+// STATE
+let rH=null,db=null,cache=new Map(),fReg=new Map(),dReg=new Map();
+let cDir=null,cFiles=[],vMode='grid',aIdx=-1,cItem=null;
+const DB="GuruV67", LR=/<lora:([^:>]+)(?::([^:>]+))?(?::([^:>]+))?>/g;
+
+// DB
+const iDB=()=>new Promise((r,j)=>{const q=indexedDB.open(DB,1);q.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains("i"))e.target.result.createObjectStore("i",{keyPath:"p"})};q.onsuccess=e=>{db=e.target.result;r()};q.onerror=j});
+const dPut=i=>new Promise(r=>{const t=db.transaction("i","readwrite");t.objectStore("i").put(i);t.oncomplete=r});
+const dDel=k=>new Promise(r=>{const t=db.transaction("i","readwrite");t.objectStore("i").delete(k);t.oncomplete=r});
+const dAll=()=>new Promise(r=>{const t=db.transaction("i","readonly");t.objectStore("i").getAll().onsuccess=e=>{e.target.result.forEach(x=>cache.set(x.p,x));r()}});
+
+// FS
+async function initFileSystem(){try{rH=await window.showDirectoryPicker({mode:"readwrite"});document.getElementById('wel').classList.add('hidden');document.getElementById('load').classList.remove('hidden');await iDB();await fullScan();}catch(e){alert("Access denied.")}}
+async function fullScan(){document.getElementById('load').classList.remove('hidden');cache.clear();fReg.clear();dReg.clear();dReg.set('',rH);await dAll();await scD(rH,"");rTree();opD(rH,"");document.getElementById('load').classList.add('hidden')}
+async function scD(h,p){for await(const e of h.values()){const ep=p?`${p}/${e.name}`:e.name;if(e.kind==='directory'){dReg.set(ep,e);await scD(e,ep)}else if(/\.(png|jpg|jpeg|webp|mp4|webm)$/i.test(e.name)){fReg.set(ep,e);if(!cache.has(ep))await proc(e,ep)}}}
+
+// --- BRAIN (Stable v3.3) ---
+async function decompressZlib(data) {try {const ds = new DecompressionStream('deflate-raw'); const writer = ds.writable.getWriter(); writer.write(data.slice(2, data.length - 4)); writer.close(); return new TextDecoder().decode(await new Response(ds.readable).arrayBuffer());} catch (e) {try {const ds = new DecompressionStream('deflate'); const writer = ds.writable.getWriter(); writer.write(data); writer.close(); return new TextDecoder().decode(await new Response(ds.readable).arrayBuffer());} catch(e2) { return null; }}}
+async function extractText(buffer) {const view = new DataView(buffer); let fullText = ""; if (view.getUint32(0) === 0x89504E47) {let offset = 8; while (offset < view.byteLength) {if (offset + 4 > view.byteLength) break; const len = view.getUint32(offset); const type = String.fromCharCode(...new Uint8Array(buffer, offset + 4, 4)); if (offset + 8 + len > view.byteLength) break; const data = new Uint8Array(buffer, offset + 8, len); if (type === 'tEXt' || type === 'iTXt') fullText += new TextDecoder().decode(data).replace(/\0/g, '') + "\n"; else if (type === 'zTXt') { const inflated = await decompressZlib(data); if (inflated) fullText += inflated + "\n"; } offset += len + 12; if (type === 'IEND') break;}} else if (view.getUint32(0) === 0x52494646 || view.getUint16(0) === 0xFFD8) fullText = new TextDecoder().decode(new Uint8Array(buffer)); return fullText;}
+function parseMetadata(text) {function extractJSON(str) {const start = str.indexOf('{'); if (start === -1) return null; let count = 0, end = -1; for (let i = start; i < str.length; i++) { if (str[i] === '{') count++; else if (str[i] === '}') count--; if (count === 0) { end = i; break; } } if (end !== -1) try { return JSON.parse(str.substring(start, end + 1)); } catch(e) { return null; } return null;} if (text.includes('"class_type"') && text.includes('"inputs"')) { const json = extractJSON(text); if (json) return parseComfy(json); } return parseA1111(text);}
+function parseComfy(json) {let pos = "", neg = "", meta = { model: "?", size: "?", seed: "?", steps: "?", cfg: "?", sampler: "?" }, resources = []; const nodes = Object.values(json); const findUpstreamText = (link, depth = 0) => {if (depth > 10 || !link || !Array.isArray(link)) return ""; const node = json[link[0]]; if (!node || !node.inputs) return ""; if (typeof node.inputs.text === 'string') return node.inputs.text; if (typeof node.inputs.text_g === 'string') return node.inputs.text_g; if (typeof node.inputs.text_l === 'string') return node.inputs.text_l; if (node.inputs.string_field) return node.inputs.string_field; const keys = ['positive', 'negative', 'conditioning', 'clip', 'prompt']; for (const key of keys) if (node.inputs[key]) { const res = findUpstreamText(node.inputs[key], depth + 1); if (res) return res; } return "";}; const findUpstreamModel = (link, depth = 0) => {if (depth > 10 || !link || !Array.isArray(link)) return ""; const node = json[link[0]]; if (!node || !node.inputs) return ""; if (node.inputs.ckpt_name) return node.inputs.ckpt_name; if (node.inputs.unet_name) return node.inputs.unet_name; if (node.inputs.model) return findUpstreamModel(node.inputs.model, depth + 1); return "";}; const ksampler = nodes.find(n => n.class_type && (n.class_type.includes("KSampler") || n.class_type === "SamplerCustom")); if (ksampler && ksampler.inputs) {meta.seed = ksampler.inputs.seed || ksampler.inputs.noise_seed || "?"; meta.steps = ksampler.inputs.steps || "?"; meta.cfg = ksampler.inputs.cfg || "?"; meta.sampler = ksampler.inputs.sampler_name || "?"; if(ksampler.inputs.scheduler) meta.sampler += " " + ksampler.inputs.scheduler; pos = findUpstreamText(ksampler.inputs.positive); neg = findUpstreamText(ksampler.inputs.negative); if (ksampler.inputs.model) meta.model = findUpstreamModel(ksampler.inputs.model).replace(/\.(safetensors|ckpt)$/, "");} nodes.forEach(n => {if (n.inputs && n.inputs.lora_name) resources.push({ type: 'LoRA', name: n.inputs.lora_name.replace(/\.(safetensors|ckpt)$/, "") }); if (n.class_type && n.class_type.includes("Power Lora Loader")) for (const [key, val] of Object.entries(n.inputs)) if (key.startsWith('lora_') && val?.on) resources.push({ type: 'LoRA', name: val.lora.replace(/\.(safetensors|ckpt)$/, "") }); if (n.inputs && n.inputs.loras && Array.isArray(n.inputs.loras.__value__)) n.inputs.loras.__value__.forEach(l => { if(l.name && l.active !== false) resources.push({ type: 'LoRA', name: l.name }) });}); const sizeNode = nodes.find(n => n.class_type == "EmptyLatentImage"); if (sizeNode?.inputs) meta.size = `${sizeNode.inputs.width}x${sizeNode.inputs.height}`; return { pos, neg, meta, resources };}
+function parseA1111(text) {let pos="", neg="", resources=[], meta={model:"?",seed:"?",steps:"?",cfg:"?",sampler:"?",size:"?"}, match; LR.lastIndex = 0; while ((match = LR.exec(text)) !== null) resources.push({ type: 'LoRA', name: match[1] }); const negIdx = text.indexOf("Negative prompt:"); const stepsIdx = text.indexOf("Steps:"); if (negIdx !== -1 && stepsIdx !== -1) { pos = text.substring(0, negIdx).replace(/parameters\s*/i, "").trim(); neg = text.substring(negIdx + 16, stepsIdx).trim(); } else if (stepsIdx !== -1) pos = text.substring(0, stepsIdx).trim(); if (stepsIdx !== -1) { const b = text.substring(stepsIdx); const get = k => { const m = b.match(new RegExp(`${k}:\\s*([^,]+)`)); return m ? m[1].trim() : "?"; }; meta.steps = get("Steps"); meta.sampler = get("Sampler"); meta.cfg = get("CFG scale"); meta.seed = get("Seed"); meta.size = get("Size"); meta.model = get("Model"); } return { pos, neg, resources, meta };}
+
+// --- LOGIC ---
+async function proc(h,p){try{const f=await h.getFile(),vid=/\.(mp4|webm)$/i.test(f.name);let m=null;if(vid)m={meta:{model:"Video",size:(f.size/1e6).toFixed(1)+"MB"},resources:[]};else{const b=await f.arrayBuffer(),t=await extractText(b);m=parseMetadata(t)}const i={p,n:f.name,d:f.lastModified,m,v:vid};cache.set(p,i);dPut(i)}catch{}}
+
+function setView(m){vMode=m;document.getElementById('bGrid').classList.toggle('active',m==='grid');document.getElementById('bList').classList.toggle('active',m==='list');rend()}
+function rTree(){const c=document.getElementById('tree');c.innerHTML='';const a=document.createElement('div');a.className='folder active';a.innerText='📁 All Files';a.ondragover=e=>{e.preventDefault();a.classList.add('drag-over')};a.ondragleave=()=>a.classList.remove('drag-over');a.ondrop=e=>{e.preventDefault();a.classList.remove('drag-over');moveFile(e.dataTransfer.getData("text"),"")};a.onclick=()=>{document.querySelectorAll('.folder').forEach(e=>e.classList.remove('active'));a.classList.add('active');opD(null,"")};c.appendChild(a);[...dReg.keys()].sort().forEach(p=>{if(!p)return;const d=document.createElement('div');d.className='folder';d.innerText="📁 "+p.split('/').pop();d.style.paddingLeft=(p.split('/').length*16)+'px';d.ondragover=e=>{e.preventDefault();d.classList.add('drag-over')};d.ondragleave=()=>d.classList.remove('drag-over');d.ondrop=e=>{e.preventDefault();d.classList.remove('drag-over');moveFile(e.dataTransfer.getData("text"),p)};d.onclick=()=>{document.querySelectorAll('.folder').forEach(e=>e.classList.remove('active'));d.classList.add('active');opD(dReg.get(p),p)};c.appendChild(d)})}
+function opD(h,p){cDir=h;document.getElementById('pathDisplay').innerText=p||"All Files";cFiles=[];for(const [fp,fh] of fReg.entries()){const par=fp.includes('/')?fp.substring(0,fp.lastIndexOf('/')):"";if(!h||par===p)cFiles.push({p:fp,h:fh,d:(cache.get(fp)||{}).d||0})}cFiles.sort((a,b)=>b.d-a.d);rend()}
+
+function rend(){
+    const c=document.getElementById('grid');c.innerHTML='';c.className=vMode==='grid'?'grid':'list-view';document.getElementById('fCount').innerText=`${cFiles.length} items`;
+    if(vMode==='list'){const h=document.createElement('div');h.className='list-head';h.innerHTML=`<div></div><div>Name</div><div>Model</div><div>Sampler</div><div>Seed</div>`;c.appendChild(h)}
+    cFiles.slice(0,100).forEach((f,i)=>{
+        const mt=cache.get(f.p)||{},mm=(mt.m&&mt.m.meta)?mt.m.meta:{},div=document.createElement('div');
+        div.draggable=true;
+        div.ondragstart=e=>{e.dataTransfer.setData("text",f.p);e.dataTransfer.effectAllowed="move"};
+        if(vMode==='grid'){div.className='card';div.innerHTML=mt.v?`<video></video>`:`<img>`;f.h.getFile().then(x=>{div.querySelector(mt.v?'video':'img').src=URL.createObjectURL(x)})}
+        else{div.className='list-row';const tag=mt.v?'video':'img';div.innerHTML=`<${tag} class="list-img"></${tag}><div>${f.h.name}</div><div>${mm.model||""}</div><div>${mm.sampler||""}</div><div>${mm.seed||""}</div>`;f.h.getFile().then(x=>div.querySelector(tag).src=URL.createObjectURL(x))}
+        div.onclick=()=>enterDet(i);c.appendChild(div)
+    })
+}
+
+// MOVE ENGINE
+async function moveFile(srcPath, destFolder){
+    if(!srcPath || srcPath===destFolder) return;
+    const fName = srcPath.split('/').pop();
+    const newPath = destFolder ? `${destFolder}/${fName}` : fName;
+    if(srcPath === newPath) return;
+    try {
+        const srcHandle = fReg.get(srcPath);
+        const file = await srcHandle.getFile();
+        const destHandle = dReg.get(destFolder) || rH;
+        const newFileHandle = await destHandle.getFileHandle(fName, { create: true });
+        const writable = await newFileHandle.createWritable();
+        await writable.write(file);
+        await writable.close();
+        // Remove Old
+        const srcParent = srcPath.includes('/') ? srcPath.substring(0, srcPath.lastIndexOf('/')) : "";
+        const srcParentHandle = dReg.get(srcParent) || rH;
+        await srcParentHandle.removeEntry(fName);
+        // Update State
+        const meta = cache.get(srcPath);
+        cache.delete(srcPath); fReg.delete(srcPath); await dDel(srcPath);
+        fReg.set(newPath, newFileHandle);
+        const newItem = { ...meta, p: newPath };
+        cache.set(newPath, newItem); await dPut(newItem);
+        alert(`Moved to ${destFolder||"Root"}`);
+        opD(cDir, document.getElementById('pathDisplay').innerText);
+    } catch(e) { console.error(e); alert("Move failed: "+e.message); }
+}
+
+async function enterDet(i){aIdx=i;document.body.className='mode-detail';document.getElementById('detailView').classList.add('active');document.getElementById('sidebar').classList.add('collapsed');upDet()}
+function exitDetail(){document.body.className='mode-grid';document.getElementById('detailView').classList.remove('active');document.getElementById('sidebar').classList.remove('collapsed');document.getElementById('inspector').classList.remove('open')}
+function togInsp(f){const i=document.getElementById('inspector');if(f!==undefined)i.classList.toggle('open',f);else i.classList.toggle('open')}
+async function upDet(){
+    if(aIdx<0||aIdx>=cFiles.length)return;
+    const f=cFiles[aIdx],mt=cache.get(f.p);cItem=f;
+    const con=document.getElementById('mediaCon');con.innerHTML='';
+    const fl=await f.h.getFile(),u=URL.createObjectURL(fl),el=document.createElement(mt.v?'video':'img');
+    el.src=u;el.className='detail-media';if(mt.v){el.controls=true;el.autoplay=true}con.appendChild(el);
+    pop(f,mt);
+}
+function pop(f,mt){
+    document.getElementById('mFile').innerText=f.h.name;
+    const m=(mt.m&&mt.m.meta)?mt.m.meta:(mt.m||{}),r=mt.m||{};
+    const set=(i,v)=>document.getElementById(i).value=v||"";
+    set('mModel',m.model);set('mSize',m.size);set('mSamp',m.sampler);set('mSeed',m.seed);set('mSteps',m.steps);set('mCfg',m.cfg);set('mPos',r.pos);set('mNeg',r.neg);
+    const b=document.getElementById('mRes');b.innerHTML='';if(r.resources)r.resources.forEach(x=>{const s=document.createElement('span');s.className='chip';s.innerText=x.name;b.appendChild(s)});
+    if(document.body.classList.contains('mode-grid'))togInsp(true);
+}
+function nav(d){const n=aIdx+d;if(n>=0&&n<cFiles.length){aIdx=n;upDet()}}
+document.addEventListener('keydown',e=>{if(document.body.classList.contains('mode-detail')){if(e.key==='ArrowRight')nav(1);if(e.key==='ArrowLeft')nav(-1);if(e.key==='Escape')exitDetail()}});
+
+const crT=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?(0xedb88320^(c>>>1)):(c>>>1);crT[n]=c}
+const cr32=b=>{let c=0xffffffff;for(let i=0;i<b.length;i++)c=crT[(c^b[i])&0xff]^(c>>>8);return c^0xffffffff};
+async function fixSave(){
+    if(!cItem)return;
+    const pos=document.getElementById('mPos').value.replace(/\n/g," "),neg=document.getElementById('mNeg').value.replace(/\n/g," ");
+    const txt=`${pos}\nNegative prompt: ${neg}\nSteps: ${document.getElementById('mSteps').value}, Sampler: ${document.getElementById('mSamp').value}, CFG scale: ${document.getElementById('mCfg').value}, Seed: ${document.getElementById('mSeed').value}, Size: ${document.getElementById('mSize').value}, Model: ${document.getElementById('mModel').value}`;
+    try{
+        const f=await cItem.h.getFile();let b=await f.arrayBuffer(),v=new DataView(b.slice(0,8));
+        if(!(v.getUint32(0)===0x89504E47&&v.getUint32(4)===0x0D0A1A0A)){const i=new Image();i.src=URL.createObjectURL(f);await new Promise(r=>i.onload=r);const c=document.createElement('canvas');c.width=i.width;c.height=i.height;c.getContext('2d').drawImage(i,0,0);b=await new Promise(r=>c.toBlob(z=>z.arrayBuffer().then(r),'image/png'))}
+        const ch=[];let o=8;v=new DataView(b);ch.push(b.slice(0,8));
+        while(o<b.byteLength){const l=v.getUint32(o),ty=String.fromCharCode(...new Uint8Array(b,o+4,4)),sz=12+l;if(o+sz>b.byteLength||ty==='IEND')break;let kp=true;if(ty==='tEXt'||ty==='iTXt'){const kw=new Uint8Array(b,o+8,Math.min(l,20));let s="";for(let k=0;k<kw.length;k++){if(kw[k]===0)break;s+=String.fromCharCode(kw[k])}if(["parameters","prompt","workflow","ComfyUI"].includes(s))kp=false}if(kp)ch.push(b.slice(o,o+sz));o+=sz}
+        const enc=new TextEncoder(),k=enc.encode("parameters\0"),val=enc.encode(txt),dt=new Uint8Array(k.length+val.length);dt.set(k);dt.set(val,k.length);
+        const ln=dt.length,tp=enc.encode("tEXt"),cd=new Uint8Array(4+ln);cd.set(tp);cd.set(dt,4);
+        const fc=new Uint8Array(12+ln),fv=new DataView(fc.buffer);fv.setUint32(0,ln);fc.set(tp,4);fc.set(dt,8);fv.setUint32(8+ln,cr32(cd));
+        ch.push(fc);ch.push(new Uint8Array([0,0,0,0,0x49,0x45,0x4E,0x44,0xAE,0x42,0x60,0x82]));
+        const nn="fixed_"+f.name.replace(/\.[^/.]+$/,".png"),par=cItem.p.includes('/')?cItem.p.substring(0,cItem.p.lastIndexOf('/')):"";
+        const d=dReg.get(par)||rH,nh=await d.getFileHandle(nn,{create:true}),w=await nh.createWritable();
+        await w.write(new Blob(ch,{type:'image/png'}));await w.close();
+        const np=par?`${par}/${nn}`:nn;fReg.set(np,nh);await proc(nh,np);alert("Saved!");opD(cDir,document.getElementById('pathDisplay').innerText);
+    }catch(e){console.error(e);alert("Error: "+e.message)}
+}
+async function mkDir(){const n=prompt("Name");if(n&&cDir){await cDir.getDirectoryHandle(n,{create:true});await fullScan()}}
+function saveJSON(){if(!cItem)return;const d={filename:document.getElementById('mFile').innerText,positive:document.getElementById('mPos').value,negative:document.getElementById('mNeg').value,meta:{model:document.getElementById('mModel').value,seed:document.getElementById('mSeed').value}};const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=d.filename+".json";a.click()}
+document.getElementById('sIn').addEventListener('input',async e=>{const t=e.target.value.toLowerCase(),a=[];for(const[p,v]of cache){if((v.name+JSON.stringify(v.m)).toLowerCase().includes(t))a.push({p,h:fReg.get(p),d:v.d})}cFiles=a;rend()});
+</script></body></html>

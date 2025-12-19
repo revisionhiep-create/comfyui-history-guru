@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>History Guru Universal Node v3 (Editor)</title>
+    <title>History Guru Universal Node v3.1 (Auto-Convert)</title>
     <style>
         :root {
             --bg: #09090b;
@@ -484,6 +484,56 @@
                 if (foundModel) meta.model = foundModel.replace(/\.(safetensors|ckpt)$/, "");
             }
 
+            // Universal Resource Scanner (including Power Lora)
+            nodes.forEach(n => {
+                // Standard
+                if (n.inputs && n.inputs.lora_name && typeof n.inputs.lora_name === 'string') {
+                    const name = n.inputs.lora_name.replace(/\.(safetensors|ckpt)$/, "");
+                    const str = n.inputs.strength_model || 1.0;
+                    resources.push({ type: 'LoRA', name: name, str: str });
+                }
+                // LoraManager
+                if (n.inputs && n.inputs.loras && n.inputs.loras.__value__) {
+                    const loras = n.inputs.loras.__value__;
+                    if (Array.isArray(loras)) {
+                        loras.forEach(l => {
+                            if(l.name && l.active !== false) {
+                                resources.push({ type: 'LoRA', name: l.name, str: l.strength || 1.0 });
+                            }
+                        });
+                    }
+                }
+                // Power Lora Loader
+                if (n.class_type && n.class_type.includes("Power Lora Loader")) {
+                    for (const [key, val] of Object.entries(n.inputs)) {
+                        if (key.startsWith('lora_') && typeof val === 'object' && val !== null) {
+                            if (val.on && val.lora) {
+                                resources.push({ 
+                                    type: 'LoRA', 
+                                    name: val.lora.replace(/\.(safetensors|ckpt)$/, ""), 
+                                    str: val.strength || 1.0 
+                                });
+                            }
+                        }
+                    }
+                }
+                // Text tags
+                if (n.inputs) {
+                    for (const [key, val] of Object.entries(n.inputs)) {
+                        if (typeof val === 'string' && val.includes('<lora:')) {
+                            let match;
+                            LORA_REGEX.lastIndex = 0;
+                            while ((match = LORA_REGEX.exec(val)) !== null) {
+                                const name = match[1];
+                                if (!resources.some(r => r.name === name)) {
+                                    resources.push({ type: 'LoRA', name: name, str: match[2] || "1.0" });
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
             const sizeNode = nodes.find(n => n.class_type == "EmptyLatentImage");
             if (sizeNode && sizeNode.inputs) {
                 meta.size = `${sizeNode.inputs.width}x${sizeNode.inputs.height}`;
@@ -496,6 +546,12 @@
             let pos = "", neg = "";
             let resources = [];
             let meta = { model: "?", size: "?", seed: "?", steps: "?", cfg: "?", sampler: "?" };
+
+            let match;
+            LORA_REGEX.lastIndex = 0;
+            while ((match = LORA_REGEX.exec(text)) !== null) {
+                resources.push({ type: 'LoRA', name: match[1], str: match[2] || "1.0" });
+            }
 
             const negMarker = "Negative prompt:";
             const stepsMarker = "Steps:";
@@ -585,13 +641,13 @@
             a.click();
         }
 
-        function fixAndDownloadImage() {
+        // --- UPDATED FIX & DOWNLOAD FUNCTION ---
+        async function fixAndDownloadImage() {
             if (!currentItem || !currentItem.buffer) {
                 alert("Original file data missing.");
                 return;
             }
 
-            // 1. Construct A1111 Style String
             const pos = document.getElementById('posPrompt').value.replace(/\n/g, "");
             const neg = document.getElementById('negPrompt').value.replace(/\n/g, "");
             const steps = document.getElementById('metaSteps').value;
@@ -603,9 +659,28 @@
 
             const parameters = `${pos}\nNegative prompt: ${neg}\nSteps: ${steps}, Sampler: ${sampler}, CFG scale: ${cfg}, Seed: ${seed}, Size: ${size}, Model: ${model}`;
 
-            // 2. Create PNG Text Chunk
+            // Check if conversion is needed (WebP/JPEG -> PNG)
+            let pngBuffer = currentItem.buffer;
+            const viewHeader = new DataView(pngBuffer.slice(0, 8));
+            const isPng = viewHeader.getUint32(0) === 0x89504E47 && viewHeader.getUint32(4) === 0x0D0A1A0A;
+
+            if (!isPng) {
+                const btn = document.querySelector('.action-btn.primary');
+                const oldText = btn.innerHTML;
+                btn.innerHTML = "⌛ Converting...";
+                
+                try {
+                    pngBuffer = await convertToPng(currentItem.url);
+                } catch(e) {
+                    alert("Failed to convert image to PNG: " + e.message);
+                    btn.innerHTML = oldText;
+                    return;
+                }
+                btn.innerHTML = oldText;
+            }
+
             const encoder = new TextEncoder();
-            const keyword = encoder.encode("parameters\0"); // Null separator
+            const keyword = encoder.encode("parameters\0"); 
             const content = encoder.encode(parameters);
             const chunkData = new Uint8Array(keyword.length + content.length);
             chunkData.set(keyword);
@@ -614,51 +689,82 @@
             const len = chunkData.length;
             const type = encoder.encode("tEXt");
             
-            // CRC Calculation (Type + Data)
             const crcData = new Uint8Array(type.length + chunkData.length);
             crcData.set(type);
             crcData.set(chunkData, type.length);
             const crc = crc32(crcData);
 
-            // Construct Final Chunk (Length + Type + Data + CRC)
             const fullChunk = new Uint8Array(4 + 4 + len + 4);
             const view = new DataView(fullChunk.buffer);
-            view.setUint32(0, len, false); // Length (Big Endian)
+            view.setUint32(0, len, false); 
             fullChunk.set(type, 4);
             fullChunk.set(chunkData, 8);
-            view.setUint32(8 + len, crc, false); // CRC
+            view.setUint32(8 + len, crc, false); 
 
-            // 3. Insert into Original Buffer
-            // We insert it right before IEND to be safe
-            const oldBytes = new Uint8Array(currentItem.buffer);
+            const oldBytes = new Uint8Array(pngBuffer);
             let iendPos = -1;
-            
-            // Simple linear search for IEND (which is 00 00 00 00 49 45 4E 44 ae 42 60 82)
-            // Searching for 'IEND' chars is usually enough for well-formed PNGs
-            for(let i = oldBytes.length - 12; i > 0; i--) {
-                if (oldBytes[i] === 0x49 && oldBytes[i+1] === 0x45 && oldBytes[i+2] === 0x4E && oldBytes[i+3] === 0x44) {
-                    iendPos = i - 4; // Start of IEND chunk (length field)
+
+            // Strict IEND search
+            const iendSignature = [0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82];
+            for (let i = oldBytes.length - 12; i > 0; i--) {
+                let match = true;
+                for(let j=0; j<12; j++) {
+                    if(oldBytes[i+j] !== iendSignature[j]) {
+                        match = false;
+                        break;
+                    }
+                }
+                if (match) {
+                    iendPos = i; 
                     break;
                 }
             }
 
+            // Fallback search
             if (iendPos === -1) {
-                alert("Could not find valid end of PNG. Cannot patch.");
+                for(let i = oldBytes.length - 8; i > 0; i--) {
+                    if (oldBytes[i] === 0x49 && oldBytes[i+1] === 0x45 && oldBytes[i+2] === 0x4E && oldBytes[i+3] === 0x44) {
+                        iendPos = i - 4; 
+                        break;
+                    }
+                }
+            }
+
+            if (iendPos === -1) {
+                alert("Error: Could not locate IEND chunk. This file might be corrupted.");
                 return;
             }
 
-            const newPng = new Uint8Array(iendPos + fullChunk.length + 12); // 12 = len(4)+IEND(4)+CRC(4)
+            const newPng = new Uint8Array(iendPos + fullChunk.length + 12); 
             newPng.set(oldBytes.slice(0, iendPos), 0);
             newPng.set(fullChunk, iendPos);
             newPng.set(oldBytes.slice(iendPos), iendPos + fullChunk.length);
 
-            // 4. Download
             const blob = new Blob([newPng], {type: "image/png"});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = "fixed_" + currentItem.file.name;
+            a.download = "fixed_" + currentItem.file.name.replace(/\.(webp|jpeg|jpg)$/i, ".png");
             a.click();
+        }
+
+        function convertToPng(imageUrl) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    canvas.toBlob((blob) => {
+                        if(!blob) reject(new Error("Canvas conversion failed"));
+                        blob.arrayBuffer().then(resolve).catch(reject);
+                    }, 'image/png');
+                };
+                img.onerror = reject;
+                img.src = imageUrl;
+            });
         }
     </script>
 </body>

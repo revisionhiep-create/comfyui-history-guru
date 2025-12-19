@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>History Guru v6.7 (Move Fixed)</title>
+<title>History Guru v6.8 (New Folder Fix)</title>
 <style>
 :root{--bg:#09090b;--head:rgba(9,9,11,0.98);--side:#0c0c0e;--card:#18181b;--bd:#27272a;--acc:#8b5cf6;--txt:#e4e4e7;--mut:#a1a1aa}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden}
@@ -50,7 +50,7 @@ body.mode-detail .folder-sidebar,body.mode-detail .toolbar{display:none} body.mo
 </head>
 <body class="mode-grid">
 <header>
-    <h1>History<span>Guru</span> <span class="version">v6.7</span></h1>
+    <h1>History<span>Guru</span> <span class="version">v6.8</span></h1>
     <div class="s-box"><input type="text" id="sIn" class="s-in" placeholder="Search..."></div>
     <button class="btn" onclick="initFileSystem()">Open Folder</button>
     <button class="btn" style="background:transparent;border:1px solid #333" onclick="fullRescan()">↻</button>
@@ -97,13 +97,13 @@ body.mode-detail .folder-sidebar,body.mode-detail .toolbar{display:none} body.mo
     </aside>
 </div>
 <div id="load" class="overlay hidden"><div class="spin"></div><h3>Processing...</h3></div>
-<div id="wel" class="overlay"><h2>History Guru v6.7</h2><p style="color:#888;margin-bottom:20px">Move & Sort Enabled</p><button class="btn" onclick="initFileSystem()">Open Folder</button></div>
+<div id="wel" class="overlay"><h2>History Guru v6.8</h2><p style="color:#888;margin-bottom:20px">New Folder Fix</p><button class="btn" onclick="initFileSystem()">Open Folder</button></div>
 
 <script>
 // STATE
 let rH=null,db=null,cache=new Map(),fReg=new Map(),dReg=new Map();
 let cDir=null,cFiles=[],vMode='grid',aIdx=-1,cItem=null;
-const DB="GuruV67", LR=/<lora:([^:>]+)(?::([^:>]+))?(?::([^:>]+))?>/g;
+const DB="GuruV68", LR=/<lora:([^:>]+)(?::([^:>]+))?(?::([^:>]+))?>/g;
 
 // DB
 const iDB=()=>new Promise((r,j)=>{const q=indexedDB.open(DB,1);q.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains("i"))e.target.result.createObjectStore("i",{keyPath:"p"})};q.onsuccess=e=>{db=e.target.result;r()};q.onerror=j});
@@ -157,11 +157,9 @@ async function moveFile(srcPath, destFolder){
         const writable = await newFileHandle.createWritable();
         await writable.write(file);
         await writable.close();
-        // Remove Old
         const srcParent = srcPath.includes('/') ? srcPath.substring(0, srcPath.lastIndexOf('/')) : "";
         const srcParentHandle = dReg.get(srcParent) || rH;
         await srcParentHandle.removeEntry(fName);
-        // Update State
         const meta = cache.get(srcPath);
         cache.delete(srcPath); fReg.delete(srcPath); await dDel(srcPath);
         fReg.set(newPath, newFileHandle);
@@ -215,7 +213,17 @@ async function fixSave(){
         const np=par?`${par}/${nn}`:nn;fReg.set(np,nh);await proc(nh,np);alert("Saved!");opD(cDir,document.getElementById('pathDisplay').innerText);
     }catch(e){console.error(e);alert("Error: "+e.message)}
 }
-async function mkDir(){const n=prompt("Name");if(n&&cDir){await cDir.getDirectoryHandle(n,{create:true});await fullScan()}}
+async function mkDir(){
+    if(!rH) return alert("Please open a folder first.");
+    const n=prompt("Name");
+    if(n){
+        try {
+            const target = cDir || rH; // Fix for root folder
+            await target.getDirectoryHandle(n,{create:true});
+            await fullScan();
+        } catch(e) { alert("Create failed: "+e.message); }
+    }
+}
 function saveJSON(){if(!cItem)return;const d={filename:document.getElementById('mFile').innerText,positive:document.getElementById('mPos').value,negative:document.getElementById('mNeg').value,meta:{model:document.getElementById('mModel').value,seed:document.getElementById('mSeed').value}};const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=d.filename+".json";a.click()}
 document.getElementById('sIn').addEventListener('input',async e=>{const t=e.target.value.toLowerCase(),a=[];for(const[p,v]of cache){if((v.name+JSON.stringify(v.m)).toLowerCase().includes(t))a.push({p,h:fReg.get(p),d:v.d})}cFiles=a;rend()});
 </script></body></html>

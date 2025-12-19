@@ -37,7 +37,7 @@ You can now **organize, sort, move, and fix** your AI generations without ever l
 
 ### For Chrome/Edge/Opera Users (Full Features)
 
-1.  **Download** the `apps/Guru Manager.html` file from this repository.
+1.  **Download** the `Guru Manager.html` file from the root directory of this repository.
 2.  **Open** the file in **Chrome, Edge, or Opera**.
 3.  Click **"Open Folder"** and select your ComfyUI/Output directory.
 4.  **Grant Permission:** Your browser will ask if the site can "View and Edit" files. You **must click "Edit"** (or Allow) for the file manager features to work.
@@ -46,7 +46,7 @@ You can now **organize, sort, move, and fix** your AI generations without ever l
 
 ### For Firefox Users (View-Only Mode)
 
-1.  **Download** the `apps/Guru Universal Node Version 3.3.html` file from this repository.
+1.  **Download** the `Guru Universal Node Version 3.3.html` file from the root directory of this repository.
 2.  **Open** the file in **Firefox**.
 3.  Click **"Load Folder"** and select your ComfyUI/Output directory.
 4.  **Browse:** Click images to view metadata in full-screen detail view. Use arrow keys to navigate between images.
@@ -79,12 +79,12 @@ Press `?` anytime to see the full list of shortcuts and features.
 | **Google Chrome** | ✅ **Supported** | Recommended - Full file management features |
 | **Microsoft Edge** | ✅ **Supported** | Recommended - Full file management features |
 | **Opera** | ✅ **Supported** | Works out of the box - Full file management features |
-| **Firefox** | ✅ **Supported (v3.3)** | Use `apps/Guru Universal Node Version 3.3.html` - View-only mode (no file operations) |
+| **Firefox** | ✅ **Supported (v3.3)** | Use `Guru Universal Node Version 3.3.html` - View-only mode (no file operations) |
 | **Safari** | ❌ **Not Supported** | Missing API support. |
 
 ### Firefox Edition (v3.3)
 
-The **Firefox Edition** (`apps/Guru Universal Node Version 3.3.html`) provides the same UI/UX experience as v4.0, but without file management features (since Firefox doesn't support the File System Access API).
+The **Firefox Edition** (`Guru Universal Node Version 3.3.html`) provides the same UI/UX experience as v4.0, but without file management features (since Firefox doesn't support the File System Access API).
 
 **✅ Available in Firefox Edition:**
 - ⭐ Favorites system with filter
@@ -104,7 +104,7 @@ The **Firefox Edition** (`apps/Guru Universal Node Version 3.3.html`) provides t
 - Direct file deletion
 - Metadata fixing/saving (requires File System Access API)
 
-**Usage:** Open `apps/Guru Universal Node Version 3.3.html` in Firefox, click "Load Folder" to select your image directory.
+**Usage:** Open `Guru Universal Node Version 3.3.html` in Firefox, click "Load Folder" to select your image directory.
 
 ## 🔧 Technical Details
 
@@ -137,7 +137,8 @@ History Guru v4 uses a hybrid engine:
 ## 📁 Project Structure
 
 Files are organized into folders:
-- `apps/` - Main HTML applications
+- Root directory - Main HTML applications (`Guru Manager.html`, `Guru Universal Node Version 3.3.html`)
+- `apps/` - Development copies and additional HTML files
 - `tools/` - AI development tools (Python scripts)
 - `docs/` - Documentation files
 - `data/` - Reference databases (JSON)

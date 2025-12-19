@@ -4,19 +4,21 @@ Quick reference guide to find everything in this project.
 
 ## 🚀 Applications (Main HTML Files)
 
-**Location:** `apps/`
+**Location:** Root directory (for Reddit links) and `apps/` (development copies)
 
 | File | Description | Browser Support |
 |------|-------------|-----------------|
 | `Guru Manager.html` | **Main application** - Full-featured file manager with File System Access API | Chrome, Edge, Opera |
 | `Guru Universal Node Version 3.3.html` | **Firefox version** - Same features, works without File System Access API | Firefox, Chrome, Edge, Opera |
-| `Guru Manager Original Code.html` | Original working version (reference/backup) | Chrome, Edge, Opera |
-| `index.html` | Legacy/alternative entry point | All browsers |
-| `test_guru_manager.html` | Testing/debugging tool for HTML validation | All browsers |
+| `apps/Guru Manager Original Code.html` | Original working version (reference/backup) | Chrome, Edge, Opera |
+| `apps/index.html` | Legacy/alternative entry point | All browsers |
+| `apps/test_guru_manager.html` | Testing/debugging tool for HTML validation | All browsers |
 
 **Quick Start:**
-- **Chrome/Edge users:** Use `apps/Guru Manager.html`
-- **Firefox users:** Use `apps/Guru Universal Node Version 3.3.html`
+- **Chrome/Edge users:** Use `Guru Manager.html` (root directory)
+- **Firefox users:** Use `Guru Universal Node Version 3.3.html` (root directory)
+
+**Note:** The main HTML files are in the root directory for easy linking. Development copies are also available in `apps/`.
 
 ---
 
@@ -99,8 +101,8 @@ Quick reference guide to find everything in this project.
 ## 🔍 Quick Find
 
 **Looking for:**
-- **Main app?** → `apps/Guru Manager.html`
-- **Firefox version?** → `apps/Guru Universal Node Version 3.3.html`
+- **Main app?** → `Guru Manager.html` (root directory)
+- **Firefox version?** → `Guru Universal Node Version 3.3.html` (root directory)
 - **Documentation?** → `docs/` or root `Readme.md`
 - **Quick start?** → `README_QUICK_START.md`
 - **File index?** → `INDEX.md` (this file)
@@ -142,8 +144,8 @@ If you have scripts or references to old file locations:
 
 | Old Location | New Location |
 |-------------|--------------|
-| `Guru Manager.html` | `apps/Guru Manager.html` |
-| `Guru Universal Node Version 3.3.html` | `apps/Guru Universal Node Version 3.3.html` |
+| `Guru Manager.html` | Root directory (main) or `apps/` (dev copy) |
+| `Guru Universal Node Version 3.3.html` | Root directory (main) or `apps/` (dev copy) |
 | `Guru Manager Original Code.html` | `apps/Guru Manager Original Code.html` |
 | `*.py` files | `tools/` |
 | `*.md` files (except Readme.md) | `docs/` |
@@ -158,11 +160,11 @@ If you have scripts or references to old file locations:
 **Usage Examples:**
 ```bash
 # From root directory:
-python tools/backup_file.py "apps/Guru Manager.html"
-python tools/test_guru_manager.py "apps/Guru Manager.html"
+python tools/backup_file.py "Guru Manager.html"
+python tools/test_guru_manager.py "Guru Manager.html"
 
 # Or from tools directory:
 cd tools
-python backup_file.py "../apps/Guru Manager.html"
-python test_guru_manager.py "../apps/Guru Manager.html"
+python backup_file.py "../Guru Manager.html"
+python test_guru_manager.py "../Guru Manager.html"
 ```

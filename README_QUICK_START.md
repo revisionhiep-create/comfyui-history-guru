@@ -2,13 +2,13 @@
 
 ## For Chrome/Edge/Opera Users
 
-1. Open `apps/Guru Manager.html` in your browser
+1. Open `Guru Manager.html` in your browser
 2. Click "Open Folder" and select your image folder
 3. Start organizing!
 
 ## For Firefox Users
 
-1. Open `apps/Guru Universal Node Version 3.3.html` in Firefox
+1. Open `Guru Universal Node Version 3.3.html` in Firefox
 2. Click "Load Folder" and select your image folder
 3. Enjoy the same features!
 

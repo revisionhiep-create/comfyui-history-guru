@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>History Guru Universal Node v3.1 (Auto-Convert)</title>
+    <title>History Guru Universal Node v3.2 (Restored LoRAs)</title>
     <style>
         :root {
             --bg: #09090b;
@@ -114,6 +114,14 @@
         }
         .prompt-text:focus { border-color: var(--accent); }
 
+        /* Chips */
+        .chips-container { display: flex; flex-wrap: wrap; gap: 8px; }
+        .chip { font-size: 0.75rem; padding: 6px 12px; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; border: 1px solid transparent; font-family: 'JetBrains Mono', monospace; }
+        .chip-lora { background: rgba(139, 92, 246, 0.1); color: #c4b5fd; border-color: rgba(139, 92, 246, 0.25); }
+        .chip-model { background: rgba(59, 130, 246, 0.1); color: #93c5fd; border-color: rgba(59, 130, 246, 0.25); }
+        .chip:hover { transform: translateY(-2px); filter: brightness(1.2); }
+        .strength-badge { background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.7em; }
+
         /* Tools */
         .tool-bar { display: flex; gap: 10px; padding-top: 20px; border-top: 1px solid var(--border); }
         .action-btn { 
@@ -200,6 +208,11 @@
                     <span class="prompt-label neg-label"><span class="dot"></span> Negative</span>
                 </div>
                 <textarea id="negPrompt" class="prompt-text" spellcheck="false"></textarea>
+            </div>
+
+            <div class="prompt-group">
+                <div class="prompt-header"><span class="prompt-label" style="color:#c4b5fd">Resources</span></div>
+                <div id="resourceTags" class="chips-container"></div>
             </div>
 
             <div class="tool-bar">
@@ -615,6 +628,21 @@
             document.getElementById('posPrompt').value = item.pos || "";
             document.getElementById('negPrompt').value = item.neg || "";
 
+            // RESTORED: Populate Resource Chips
+            const tagContainer = document.getElementById('resourceTags');
+            tagContainer.innerHTML = '';
+            item.resources.forEach(res => {
+                const chip = document.createElement('div');
+                chip.className = `chip ${res.type === 'Model' ? 'chip-model' : 'chip-lora'}`;
+                chip.innerHTML = `<span>${res.type}</span> ${res.name} <span class="strength-badge">${res.str || "1.0"}</span>`;
+                chip.onclick = () => {
+                    const search = document.getElementById('search');
+                    search.value = res.name;
+                    search.dispatchEvent(new Event('input'));
+                };
+                tagContainer.appendChild(chip);
+            });
+
             toggleSidebar(true);
         }
 
@@ -641,7 +669,6 @@
             a.click();
         }
 
-        // --- UPDATED FIX & DOWNLOAD FUNCTION ---
         async function fixAndDownloadImage() {
             if (!currentItem || !currentItem.buffer) {
                 alert("Original file data missing.");

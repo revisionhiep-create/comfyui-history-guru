@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>History Guru v6.8</title>
+<title>History Guru v6.10 (Tag Hunter)</title>
 <style>
 :root{--bg:#09090b;--head:rgba(9,9,11,0.98);--side:#0c0c0e;--card:#18181b;--bd:#27272a;--acc:#8b5cf6;--txt:#e4e4e7;--mut:#a1a1aa}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden}
@@ -50,7 +50,7 @@ body.mode-detail .folder-sidebar,body.mode-detail .toolbar{display:none} body.mo
 </head>
 <body class="mode-grid">
 <header>
-    <h1>History<span>Guru</span> <span class="version">v6.8</span></h1>
+    <h1>History<span>Guru</span> <span class="version">v6.10</span></h1>
     <div class="s-box"><input type="text" id="sIn" class="s-in" placeholder="Search..."></div>
     <button class="btn" onclick="initFileSystem()">Open Folder</button>
     <button class="btn" style="background:transparent;border:1px solid #333" onclick="fullRescan()">↻</button>
@@ -97,13 +97,13 @@ body.mode-detail .folder-sidebar,body.mode-detail .toolbar{display:none} body.mo
     </aside>
 </div>
 <div id="load" class="overlay hidden"><div class="spin"></div><h3>Processing...</h3></div>
-<div id="wel" class="overlay"><h2>History Guru v6.8</h2><p style="color:#888;margin-bottom:20px">Welcome Creator</p><button class="btn" onclick="initFileSystem()">Open Folder</button></div>
+<div id="wel" class="overlay"><h2>History Guru v6.10</h2><p style="color:#888;margin-bottom:20px">Deep Tag Fix</p><button class="btn" onclick="initFileSystem()">Open Folder</button></div>
 
 <script>
 // STATE
 let rH=null,db=null,cache=new Map(),fReg=new Map(),dReg=new Map();
 let cDir=null,cFiles=[],vMode='grid',aIdx=-1,cItem=null;
-const DB="GuruV68", LR=/<lora:([^:>]+)(?::([^:>]+))?(?::([^:>]+))?>/g;
+const DB="GuruV610", LR=/<lora:([^:>]+)(?::([^:>]+))?(?::([^:>]+))?>/g;
 
 // DB
 const iDB=()=>new Promise((r,j)=>{const q=indexedDB.open(DB,1);q.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains("i"))e.target.result.createObjectStore("i",{keyPath:"p"})};q.onsuccess=e=>{db=e.target.result;r()};q.onerror=j});
@@ -116,12 +116,60 @@ async function initFileSystem(){try{rH=await window.showDirectoryPicker({mode:"r
 async function fullScan(){document.getElementById('load').classList.remove('hidden');cache.clear();fReg.clear();dReg.clear();dReg.set('',rH);await dAll();await scD(rH,"");rTree();opD(rH,"");document.getElementById('load').classList.add('hidden')}
 async function scD(h,p){for await(const e of h.values()){const ep=p?`${p}/${e.name}`:e.name;if(e.kind==='directory'){dReg.set(ep,e);await scD(e,ep)}else if(/\.(png|jpg|jpeg|webp|mp4|webm)$/i.test(e.name)){fReg.set(ep,e);if(!cache.has(ep))await proc(e,ep)}}}
 
-// --- BRAIN (Stable v3.3) ---
+// --- BRAIN (Accumulative Fix) ---
 async function decompressZlib(data) {try {const ds = new DecompressionStream('deflate-raw'); const writer = ds.writable.getWriter(); writer.write(data.slice(2, data.length - 4)); writer.close(); return new TextDecoder().decode(await new Response(ds.readable).arrayBuffer());} catch (e) {try {const ds = new DecompressionStream('deflate'); const writer = ds.writable.getWriter(); writer.write(data); writer.close(); return new TextDecoder().decode(await new Response(ds.readable).arrayBuffer());} catch(e2) { return null; }}}
 async function extractText(buffer) {const view = new DataView(buffer); let fullText = ""; if (view.getUint32(0) === 0x89504E47) {let offset = 8; while (offset < view.byteLength) {if (offset + 4 > view.byteLength) break; const len = view.getUint32(offset); const type = String.fromCharCode(...new Uint8Array(buffer, offset + 4, 4)); if (offset + 8 + len > view.byteLength) break; const data = new Uint8Array(buffer, offset + 8, len); if (type === 'tEXt' || type === 'iTXt') fullText += new TextDecoder().decode(data).replace(/\0/g, '') + "\n"; else if (type === 'zTXt') { const inflated = await decompressZlib(data); if (inflated) fullText += inflated + "\n"; } offset += len + 12; if (type === 'IEND') break;}} else if (view.getUint32(0) === 0x52494646 || view.getUint16(0) === 0xFFD8) fullText = new TextDecoder().decode(new Uint8Array(buffer)); return fullText;}
 function parseMetadata(text) {function extractJSON(str) {const start = str.indexOf('{'); if (start === -1) return null; let count = 0, end = -1; for (let i = start; i < str.length; i++) { if (str[i] === '{') count++; else if (str[i] === '}') count--; if (count === 0) { end = i; break; } } if (end !== -1) try { return JSON.parse(str.substring(start, end + 1)); } catch(e) { return null; } return null;} if (text.includes('"class_type"') && text.includes('"inputs"')) { const json = extractJSON(text); if (json) return parseComfy(json); } return parseA1111(text);}
-function parseComfy(json) {let pos = "", neg = "", meta = { model: "?", size: "?", seed: "?", steps: "?", cfg: "?", sampler: "?" }, resources = []; const nodes = Object.values(json); const findUpstreamText = (link, depth = 0) => {if (depth > 10 || !link || !Array.isArray(link)) return ""; const node = json[link[0]]; if (!node || !node.inputs) return ""; if (typeof node.inputs.text === 'string') return node.inputs.text; if (typeof node.inputs.text_g === 'string') return node.inputs.text_g; if (typeof node.inputs.text_l === 'string') return node.inputs.text_l; if (node.inputs.string_field) return node.inputs.string_field; const keys = ['positive', 'negative', 'conditioning', 'clip', 'prompt']; for (const key of keys) if (node.inputs[key]) { const res = findUpstreamText(node.inputs[key], depth + 1); if (res) return res; } return "";}; const findUpstreamModel = (link, depth = 0) => {if (depth > 10 || !link || !Array.isArray(link)) return ""; const node = json[link[0]]; if (!node || !node.inputs) return ""; if (node.inputs.ckpt_name) return node.inputs.ckpt_name; if (node.inputs.unet_name) return node.inputs.unet_name; if (node.inputs.model) return findUpstreamModel(node.inputs.model, depth + 1); return "";}; const ksampler = nodes.find(n => n.class_type && (n.class_type.includes("KSampler") || n.class_type === "SamplerCustom")); if (ksampler && ksampler.inputs) {meta.seed = ksampler.inputs.seed || ksampler.inputs.noise_seed || "?"; meta.steps = ksampler.inputs.steps || "?"; meta.cfg = ksampler.inputs.cfg || "?"; meta.sampler = ksampler.inputs.sampler_name || "?"; if(ksampler.inputs.scheduler) meta.sampler += " " + ksampler.inputs.scheduler; pos = findUpstreamText(ksampler.inputs.positive); neg = findUpstreamText(ksampler.inputs.negative); if (ksampler.inputs.model) meta.model = findUpstreamModel(ksampler.inputs.model).replace(/\.(safetensors|ckpt)$/, "");} nodes.forEach(n => {if (n.inputs && n.inputs.lora_name) resources.push({ type: 'LoRA', name: n.inputs.lora_name.replace(/\.(safetensors|ckpt)$/, "") }); if (n.class_type && n.class_type.includes("Power Lora Loader")) for (const [key, val] of Object.entries(n.inputs)) if (key.startsWith('lora_') && val?.on) resources.push({ type: 'LoRA', name: val.lora.replace(/\.(safetensors|ckpt)$/, "") }); if (n.inputs && n.inputs.loras && Array.isArray(n.inputs.loras.__value__)) n.inputs.loras.__value__.forEach(l => { if(l.name && l.active !== false) resources.push({ type: 'LoRA', name: l.name }) });}); const sizeNode = nodes.find(n => n.class_type == "EmptyLatentImage"); if (sizeNode?.inputs) meta.size = `${sizeNode.inputs.width}x${sizeNode.inputs.height}`; return { pos, neg, meta, resources };}
-function parseA1111(text) {let pos="", neg="", resources=[], meta={model:"?",seed:"?",steps:"?",cfg:"?",sampler:"?",size:"?"}, match; LR.lastIndex = 0; while ((match = LR.exec(text)) !== null) resources.push({ type: 'LoRA', name: match[1] }); const negIdx = text.indexOf("Negative prompt:"); const stepsIdx = text.indexOf("Steps:"); if (negIdx !== -1 && stepsIdx !== -1) { pos = text.substring(0, negIdx).replace(/parameters\s*/i, "").trim(); neg = text.substring(negIdx + 16, stepsIdx).trim(); } else if (stepsIdx !== -1) pos = text.substring(0, stepsIdx).trim(); if (stepsIdx !== -1) { const b = text.substring(stepsIdx); const get = k => { const m = b.match(new RegExp(`${k}:\\s*([^,]+)`)); return m ? m[1].trim() : "?"; }; meta.steps = get("Steps"); meta.sampler = get("Sampler"); meta.cfg = get("CFG scale"); meta.seed = get("Seed"); meta.size = get("Size"); meta.model = get("Model"); } return { pos, neg, resources, meta };}
+
+function parseComfy(json) {
+    let pos="", neg="", meta={model:"?",size:"?",seed:"?",steps:"?",cfg:"?",sampler:"?"}, resources=[];
+    const nodes = Object.values(json);
+    
+    // NEW ACCUMULATIVE RECURSION
+    const findUpstreamText=(l,d=0)=>{
+        if(d>10||!l||!Array.isArray(l))return"";
+        const n=json[l[0]]; if(!n||!n.inputs)return"";
+        let t = "";
+        // 1. Local Text
+        if(typeof n.inputs.text==='string') t+=n.inputs.text;
+        if(typeof n.inputs.text_g==='string') t+=(t?", ":"")+n.inputs.text_g;
+        if(typeof n.inputs.text_l==='string') t+=(t?", ":"")+n.inputs.text_l;
+        if(n.inputs.string_field) t+=(t?", ":"")+n.inputs.string_field;
+        // 2. Special Lists (StandardTriggerWordsLoader)
+        if(n.inputs.trigger_words_display && Array.isArray(n.inputs.trigger_words_display.__value__)) {
+            const tags = n.inputs.trigger_words_display.__value__.filter(x=>x.active).map(x=>x.text).join(", ");
+            if(tags) t+=(t?", ":"")+tags;
+        }
+        // 3. Recurse Keys
+        const keys=['positive','negative','conditioning','clip','prompt','trigger_words']; // Added trigger_words
+        for(const k of keys) if(n.inputs[k]) {
+            const r = findUpstreamText(n.inputs[k],d+1);
+            if(r) t+=(t?", ":"")+r;
+        }
+        return t;
+    };
+
+    const findUpstreamModel=(l,d=0)=>{if(d>10||!l||!Array.isArray(l))return"";const n=json[l[0]];if(!n||!n.inputs)return"";if(n.inputs.ckpt_name)return n.inputs.ckpt_name;if(n.inputs.unet_name)return n.inputs.unet_name;if(n.inputs.model)return findUpstreamModel(n.inputs.model,d+1);return""};
+    const ksampler=nodes.find(n=>n.class_type&&(n.class_type.includes("KSampler")||n.class_type==="SamplerCustom"));
+    if(ksampler&&ksampler.inputs){meta.seed=ksampler.inputs.seed||ksampler.inputs.noise_seed||"?";meta.steps=ksampler.inputs.steps||"?";meta.cfg=ksampler.inputs.cfg||"?";meta.sampler=ksampler.inputs.sampler_name||"?";if(ksampler.inputs.scheduler)meta.sampler+=" "+ksampler.inputs.scheduler;pos=findUpstreamText(ksampler.inputs.positive);neg=findUpstreamText(ksampler.inputs.negative);if(ksampler.inputs.model)meta.model=findUpstreamModel(ksampler.inputs.model).replace(/\.(safetensors|ckpt)$/,"");}
+    
+    nodes.forEach(n=>{
+        if(n.inputs&&n.inputs.lora_name) resources.push({type:'LoRA', name:n.inputs.lora_name.replace(/\.(safetensors|ckpt)$/,""), str:n.inputs.strength_model});
+        if(n.class_type&&n.class_type.includes("Power Lora Loader")) for(const [k,v] of Object.entries(n.inputs)) if(k.startsWith('lora_')&&v?.on) resources.push({type:'LoRA', name:v.lora.replace(/\.(safetensors|ckpt)$/,""), str:v.strength});
+        if(n.inputs&&n.inputs.loras&&Array.isArray(n.inputs.loras.__value__)) n.inputs.loras.__value__.forEach(l=>{if(l.name&&l.active!==false)resources.push({type:'LoRA', name:l.name, str:l.strength})});
+    });
+    const sizeNode=nodes.find(n=>n.class_type=="EmptyLatentImage");if(sizeNode?.inputs)meta.size=`${sizeNode.inputs.width}x${sizeNode.inputs.height}`;
+    return {pos,neg,meta,resources};
+}
+
+function parseA1111(text) {
+    let pos="", neg="", resources=[], meta={model:"?",seed:"?",steps:"?",cfg:"?",sampler:"?",size:"?"}, match;
+    LR.lastIndex=0; while((match=LR.exec(text))!==null) resources.push({type:'LoRA', name:match[1], str:match[2]||"1.0"});
+    const negIdx=text.indexOf("Negative prompt:"); const stepsIdx=text.indexOf("Steps:");
+    if(negIdx!==-1&&stepsIdx!==-1){pos=text.substring(0,negIdx).replace(/parameters\s*/i,"").trim();neg=text.substring(negIdx+16,stepsIdx).trim()}else if(stepsIdx!==-1)pos=text.substring(0,stepsIdx).trim();
+    if(stepsIdx!==-1){const b=text.substring(stepsIdx);const get=k=>{const m=b.match(new RegExp(`${k}:\\s*([^,]+)`));return m?m[1].trim():"?"};meta.steps=get("Steps");meta.sampler=get("Sampler");meta.cfg=get("CFG scale");meta.seed=get("Seed");meta.size=get("Size");meta.model=get("Model");}
+    return {pos,neg,resources,meta};
+}
 
 // --- LOGIC ---
 async function proc(h,p){try{const f=await h.getFile(),vid=/\.(mp4|webm)$/i.test(f.name);let m=null;if(vid)m={meta:{model:"Video",size:(f.size/1e6).toFixed(1)+"MB"},resources:[]};else{const b=await f.arrayBuffer(),t=await extractText(b);m=parseMetadata(t)}const i={p,n:f.name,d:f.lastModified,m,v:vid};cache.set(p,i);dPut(i)}catch{}}
@@ -186,7 +234,12 @@ function pop(f,mt){
     const m=(mt.m&&mt.m.meta)?mt.m.meta:(mt.m||{}),r=mt.m||{};
     const set=(i,v)=>document.getElementById(i).value=v||"";
     set('mModel',m.model);set('mSize',m.size);set('mSamp',m.sampler);set('mSeed',m.seed);set('mSteps',m.steps);set('mCfg',m.cfg);set('mPos',r.pos);set('mNeg',r.neg);
-    const b=document.getElementById('mRes');b.innerHTML='';if(r.resources)r.resources.forEach(x=>{const s=document.createElement('span');s.className='chip';s.innerText=x.name;b.appendChild(s)});
+    const b=document.getElementById('mRes');b.innerHTML='';
+    if(r.resources)r.resources.forEach(x=>{
+        const s=document.createElement('span');s.className='chip';
+        s.innerHTML = x.name + (x.str ? ` <span style="opacity:0.6;font-size:0.9em">| ${x.str}</span>` : "");
+        b.appendChild(s)
+    });
     if(document.body.classList.contains('mode-grid'))togInsp(true);
 }
 function nav(d){const n=aIdx+d;if(n>=0&&n<cFiles.length){aIdx=n;upDet()}}
@@ -218,7 +271,7 @@ async function mkDir(){
     const n=prompt("Name");
     if(n){
         try {
-            const target = cDir || rH; // Fix for root folder
+            const target = cDir || rH; 
             await target.getDirectoryHandle(n,{create:true});
             await fullScan();
         } catch(e) { alert("Create failed: "+e.message); }

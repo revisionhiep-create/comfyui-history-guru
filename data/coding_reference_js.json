@@ -1,0 +1,168 @@
+{
+  "file_system_access_api": {
+    "description": "Chrome's File System Access API for local file operations",
+    "methods": {
+      "showDirectoryPicker": {
+        "syntax": "await window.showDirectoryPicker({mode: 'readwrite'})",
+        "returns": "FileSystemDirectoryHandle",
+        "notes": "Requires user gesture, only works in secure contexts",
+        "limitations": ["Cannot rename directories directly", "Cut/paste is complex", "Delete works reliably"]
+      },
+      "getFile": {
+        "syntax": "await handle.getFile()",
+        "returns": "File",
+        "notes": "Gets file from FileSystemFileHandle"
+      },
+      "getFileHandle": {
+        "syntax": "await dirHandle.getFileHandle(name, {create: true})",
+        "returns": "FileSystemFileHandle",
+        "notes": "Creates or gets file handle"
+      },
+      "getDirectoryHandle": {
+        "syntax": "await dirHandle.getDirectoryHandle(name, {create: true})",
+        "returns": "FileSystemDirectoryHandle",
+        "notes": "Creates or gets directory handle"
+      },
+      "removeEntry": {
+        "syntax": "await dirHandle.removeEntry(name)",
+        "returns": "void",
+        "notes": "Deletes file or directory. Works reliably for both."
+      },
+      "createWritable": {
+        "syntax": "await fileHandle.createWritable()",
+        "returns": "FileSystemWritableFileStream",
+        "notes": "Creates writable stream for file operations"
+      }
+    },
+    "patterns": {
+      "read_file": "const file = await handle.getFile(); const buffer = await file.arrayBuffer();",
+      "write_file": "const writable = await handle.createWritable(); await writable.write(data); await writable.close();",
+      "delete_file": "const parent = await getParentHandle(); await parent.removeEntry(fileName);",
+      "scan_directory": "for await (const entry of dirHandle.values()) { if (entry.kind === 'file') { ... } }"
+    }
+  },
+  "indexeddb": {
+    "description": "Browser database for client-side storage",
+    "methods": {
+      "open": {
+        "syntax": "indexedDB.open(dbName, version)",
+        "returns": "IDBOpenDBRequest",
+        "notes": "Opens or creates database"
+      },
+      "createObjectStore": {
+        "syntax": "db.createObjectStore(name, {keyPath: 'id'})",
+        "notes": "Creates storage for data"
+      },
+      "transaction": {
+        "syntax": "db.transaction(storeName, 'readwrite')",
+        "returns": "IDBTransaction",
+        "notes": "Creates transaction for operations"
+      },
+      "put": {
+        "syntax": "store.put(data)",
+        "notes": "Stores or updates data"
+      },
+      "get": {
+        "syntax": "store.get(key)",
+        "returns": "IDBRequest",
+        "notes": "Retrieves data by key"
+      },
+      "getAll": {
+        "syntax": "store.getAll()",
+        "returns": "IDBRequest",
+        "notes": "Gets all records"
+      },
+      "delete": {
+        "syntax": "store.delete(key)",
+        "notes": "Deletes record by key"
+      }
+    },
+    "patterns": {
+      "initialize": "const req = indexedDB.open('DB', 1); req.onupgradeneeded = (e) => { const db = e.target.result; if (!db.objectStoreNames.contains('store')) { db.createObjectStore('store', {keyPath: 'id'}); } }; req.onsuccess = (e) => { db = e.target.result; };",
+      "save": "const tx = db.transaction('store', 'readwrite'); tx.objectStore('store').put(data); tx.oncomplete = () => resolve();",
+      "load": "const tx = db.transaction('store', 'readonly'); const req = tx.objectStore('store').getAll(); req.onsuccess = (e) => { const data = e.target.result; };"
+    }
+  },
+  "localstorage": {
+    "description": "Simple key-value storage for user preferences",
+    "methods": {
+      "setItem": {
+        "syntax": "localStorage.setItem(key, value)",
+        "notes": "Stores string value. Use JSON.stringify for objects."
+      },
+      "getItem": {
+        "syntax": "localStorage.getItem(key)",
+        "returns": "string | null",
+        "notes": "Retrieves value. Returns null if not found."
+      },
+      "removeItem": {
+        "syntax": "localStorage.removeItem(key)",
+        "notes": "Removes key-value pair"
+      },
+      "clear": {
+        "syntax": "localStorage.clear()",
+        "notes": "Removes all data"
+      }
+    },
+    "patterns": {
+      "save_object": "localStorage.setItem('key', JSON.stringify(obj));",
+      "load_object": "const obj = JSON.parse(localStorage.getItem('key') || '{}');",
+      "save_set": "localStorage.setItem('key', JSON.stringify([...set]));",
+      "load_set": "const set = new Set(JSON.parse(localStorage.getItem('key') || '[]'));"
+    }
+  },
+  "dom_manipulation": {
+    "description": "DOM manipulation patterns",
+    "methods": {
+      "getElementById": {
+        "syntax": "document.getElementById('id')",
+        "returns": "HTMLElement | null"
+      },
+      "createElement": {
+        "syntax": "document.createElement('div')",
+        "returns": "HTMLElement"
+      },
+      "querySelector": {
+        "syntax": "element.querySelector('.class')",
+        "returns": "HTMLElement | null"
+      },
+      "addEventListener": {
+        "syntax": "element.addEventListener('click', handler, {once: true})",
+        "notes": "Use {once: true} for one-time listeners"
+      }
+    },
+    "patterns": {
+      "create_with_class": "const div = document.createElement('div'); div.className = 'my-class';",
+      "create_with_innerHTML": "div.innerHTML = '<span>Text</span>';",
+      "append_child": "parent.appendChild(child);",
+      "event_delegation": "parent.addEventListener('click', (e) => { if (e.target.matches('.child')) { ... } });"
+    }
+  },
+  "async_patterns": {
+    "description": "Async/await patterns for file operations",
+    "patterns": {
+      "async_function": "async function myFunc() { await operation(); }",
+      "promise_all": "await Promise.all([op1(), op2(), op3()]);",
+      "try_catch": "try { await operation(); } catch(e) { console.error(e); }",
+      "for_await": "for await (const item of asyncIterable) { ... }"
+    }
+  },
+  "array_methods": {
+    "description": "Common array operations",
+    "methods": {
+      "map": "array.map(item => transform(item))",
+      "filter": "array.filter(item => condition(item))",
+      "forEach": "array.forEach(item => action(item))",
+      "find": "array.find(item => condition(item))",
+      "some": "array.some(item => condition(item))",
+      "sort": "array.sort((a, b) => a - b)"
+    }
+  },
+  "map_set": {
+    "description": "Map and Set for efficient lookups",
+    "patterns": {
+      "map_usage": "const map = new Map(); map.set('key', value); const val = map.get('key'); map.has('key'); map.delete('key');",
+      "set_usage": "const set = new Set(); set.add(value); set.has(value); set.delete(value); [...set] // convert to array"
+    }
+  }
+}

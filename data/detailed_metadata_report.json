@@ -1,0 +1,77 @@
+[
+  {
+    "file": "113830838.png",
+    "chunks": [],
+    "pil_info": {
+      "jfif": "257",
+      "jfif_version": "(1, 1)",
+      "dpi": "(96, 96)",
+      "jfif_unit": "1",
+      "jfif_density": "(96, 96)",
+      "exif": "b'Exif\\x00\\x00II*\\x00\\x08\\x00\\x00\\x00\\x03\\x001\\x01\\x02\\x00%\\x00\\x00\\x002\\x00\\x00\\x00;\\x01\\x02\\x00\\x03\\x00\\x00\\x00ai\\x00\\x00i\\x87\\x04\\x00\\x01\\x00\\x00\\x00W\\x00\\x00\\x00\\x00\\x00\\x00\\x00647d705a-c22b-4dbf-"
+    }
+  },
+  {
+    "file": "113856721.png",
+    "chunks": [
+      {
+        "type": "tEXt",
+        "keyword": "prompt",
+        "content": "{\"9\": {\"inputs\": {\"filename_prefix\": \"z-image\", \"images\": [\"48\", 0]}, \"class_type\": \"SaveImage\", \"_meta\": {\"title\": \"Save Image\"}}, \"39\": {\"inputs\": {\"clip_name\": \"qwen3_4b_fp8_scaled.safetensors\", \"type\": \"lumina2\", \"device\": \"default\"}, \"class_type\": \"CLIPLoader\", \"_meta\": {\"title\": \"Load CLIP\"}}, \"40\": {\"inputs\": {\"vae_name\": \"zImageTurboVAE_v10.safetensors\"}, \"class_type\": \"VAELoader\", \"_meta\": {\"title\": \"Load VAE\"}}, \"41\": {\"inputs\": {\"width\": 832, \"height\": 1216, \"batch_size\": 1}, \"class_type\": \"EmptySD3LatentImage\", \"_meta\": {\"title\": \"EmptySD3LatentImage\"}}, \"42\": {\"inputs\": {\"conditioning\": [\"45\", 0]}, \"class_type\": \"ConditioningZeroOut\", \"_meta\": {\"title\": \"ConditioningZeroOut\"}}, \"44\": {\"inputs\": {\"seed\": 913982149702855, \"steps\": 15, \"cfg\": 1.0, \"sampler_name\": \"res_multistep\", \"scheduler\": \"simple\", \"denoise\": 1.0, \"model\": [\"47\", 0], \"positive\": [\"59\", 0], \"negative\": [\"42\", 0], \"latent_image\": [\"41\", 0]}, \"class_type\": \"KSampler\", \"_meta\": {\"title\": \"KSampler\"}}, \"45\": {",
+        "full_length": 4938
+      },
+      {
+        "type": "tEXt",
+        "keyword": "workflow",
+        "content": "{\"id\": \"9ae6082b-c7f4-433c-9971-7a8f65a3ea65\", \"revision\": 0, \"last_node_id\": 62, \"last_link_id\": 72, \"nodes\": [{\"id\": 9, \"type\": \"SaveImage\", \"pos\": [1240, 260], \"size\": [780, 660], \"flags\": {}, \"order\": 13, \"mode\": 0, \"inputs\": [{\"name\": \"images\", \"type\": \"IMAGE\", \"link\": 48}], \"outputs\": [], \"properties\": {\"cnr_id\": \"comfy-core\", \"ver\": \"0.3.64\", \"Node name for S&R\": \"SaveImage\", \"enableTabs\": false, \"tabWidth\": 65, \"tabXOffset\": 10, \"hasSecondTab\": false, \"secondTabText\": \"Send Back\", \"secondTabOffset\": 80, \"secondTabWidth\": 65}, \"widgets_values\": [\"z-image\"]}, {\"id\": 35, \"type\": \"MarkdownNote\", \"pos\": [-390, 270], \"size\": [490, 400], \"flags\": {\"collapsed\": false}, \"order\": 0, \"mode\": 0, \"inputs\": [], \"outputs\": [], \"title\": \"Model link\", \"properties\": {}, \"widgets_values\": [\"## Report issue\\n\\nIf you found any issues when running this workflow, [report template issue here](https://github.com/Comfy-Org/workflow_templates/issues)\\n\\n\\n## Model links\\n\\n**text_encoders**\\n\\n- [qwen_3",
+        "full_length": 15137
+      }
+    ],
+    "pil_info": {
+      "prompt": "{\"9\": {\"inputs\": {\"filename_prefix\": \"z-image\", \"images\": [\"48\", 0]}, \"class_type\": \"SaveImage\", \"_meta\": {\"title\": \"Save Image\"}}, \"39\": {\"inputs\": {\"clip_name\": \"qwen3_4b_fp8_scaled.safetensors\", \"t",
+      "workflow": "{\"id\": \"9ae6082b-c7f4-433c-9971-7a8f65a3ea65\", \"revision\": 0, \"last_node_id\": 62, \"last_link_id\": 72, \"nodes\": [{\"id\": 9, \"type\": \"SaveImage\", \"pos\": [1240, 260], \"size\": [780, 660], \"flags\": {}, \"ord"
+    }
+  },
+  {
+    "file": "113997857.png",
+    "chunks": [
+      {
+        "type": "tEXt",
+        "keyword": "parameters",
+        "content": "masterpiece, best quality, anime coloring, anime screencap,\n\n1girl, solo, long hair, looking at viewer, blush, smile, bangs, blue eyes, blonde hair, hair ornament, closed mouth, collarbone, upper body, braid, pointy ears, hairclip, lips, parted bangs, eyelashes, thick eyebrows, portrait, forehead, princess zelda\n\n,,\nNegative prompt: blurry ugly bad\nSteps: 10, Sampler: Euler, CFG scale: 1.0, Seed: 765432652758509, Size: 832x1216, Clip skip: 1, Model: zImage_turbo, Hashes: {\"LORA:MoonlightCAT_ZIT\":\"5AAD1622EF\"}, Version: ComfyUI, Civitai resources: [{\"modelName\":\"Z Image\",\"versionName\":\"Turbo\",\"air\":\"urn:air:zimageturbo:checkpoint:civitai:2168935@2442439\"}]",
+        "full_length": 663
+      },
+      {
+        "type": "tEXt",
+        "keyword": "workflow",
+        "content": "{\"id\":\"ddadaa73-5af8-4a95-a556-7474c23fa0a3\",\"revision\":0,\"last_node_id\":163,\"last_link_id\":296,\"nodes\":[{\"id\":3,\"type\":\"CLIPTextEncode\",\"pos\":[1344,415],\"size\":[210.2994140625,88],\"flags\":{},\"order\":16,\"mode\":0,\"inputs\":[{\"name\":\"clip\",\"type\":\"CLIP\",\"link\":191},{\"name\":\"text\",\"type\":\"STRING\",\"widget\":{\"name\":\"text\"},\"link\":294}],\"outputs\":[{\"name\":\"CONDITIONING\",\"type\":\"CONDITIONING\",\"slot_index\":0,\"links\":[2]}],\"properties\":{\"cnr_id\":\"comfy-core\",\"ver\":\"0.3.49\",\"Node name for S&R\":\"CLIPTextEncode\",\"ue_properties\":{\"widget_ue_connectable\":{\"text\":true},\"version\":\"7.1\",\"input_ue_unconnectable\":{}}},\"widgets_values\":[\"((masterpiece,best quality)), absurdres, hex maniac (pokemon),   long hair, ahoge, purple hairband, purple eyes, @_@, long black dress,  smile, looking at viewer, cowboy shot,\\nhead tilt, full moon, graveyard, open mouth,\\nhands behind back,\"]},{\"id\":4,\"type\":\"CLIPTextEncode\",\"pos\":[1345,515],\"size\":[210.2994140625,88],\"flags\":{},\"order\":17,\"mode\":0,\"inputs\":[{\"name\":\"clip",
+        "full_length": 13821
+      },
+      {
+        "type": "tEXt",
+        "keyword": "prompt",
+        "content": "{\"1\":{\"inputs\":{\"seed\":[\"71\",0],\"steps\":[\"137\",0],\"cfg\":[\"151\",0],\"sampler_name\":\"euler\",\"scheduler\":\"simple\",\"denoise\":1.0,\"model\":[\"69\",0],\"positive\":[\"3\",0],\"negative\":[\"4\",0],\"latent_image\":[\"5\",0]},\"class_type\":\"KSampler\",\"_meta\":{\"title\":\"KSampler\"}},\"3\":{\"inputs\":{\"text\":[\"66\",0],\"clip\":[\"69\",1]},\"class_type\":\"CLIPTextEncode\",\"_meta\":{\"title\":\"CLIP Text Encode (Prompt)\"}},\"4\":{\"inputs\":{\"text\":[\"67\",0],\"clip\":[\"69\",1]},\"class_type\":\"CLIPTextEncode\",\"_meta\":{\"title\":\"CLIP Text Encode (Prompt)\"}},\"5\":{\"inputs\":{\"width\":[\"140\",0],\"height\":[\"139\",0],\"batch_size\":1},\"class_type\":\"EmptyLatentImage\",\"_meta\":{\"title\":\"Empty Latent Image\"}},\"16\":{\"inputs\":{\"samples\":[\"1\",0],\"vae\":[\"154\",0]},\"class_type\":\"VAEDecode\",\"_meta\":{\"title\":\"VAE Decode\"}},\"66\":{\"inputs\":{\"text\":\"masterpiece, best quality, anime coloring, anime screencap,\\n\\n1girl, solo, long hair, looking at viewer, blush, smile, bangs, blue eyes, blonde hair, hair ornament, closed mouth, collarbone, upper body, braid, pointy ear",
+        "full_length": 3202
+      }
+    ],
+    "pil_info": {
+      "parameters": "masterpiece, best quality, anime coloring, anime screencap,\n\n1girl, solo, long hair, looking at viewer, blush, smile, bangs, blue eyes, blonde hair, hair ornament, closed mouth, collarbone, upper body",
+      "workflow": "{\"id\":\"ddadaa73-5af8-4a95-a556-7474c23fa0a3\",\"revision\":0,\"last_node_id\":163,\"last_link_id\":296,\"nodes\":[{\"id\":3,\"type\":\"CLIPTextEncode\",\"pos\":[1344,415],\"size\":[210.2994140625,88],\"flags\":{},\"order\":",
+      "prompt": "{\"1\":{\"inputs\":{\"seed\":[\"71\",0],\"steps\":[\"137\",0],\"cfg\":[\"151\",0],\"sampler_name\":\"euler\",\"scheduler\":\"simple\",\"denoise\":1.0,\"model\":[\"69\",0],\"positive\":[\"3\",0],\"negative\":[\"4\",0],\"latent_image\":[\"5\",0"
+    }
+  },
+  {
+    "file": "114266629.png",
+    "chunks": [
+      {
+        "type": "tEXt",
+        "keyword": "parameters",
+        "content": "final fantasy, final fantasy vii, aerith gainsborough, 1girl, brown hair, closed mouth, collarbone, cropped jacket, dress, drill hair, drill sidelocks, flower, forehead, green eyes, hair ribbon, holding, holding flower, jacket, long hair, parted bangs, pink dress, pink ribbon, reaching, reaching towards viewer, red jacket, ribbon, short sleeves, sidelocks, smile, solo, yellow flower,\n amano yoshitaka, abstract, watercolor \\(medium\\)\n\n,masterpiece,best quality,amazing quality,\nNegative prompt: bad quality,worst quality,worst detail,sketch,censor,\nSteps: 30, Sampler: Euler a, Schedule type: Automatic, CFG scale: 7, Seed: 2366430661, Size: 1024x1360, Model hash: a5f58eb1c3, Model: WAI-Nsfw-Illustrious-16, Denoising strength: 0.5, Clip skip: 2, ENSD: 31337, RNG: NV, Hires upscale: 1.5, Hires steps: 20, Hires upscaler: R-ESRGAN 4x+ Anime6B, Discard penultimate sigma: True, Eta: 0.67, Version: v1.10.1-92-g6685e532d",
+        "full_length": 922
+      }
+    ],
+    "pil_info": {
+      "parameters": "final fantasy, final fantasy vii, aerith gainsborough, 1girl, brown hair, closed mouth, collarbone, cropped jacket, dress, drill hair, drill sidelocks, flower, forehead, green eyes, hair ribbon, holdi"
+    }
+  }
+]

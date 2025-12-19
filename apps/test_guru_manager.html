@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Guru Manager HTML Tester & Debugger</title>
+<style>
+:root {
+    --bg: #0a0a0a;
+    --card: #1a1a1a;
+    --bd: #333;
+    --acc: #8b5cf6;
+    --txt: #e4e4e7;
+    --mut: #a1a1aa;
+    --success: #10b981;
+    --error: #ef4444;
+    --warning: #f59e0b;
+}
+
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--txt);
+    font-family: 'Consolas', 'Monaco', monospace;
+    padding: 20px;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.header {
+    background: var(--card);
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    margin: 0;
+    color: var(--acc);
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    background: var(--acc);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.btn:hover { opacity: 0.9; }
+.btn-secondary { background: var(--bd); }
+
+.results {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+}
+
+.panel {
+    background: var(--card);
+    border: 1px solid var(--bd);
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.panel h2 {
+    margin: 0 0 15px 0;
+    color: var(--acc);
+    font-size: 1.2rem;
+    border-bottom: 1px solid var(--bd);
+    padding-bottom: 10px;
+}
+
+.test-item {
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 4px;
+    border-left: 4px solid;
+    background: rgba(255,255,255,0.05);
+}
+
+.test-item.pass {
+    border-left-color: var(--success);
+    color: var(--success);
+}
+
+.test-item.fail {
+    border-left-color: var(--error);
+    color: var(--error);
+}
+
+.test-item.warn {
+    border-left-color: var(--warning);
+    color: var(--warning);
+}
+
+.test-item .name {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.test-item .details {
+    font-size: 0.85rem;
+    color: var(--mut);
+    margin-top: 5px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stat-box {
+    background: var(--card);
+    border: 1px solid var(--bd);
+    border-radius: 6px;
+    padding: 15px;
+    text-align: center;
+}
+
+.stat-box .number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--acc);
+}
+
+.stat-box .label {
+    font-size: 0.85rem;
+    color: var(--mut);
+    margin-top: 5px;
+}
+
+.code-view {
+    background: #000;
+    border: 1px solid var(--bd);
+    border-radius: 4px;
+    padding: 15px;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🔍 Guru Manager HTML Tester & Debugger</h1>
+        <p style="color: var(--mut); margin: 10px 0;">Automated testing tool for Guru Manager HTML file</p>
+        
+        <div class="controls">
+            <button class="btn" onclick="loadAndTest()">🚀 Run All Tests</button>
+            <button class="btn btn-secondary" onclick="testSyntax()">📝 Syntax Check</button>
+            <button class="btn btn-secondary" onclick="testFunctions()">⚙️ Function Check</button>
+            <button class="btn btn-secondary" onclick="testElements()">🎨 Element Check</button>
+            <button class="btn btn-secondary" onclick="testCSS()">💅 CSS Check</button>
+            <button class="btn btn-secondary" onclick="exportReport()">📤 Export Report</button>
+        </div>
+    </div>
+
+    <div id="stats" class="stats"></div>
+
+    <div class="results">
+        <div class="panel">
+            <h2>✅ Syntax & Structure</h2>
+            <div id="syntaxResults"></div>
+        </div>
+
+        <div class="panel">
+            <h2>⚙️ JavaScript Functions</h2>
+            <div id="functionResults"></div>
+        </div>
+
+        <div class="panel">
+            <h2>🎨 HTML Elements</h2>
+            <div id="elementResults"></div>
+        </div>
+
+        <div class="panel">
+            <h2>💅 CSS & Styling</h2>
+            <div id="cssResults"></div>
+        </div>
+
+        <div class="panel">
+            <h2>🔗 Dependencies & References</h2>
+            <div id="dependencyResults"></div>
+        </div>
+
+        <div class="panel">
+            <h2>🐛 Issues & Warnings</h2>
+            <div id="issueResults"></div>
+        </div>
+    </div>
+
+    <div class="panel" style="margin-top: 20px;">
+        <h2>📋 Full Report</h2>
+        <div id="fullReport" class="code-view"></div>
+    </div>
+</div>
+
+<script>
+let testResults = {
+    syntax: [],
+    functions: [],
+    elements: [],
+    css: [],
+    dependencies: [],
+    issues: []
+};
+
+async function loadAndTest() {
+    console.log('Starting comprehensive test...');
+    
+    try {
+        // Load the Guru Manager HTML file
+        const response = await fetch('Guru Manager.html'); // Assumes same directory
+        if (!response.ok) {
+            throw new Error(`Failed to load file: ${response.statusText}`);
+        }
+        
+        const htmlContent = await response.text();
+        console.log('File loaded, size:', htmlContent.length);
+        
+        // Run all tests
+        testSyntax(htmlContent);
+        testFunctions(htmlContent);
+        testElements(htmlContent);
+        testCSS(htmlContent);
+        testDependencies(htmlContent);
+        findIssues(htmlContent);
+        
+        updateStats();
+        generateFullReport();
+        
+    } catch (error) {
+        console.error('Error loading file:', error);
+        addResult('syntaxResults', 'fail', 'File Load Error', `Could not load Guru Manager.html: ${error.message}`);
+    }
+}
+
+function testSyntax(htmlContent) {
+    if (!htmlContent) {
+        loadAndTest();
+        return;
+    }
+    
+    clearResults('syntaxResults');
+    
+    // Check for basic HTML structure
+    const hasDoctype = htmlContent.includes('<!DOCTYPE');
+    addResult('syntaxResults', hasDoctype ? 'pass' : 'fail', 'DOCTYPE Declaration', hasDoctype ? 'Found' : 'Missing');
+    
+    const hasHtml = htmlContent.includes('<html');
+    addResult('syntaxResults', hasHtml ? 'pass' : 'fail', 'HTML Tag', hasHtml ? 'Found' : 'Missing');
+    
+    const hasHead = htmlContent.includes('<head');
+    addResult('syntaxResults', hasHead ? 'pass' : 'fail', 'Head Tag', hasHead ? 'Found' : 'Missing');
+    
+    const hasBody = htmlContent.includes('<body');
+    addResult('syntaxResults', hasBody ? 'pass' : 'fail', 'Body Tag', hasBody ? 'Found' : 'Missing');
+    
+    // Check for unclosed tags (basic check)
+    const openTags = (htmlContent.match(/<[^/][^>]*>/g) || []).length;
+    const closeTags = (htmlContent.match(/<\/[^>]+>/g) || []).length;
+    const selfClosing = (htmlContent.match(/<[^>]+\/>/g) || []).length;
+    const tagBalance = Math.abs(openTags - closeTags - selfClosing);
+    
+    addResult('syntaxResults', tagBalance < 10 ? 'pass' : 'warn', 'Tag Balance', 
+        `Open: ${openTags}, Close: ${closeTags}, Self-closing: ${selfClosing}, Difference: ${tagBalance}`);
+    
+    // Check for JavaScript syntax errors
+    const scriptMatches = htmlContent.match(/<script[^>]*>([\s\S]*?)<\/script>/gi) || [];
+    let jsErrors = 0;
+    
+    scriptMatches.forEach((script, idx) => {
+        const jsCode = script.replace(/<\/?script[^>]*>/gi, '');
+        try {
+            // Try to parse as JavaScript
+            new Function(jsCode);
+        } catch (e) {
+            jsErrors++;
+            addResult('syntaxResults', 'fail', `JavaScript Syntax Error #${idx + 1}`, e.message);
+        }
+    });
+    
+    if (jsErrors === 0) {
+        addResult('syntaxResults', 'pass', 'JavaScript Syntax', 'No syntax errors found');
+    }
+    
+    // Check for common issues
+    const hasConsoleErrors = htmlContent.includes('console.error');
+    addResult('syntaxResults', hasConsoleErrors ? 'warn' : 'pass', 'Console Errors', 
+        hasConsoleErrors ? 'Found console.error calls' : 'No console.error found');
+}
+
+function testFunctions(htmlContent) {
+    if (!htmlContent) {
+        loadAndTest();
+        return;
+    }
+    
+    clearResults('functionResults');
+    
+    // Extract all function definitions
+    const functionRegex = /function\s+(\w+)\s*\([^)]*\)/g;
+    const functions = [];
+    let match;
+    
+    while ((match = functionRegex.exec(htmlContent)) !== null) {
+        functions.push(match[1]);
+    }
+    
+    // Also check arrow functions
+    const arrowFunctionRegex = /(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s+)?\([^)]*\)\s*=>/g;
+    while ((match = arrowFunctionRegex.exec(htmlContent)) !== null) {
+        functions.push(match[1]);
+    }
+    
+    addResult('functionResults', 'pass', 'Function Count', `Found ${functions.length} functions`);
+    
+    // Check for critical functions
+    const criticalFunctions = [
+        'initFileSystem', 'fullScan', 'rend', 'setView', 'enterDet', 
+        'exitDetail', 'pop', 'parseComfy', 'parseA1111', 'extractText',
+        'toggleTheme', 'showBatchOps', 'exportMetadata', 'applyAdvSearch'
+    ];
+    
+    criticalFunctions.forEach(funcName => {
+        const exists = functions.includes(funcName) || htmlContent.includes(`${funcName}(`);
+        addResult('functionResults', exists ? 'pass' : 'fail', 
+            `Function: ${funcName}`, exists ? 'Found' : 'MISSING - Critical function!');
+    });
+    
+    // Check for event listeners
+    const hasAddEventListener = htmlContent.includes('addEventListener');
+    addResult('functionResults', hasAddEventListener ? 'pass' : 'warn', 
+        'Event Listeners', hasAddEventListener ? 'Found addEventListener calls' : 'No addEventListener found');
+    
+    // Check for async/await usage
+    const hasAsync = htmlContent.includes('async function') || htmlContent.includes('async ');
+    addResult('functionResults', hasAsync ? 'pass' : 'warn', 
+        'Async Functions', hasAsync ? 'Found async functions' : 'No async functions found');
+}
+
+function testElements(htmlContent) {
+    if (!htmlContent) {
+        loadAndTest();
+        return;
+    }
+    
+    clearResults('elementResults');
+    
+    // Check for critical elements by ID
+    const criticalElements = [
+        'grid', 'sidebar', 'tree', 'inspector', 'sIn', 'bGrid', 'bList',
+        'bStats', 'bTree', 'bCompare', 'themeToggle', 'detailView'
+    ];
+    
+    criticalElements.forEach(elemId => {
+        const exists = htmlContent.includes(`id="${elemId}"`) || htmlContent.includes(`id='${elemId}'`);
+        addResult('elementResults', exists ? 'pass' : 'fail', 
+            `Element: #${elemId}`, exists ? 'Found' : 'MISSING - Critical element!');
+    });
+    
+    // Check for buttons
+    const buttonCount = (htmlContent.match(/<button[^>]*>/gi) || []).length;
+    addResult('elementResults', buttonCount > 0 ? 'pass' : 'warn', 
+        'Buttons', `Found ${buttonCount} buttons`);
+    
+    // Check for inputs
+    const inputCount = (htmlContent.match(/<input[^>]*>/gi) || []).length;
+    addResult('elementResults', inputCount > 0 ? 'pass' : 'warn', 
+        'Inputs', `Found ${inputCount} input fields`);
+    
+    // Check for overlays
+    const overlayCount = (htmlContent.match(/class="overlay"/gi) || []).length;
+    addResult('elementResults', overlayCount > 0 ? 'pass' : 'warn', 
+        'Overlays', `Found ${overlayCount} overlay elements`);
+}
+
+function testCSS(htmlContent) {
+    if (!htmlContent) {
+        loadAndTest();
+        return;
+    }
+    
+    clearResults('cssResults');
+    
+    // Extract CSS
+    const styleMatches = htmlContent.match(/<style[^>]*>([\s\S]*?)<\/style>/gi) || [];
+    const cssContent = styleMatches.map(m => m.replace(/<\/?style[^>]*>/gi, '')).join('\n');
+    
+    // Check for CSS variables
+    const hasCSSVars = cssContent.includes('var(--') || htmlContent.includes('var(--');
+    addResult('cssResults', hasCSSVars ? 'pass' : 'warn', 
+        'CSS Variables', hasCSSVars ? 'Using CSS custom properties' : 'No CSS variables found');
+    
+    // Check for responsive design
+    const hasMediaQueries = cssContent.includes('@media') || htmlContent.includes('@media');
+    addResult('cssResults', hasMediaQueries ? 'pass' : 'warn', 
+        'Media Queries', hasMediaQueries ? 'Found responsive design' : 'No media queries found');
+    
+    // Check for flexbox/grid
+    const hasFlex = cssContent.includes('display:flex') || htmlContent.includes('display:flex');
+    const hasGrid = cssContent.includes('display:grid') || htmlContent.includes('display:grid');
+    addResult('cssResults', hasFlex || hasGrid ? 'pass' : 'warn', 
+        'Layout System', hasFlex && hasGrid ? 'Using Flexbox & Grid' : hasFlex ? 'Using Flexbox' : hasGrid ? 'Using Grid' : 'No modern layout');
+    
+    // Check for transitions
+    const hasTransitions = cssContent.includes('transition:') || htmlContent.includes('transition:');
+    addResult('cssResults', hasTransitions ? 'pass' : 'warn', 
+        'Transitions', hasTransitions ? 'Found CSS transitions' : 'No transitions found');
+}
+
+function testDependencies(htmlContent) {
+    if (!htmlContent) {
+        loadAndTest();
+        return;
+    }
+    
+    clearResults('dependencyResults');
+    
+    // Check for File System Access API usage
+    const hasFSAPI = htmlContent.includes('showDirectoryPicker') || htmlContent.includes('FileSystemAccess');
+    addResult('dependencyResults', hasFSAPI ? 'pass' : 'warn', 
+        'File System API', hasFSAPI ? 'Using File System Access API' : 'Not using FS API');
+    
+    // Check for IndexedDB
+    const hasIndexedDB = htmlContent.includes('indexedDB') || htmlContent.includes('IndexedDB');
+    addResult('dependencyResults', hasIndexedDB ? 'pass' : 'warn', 
+        'IndexedDB', hasIndexedDB ? 'Using IndexedDB' : 'Not using IndexedDB');
+    
+    // Check for external dependencies
+    const hasExternalScripts = htmlContent.includes('<script src=');
+    addResult('dependencyResults', hasExternalScripts ? 'warn' : 'pass', 
+        'External Scripts', hasExternalScripts ? 'Found external scripts' : 'No external dependencies (offline-friendly)');
+    
+    // Check for localStorage
+    const hasLocalStorage = htmlContent.includes('localStorage');
+    addResult('dependencyResults', hasLocalStorage ? 'pass' : 'warn', 
+        'LocalStorage', hasLocalStorage ? 'Using localStorage' : 'Not using localStorage');
+}
+
+function findIssues(htmlContent) {
+    if (!htmlContent) {
+        loadAndTest();
+        return;
+    }
+    
+    clearResults('issueResults');
+    
+    // Check for common issues
+    const issues = [];
+    
+    // Check for undefined variables
+    const undefinedVars = htmlContent.match(/\bundefined\b/g);
+    if (undefinedVars && undefinedVars.length > 0) {
+        addResult('issueResults', 'warn', 'Undefined References', 
+            `Found ${undefinedVars.length} 'undefined' references`);
+    }
+    
+    // Check for console.log (debugging code)
+    const consoleLogs = (htmlContent.match(/console\.log\(/g) || []).length;
+    if (consoleLogs > 0) {
+        addResult('issueResults', 'warn', 'Console.log Statements', 
+            `Found ${consoleLogs} console.log calls (consider removing for production)`);
+    }
+    
+    // Check for TODO/FIXME comments
+    const todos = (htmlContent.match(/TODO|FIXME|XXX/gi) || []).length;
+    if (todos > 0) {
+        addResult('issueResults', 'warn', 'TODO/FIXME Comments', 
+            `Found ${todos} TODO/FIXME comments`);
+    }
+    
+    // Check for potential memory leaks (missing cleanup)
+    const hasEventListeners = htmlContent.includes('addEventListener');
+    const hasRemoveListeners = htmlContent.includes('removeEventListener');
+    if (hasEventListeners && !hasRemoveListeners) {
+        addResult('issueResults', 'warn', 'Event Listener Cleanup', 
+            'Found addEventListener but no removeEventListener (potential memory leak)');
+    }
+    
+    // Check for missing error handling
+    const tryBlocks = (htmlContent.match(/try\s*{/g) || []).length;
+    const catchBlocks = (htmlContent.match(/catch\s*\(/g) || []).length;
+    if (tryBlocks !== catchBlocks) {
+        addResult('issueResults', 'warn', 'Error Handling', 
+            `Mismatch: ${tryBlocks} try blocks, ${catchBlocks} catch blocks`);
+    }
+    
+    // Check for hardcoded values
+    const hardcodedColors = (htmlContent.match(/#[0-9a-fA-F]{6}/g) || []).length;
+    if (hardcodedColors > 10) {
+        addResult('issueResults', 'warn', 'Hardcoded Colors', 
+            `Found ${hardcodedColors} hardcoded hex colors (consider using CSS variables)`);
+    }
+    
+    if (issues.length === 0 && todos === 0 && consoleLogs === 0) {
+        addResult('issueResults', 'pass', 'Code Quality', 'No major issues found');
+    }
+}
+
+function addResult(containerId, status, name, details) {
+    const container = document.getElementById(containerId);
+    const item = document.createElement('div');
+    item.className = `test-item ${status}`;
+    
+    item.innerHTML = `
+        <div class="name">${name}</div>
+        <div class="details">${details}</div>
+    `;
+    
+    container.appendChild(item);
+    
+    // Store in results
+    testResults[containerId.replace('Results', '')].push({ status, name, details });
+}
+
+function clearResults(containerId) {
+    document.getElementById(containerId).innerHTML = '';
+    const key = containerId.replace('Results', '');
+    testResults[key] = [];
+}
+
+function updateStats() {
+    const statsContainer = document.getElementById('stats');
+    
+    let total = 0, passed = 0, failed = 0, warnings = 0;
+    
+    Object.values(testResults).forEach(category => {
+        category.forEach(test => {
+            total++;
+            if (test.status === 'pass') passed++;
+            else if (test.status === 'fail') failed++;
+            else if (test.status === 'warn') warnings++;
+        });
+    });
+    
+    statsContainer.innerHTML = `
+        <div class="stat-box">
+            <div class="number">${total}</div>
+            <div class="label">Total Tests</div>
+        </div>
+        <div class="stat-box">
+            <div class="number" style="color: var(--success);">${passed}</div>
+            <div class="label">Passed</div>
+        </div>
+        <div class="stat-box">
+            <div class="number" style="color: var(--error);">${failed}</div>
+            <div class="label">Failed</div>
+        </div>
+        <div class="stat-box">
+            <div class="number" style="color: var(--warning);">${warnings}</div>
+            <div class="label">Warnings</div>
+        </div>
+    `;
+}
+
+function generateFullReport() {
+    const reportContainer = document.getElementById('fullReport');
+    let report = '=== GURU MANAGER HTML TEST REPORT ===\n\n';
+    report += `Generated: ${new Date().toLocaleString()}\n\n`;
+    
+    Object.entries(testResults).forEach(([category, tests]) => {
+        report += `\n## ${category.toUpperCase()}\n`;
+        report += '='.repeat(50) + '\n';
+        
+        tests.forEach(test => {
+            const icon = test.status === 'pass' ? '✅' : test.status === 'fail' ? '❌' : '⚠️';
+            report += `${icon} ${test.name}\n`;
+            report += `   ${test.details}\n\n`;
+        });
+    });
+    
+    reportContainer.textContent = report;
+}
+
+function exportReport() {
+    const report = document.getElementById('fullReport').textContent;
+    const blob = new Blob([report], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `guru-manager-test-report-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// Auto-run on load
+window.addEventListener('load', () => {
+    console.log('Tester loaded, ready to test Guru Manager.html');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+{
+  "info": [
+    "[OK] File loaded: 78085 characters",
+    "[OK] DOCTYPE: Found",
+    "[OK] <html: Found",
+    "[OK] <head: Found",
+    "[OK] <body: Found",
+    "[OK] </html>: Found",
+    "Found 1 script tag(s)",
+    "Found 49 function definitions",
+    "Found 5 arrow functions",
+    "[OK] All critical functions found",
+    "[OK] All critical elements found",
+    "Found 33 buttons, 18 inputs, 168 divs",
+    "[OK] Using CSS custom properties",
+    "[OK] Using Flexbox & Grid",
+    "[OK] Using File System Access API",
+    "[OK] Using IndexedDB",
+    "[OK] Using localStorage",
+    "[OK] No external dependencies (offline-friendly)"
+  ],
+  "warnings": [
+    "[WARN] Try-catch mismatch: 8 try, 11 catch",
+    "[WARN] Potential memory leak: 4 addEventListener, 0 removeEventListener",
+    "[WARN] No media queries found",
+    "[WARN] Found 32 hardcoded hex colors",
+    "[WARN] Found 115 inline styles (consider using CSS classes)",
+    "[WARN] Found many magic numbers (consider using constants)"
+  ],
+  "issues": [],
+  "stats": {
+    "script_tags": 1,
+    "functions": 49,
+    "arrow_functions": 5,
+    "buttons": 33,
+    "inputs": 18,
+    "divs": 168,
+    "overlays": 1
+  }
+}

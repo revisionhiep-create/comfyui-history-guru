@@ -1,0 +1,14 @@
+[project]
+name = "comfyui-standard-trigger-words"
+description = "Fixed redraw problem at startup, added 4 layers of protection"
+version = "1.0.2"
+license = {text = "MIT"}
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/revisionhiep-create/comfyui-standard-trigger-words"
+
+[tool.comfy]
+PublisherId = "revybevy"
+DisplayName = "Scomfyui-standard-trigger-words"
+Icon = ""

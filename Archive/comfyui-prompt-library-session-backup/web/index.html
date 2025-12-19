@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Library</title>
+    <link rel="stylesheet" href="/prompt_library/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>📚 Prompt Library</h1>
+            <div class="header-info" id="promptCount">Loading...</div>
+        </header>
+
+        <div class="controls">
+            <div class="control-group">
+                <input type="text" id="searchLora" placeholder="Search by LoRA name..." class="search-input">
+                <button id="searchBtn" class="btn btn-primary">🔍 Search</button>
+                <button id="clearSearchBtn" class="btn btn-secondary">✕ Clear</button>
+            </div>
+
+            <div class="control-group">
+                <select id="sortBy" class="select-input">
+                    <option value="date">Sort by Date (Newest)</option>
+                    <option value="alphabetical">Sort Alphabetically</option>
+                </select>
+                
+                <label class="checkbox-label">
+                    <input type="checkbox" id="favoritesOnly">
+                    <span>⭐ Favorites Only</span>
+                </label>
+                
+                <button id="refreshBtn" class="btn btn-secondary">🔄 Refresh</button>
+                <button id="exportBtn" class="btn btn-secondary">📊 Export CSV</button>
+            </div>
+        </div>
+
+        <div id="promptsList" class="prompts-list"></div>
+
+        <div class="pagination">
+            <button id="prevBtn" class="btn btn-secondary">← Previous</button>
+            <span id="pageInfo" class="page-info">Page 1 of 1</span>
+            <button id="nextBtn" class="btn btn-secondary">Next →</button>
+        </div>
+    </div>
+
+    <script src="/prompt_library/static/app.js"></script>
+</body>
+</html>

@@ -102,7 +102,7 @@ Press `?` anytime to see the full list of shortcuts and features.
 | **Firefox** | ✅ **Supported** | Use `Guru Manager Firefox Edition.html` - View-only mode (no file operations) |
 | **Safari** | ❌ **Not Supported** | Missing API support. |
 
-### Firefox Edition (v3.3)
+### Firefox Edition
 
 The **Firefox Edition** (`Guru Manager Firefox Edition.html`) provides the same UI/UX experience as v4.0, but without file management features (since Firefox doesn't support the File System Access API).
 

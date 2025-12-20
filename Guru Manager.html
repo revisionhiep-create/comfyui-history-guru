@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>History Guru v6.10</title>
+<title>History Guru v6.10 (Tag Hunter)</title>
 <style>
 :root{--bg:#09090b;--head:rgba(9,9,11,0.98);--side:#0c0c0e;--card:#18181b;--bd:#27272a;--acc:#8b5cf6;--txt:#e4e4e7;--mut:#a1a1aa}
 [data-theme="light"]{--bg:#f8f9fa;--head:#ffffff;--side:#f1f3f4;--card:#ffffff;--bd:#dadce0;--acc:#1a73e8;--txt:#202124;--mut:#5f6368}
@@ -23,9 +23,16 @@ h1{font-size:1.1rem;font-weight:800;margin:0;white-space:nowrap}h1 span{color:va
 .grid-scroll{flex:1;overflow-y:auto;padding:20px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;padding-bottom:100px}
 .card{aspect-ratio:1;background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden;cursor:pointer;position:relative}
 .card:hover{border-color:var(--acc);transform:translateY(-4px)}.card img,.card video{width:100%;height:100%;object-fit:cover;pointer-events:none}
-.list-head{display:grid;grid-template-columns:50px 3fr 2fr 1.5fr 1fr;gap:12px;padding:10px 16px;border-bottom:1px solid var(--bd);font-size:0.75rem;color:var(--mut);font-weight:700;position:sticky;top:0;background:var(--bg);z-index:10}
-.list-row{display:grid;grid-template-columns:50px 3fr 2fr 1.5fr 1fr;gap:12px;padding:6px 16px;border-bottom:1px solid #1f1f22;align-items:center;font-size:0.85rem;cursor:pointer;height:48px}
-.list-row:hover{background:#27272a}.list-img{width:32px;height:32px;border-radius:4px;object-fit:cover;background:#000}
+.list-head{display:grid;grid-template-columns:55px 3fr 2fr 1.5fr 1fr;gap:12px;padding:10px 16px;border-bottom:1px solid var(--bd);font-size:0.75rem;color:var(--mut);font-weight:700;position:sticky;top:0;background:var(--bg);z-index:10}
+.list-head>div{cursor:pointer;user-select:none;display:flex;align-items:center;gap:4px;transition:color 0.2s}
+.list-head>div:hover{color:var(--acc)}
+.list-head>div:first-child{cursor:default}
+.list-head>div.sortable:hover{color:var(--txt)}
+.list-head>div.sorted{color:var(--acc)}
+.sort-arrow{font-size:0.7rem;opacity:0.6}
+.list-head>div.sorted .sort-arrow{opacity:1}
+.list-row{display:grid;grid-template-columns:55px 3fr 2fr 1.5fr 1fr;gap:12px;padding:6px 16px;border-bottom:1px solid #1f1f22;align-items:center;font-size:0.85rem;cursor:pointer;height:55px}
+.list-row:hover{background:#27272a}.list-img{width:37px;height:37px;border-radius:4px;object-fit:cover;background:#000}
 .detail-layer{position:absolute;inset:0;background:#000;z-index:2000;display:flex;flex-direction:column;visibility:hidden;opacity:0;transition:opacity 0.2s}
 .detail-layer.active{visibility:visible;opacity:1}
 .detail-mid{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:#09090b}
@@ -33,8 +40,11 @@ h1{font-size:1.1rem;font-weight:800;margin:0;white-space:nowrap}h1 span{color:va
 .nav-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;width:50px;height:50px;border-radius:50%;cursor:pointer;font-size:1.5rem;display:flex;align-items:center;justify-content:center;z-index:2010}
 .nav-btn:hover{background:var(--acc)}.nav-prev{left:20px}.nav-next{right:20px}
 .back-pill{position:absolute;top:20px;left:20px;background:rgba(0,0,0,0.6);color:#fff;padding:8px 16px;border-radius:20px;cursor:pointer;border:1px solid rgba(255,255,255,0.2);z-index:2010}
+.detail-favorite-star{position:absolute;top:20px;right:20px;background:rgba(0,0,0,0.6);color:#fff;padding:8px;border-radius:50%;cursor:pointer;border:1px solid rgba(255,255,255,0.2);z-index:2010;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;transition:all 0.2s}
+.detail-favorite-star:hover{background:rgba(0,0,0,0.8);transform:scale(1.1)}
+.detail-favorite-star.favorited{background:rgba(251,191,36,0.3);border-color:#fbbf24}
 .inspector{width:400px;background:var(--side);border-left:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;z-index:95;transition:transform 0.3s}
-body.mode-grid .inspector{position:fixed;right:0;top:60px;bottom:0;transform:translateX(100%)} body.mode-grid .inspector.open{transform:translateX(0)}
+body.mode-list .inspector{position:fixed;right:0;top:60px;bottom:0;transform:translateX(100%)} body.mode-list .inspector.open{transform:translateX(0)}
 body.mode-detail .inspector{position:relative;transform:none;border-left:1px solid #333}
 .insp-head{height:60px;padding:0 20px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;background:var(--head);flex-shrink:0}
 .insp-scroll{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
@@ -46,22 +56,20 @@ body.mode-detail .inspector{position:relative;transform:none;border-left:1px sol
 .bot-bar{display:flex;gap:10px}.btn-full{flex:1;padding:12px;border-radius:8px;background:#27272a;color:#fff;border:none;cursor:pointer;font-weight:600}.btn-pri{background:var(--acc)}
 .overlay{position:fixed;inset:0;background:rgba(9,9,11,0.95);z-index:3000;display:flex;flex-direction:column;align-items:center;justify-content:center}.hidden{display:none}
 .spin{width:40px;height:40px;border:4px solid #333;border-top-color:var(--acc);border-radius:50%;animation:s 1s linear infinite;margin-bottom:20px}@keyframes s{to{transform:rotate(360deg)}}
-body.mode-detail .folder-sidebar,body.mode-detail .toolbar{display:none} body.mode-grid .detail-layer{display:none}
+body.mode-detail .folder-sidebar,body.mode-detail .toolbar{display:none} body.mode-list .detail-layer{display:none}
 .stats-view{padding:0}.stat-card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:20px;margin-bottom:20px}.stat-card h3{color:var(--acc);margin:0 0 15px 0;font-size:1.1rem;border-bottom:1px solid var(--bd);padding-bottom:10px}.stat-item{margin:8px 0;color:var(--txt);font-size:0.9rem;display:flex;justify-content:space-between}.stat-item strong{color:var(--acc)}
 .card.favorite{border-color:#fbbf24}.card.selected{border-color:var(--acc)!important;box-shadow:0 0 10px rgba(139,92,246,0.5)}.list-row.selected{background:rgba(139,92,246,0.2)!important}.favorite-star{position:absolute;top:8px;right:8px;font-size:1.2rem;cursor:pointer;background:rgba(0,0,0,0.5);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;transition:opacity 0.2s;opacity:0.7;z-index:10}.favorite-star:hover{opacity:1}.card:hover .favorite-star{opacity:1}
 .toast{position:fixed;bottom:20px;right:20px;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:12px 20px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:10000;display:flex;align-items:center;gap:12px;min-width:250px;animation:toastSlide 0.3s ease}.toast.success{border-left:4px solid #4ade80}.toast.error{border-left:4px solid #ef4444}.toast.info{border-left:4px solid var(--acc)}@keyframes toastSlide{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 .context-menu{position:fixed;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:4px 0;min-width:150px;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,0.3);display:none}.context-menu-item{padding:8px 16px;cursor:pointer;color:var(--txt);font-size:0.85rem}.context-menu-item:hover{background:var(--side)}.context-menu-item.disabled{opacity:0.5;cursor:not-allowed}
 </style>
 </head>
-<body class="mode-grid" data-theme="dark">
+<body class="mode-list" data-theme="dark">
 <header>
     <h1>History<span>Guru</span> <span class="version">v6.10</span></h1>
     <div class="s-box"><input type="text" id="sIn" class="s-in" placeholder="Search..."></div>
     <button class="btn" onclick="initFileSystem()">Open Folder</button>
     <button class="btn" style="background:transparent;border:1px solid #333" onclick="fullScan()">↻</button>
     <div style="width:1px;height:24px;background:#333"></div>
-    <button id="bGrid" class="btn-icon active" onclick="setView('grid')">▦</button>
-    <button id="bList" class="btn-icon" onclick="setView('list')">☰</button>
     <button id="bStats" class="btn-icon" onclick="setView('stats')">📊</button>
     <button id="themeToggle" class="btn-icon" onclick="toggleTheme()" title="Toggle Theme">🌙</button>
     <button id="helpBtn" class="btn-icon" onclick="showHelp()" title="Help & Shortcuts">❓</button>
@@ -83,6 +91,7 @@ body.mode-detail .folder-sidebar,body.mode-detail .toolbar{display:none} body.mo
         <div class="grid-scroll"><div id="grid" class="grid"></div></div>
         <div id="detailView" class="detail-layer">
             <button class="back-pill" onclick="exitDetail()">← Back (Esc)</button>
+            <button id="detailFavoriteStar" class="detail-favorite-star" onclick="toggleFavoriteFromDetail()" title="Toggle Favorite">☆</button>
             <div class="detail-mid">
                 <button class="nav-btn nav-prev" onclick="nav(-1)">‹</button>
                 <div id="mediaCon" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center"></div>
@@ -112,7 +121,7 @@ body.mode-detail .folder-sidebar,body.mode-detail .toolbar{display:none} body.mo
     </aside>
 </div>
 <div id="load" class="overlay hidden"><div class="spin"></div><h3>Processing...</h3></div>
-<div id="wel" class="overlay"><h2>History Guru v6.10</h2><p style="color:#888;margin-bottom:20px">Welcome Creator</p><button class="btn" onclick="initFileSystem()">Open Folder</button></div>
+<div id="wel" class="overlay"><h2>History Guru v6.10</h2><p style="color:#888;margin-bottom:20px">Hello Creator</p><button class="btn" onclick="initFileSystem()">Open Folder</button></div>
 <div id="contextMenu" class="context-menu">
     <div class="context-menu-item" onclick="contextDelete()" style="color:#ef4444">Delete</div>
 </div>
@@ -129,12 +138,8 @@ body.mode-detail .folder-sidebar,body.mode-detail .toolbar{display:none} body.mo
 <script>
 // STATE
 let rH=null,db=null,cache=new Map(),fReg=new Map(),dReg=new Map();
-let cDir=null,cFiles=[],vMode='grid',aIdx=-1,cItem=null,favorites=new Set(),showFavoritesOnly=false,sortBy='date',selectedIndex=-1,selectedItems=new Set();
+let cDir=null,cFiles=[],vMode='list',aIdx=-1,cItem=null,favorites=new Set(),showFavoritesOnly=false,sortBy='date',sortDirection='desc',selectedIndex=-1,selectedItems=new Set();
 const DB="GuruV610", LR=/<lora:([^:>]+)(?::([^:>]+))?(?::([^:>]+))?>/g;
-// Virtual scrolling state
-let virtualScroll={enabled:true,itemsPerRow:0,rowHeight:0,visibleStart:0,visibleEnd:0,scrollTop:0,renderedItems:new Map(),scrollTimeout:null,resizeObserver:null};
-// Object URL cache to prevent constant image refreshing
-let objectUrlCache=new Map();
 
 // DB
 const iDB=()=>new Promise((r,j)=>{const q=indexedDB.open(DB,1);q.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains("i"))e.target.result.createObjectStore("i",{keyPath:"p"})};q.onsuccess=e=>{db=e.target.result;r()};q.onerror=j});
@@ -143,168 +148,17 @@ const dDel=k=>new Promise(r=>{const t=db.transaction("i","readwrite");t.objectSt
 const dAll=()=>new Promise(r=>{const t=db.transaction("i","readonly");t.objectStore("i").getAll().onsuccess=e=>{e.target.result.forEach(x=>cache.set(x.p,x));r()}});
 
 // FS
-async function initFileSystem(){try{rH=await window.showDirectoryPicker({mode:"readwrite"});document.getElementById('wel').classList.add('hidden');document.getElementById('load').classList.remove('hidden');await iDB();await fullScan();setupVirtualScroll()}catch(e){alert("Access denied.")}}
-async function fullScan(){document.getElementById('load').classList.remove('hidden');cache.clear();fReg.clear();dReg.clear();dReg.set('',rH);objectUrlCache.forEach(url=>URL.revokeObjectURL(url));objectUrlCache.clear();await dAll();await scD(rH,"");rTree();await opD(rH,"");document.getElementById('load').classList.add('hidden')}
-async function scD(h,p){for await(const e of h.values()){const ep=p?`${p}/${e.name}`:e.name;if(e.kind==='directory'){dReg.set(ep,e);await scD(e,ep)}else if(/\.(png|jpg|jpeg|webp|mp4|webm)$/i.test(e.name)){fReg.set(ep,e);const cached=cache.get(ep);if(!cached||!cached.m||!cached.m.pos&&!cached.m.meta||cached.m.meta&&cached.m.meta.model==="?")await proc(e,ep)}}}
-function setupVirtualScroll(){const scrollContainer=document.querySelector('.grid-scroll');if(!scrollContainer)return;let scrollHandler=null;if(!scrollContainer.dataset.virtualScrollSetup){scrollHandler=()=>{if(vMode==='grid'&&cFiles.length>100){if(virtualScroll.scrollTimeout)clearTimeout(virtualScroll.scrollTimeout);virtualScroll.scrollTimeout=setTimeout(()=>{const oldStart=virtualScroll.visibleStart,oldEnd=virtualScroll.visibleEnd;calculateVirtualScroll();if(oldStart!==virtualScroll.visibleStart||oldEnd!==virtualScroll.visibleEnd){rend()}virtualScroll.scrollTimeout=null},16)}};scrollContainer.addEventListener('scroll',scrollHandler,{passive:true});scrollContainer.dataset.virtualScrollSetup='true'}if(!virtualScroll.resizeObserver){virtualScroll.resizeObserver=new ResizeObserver(()=>{if(vMode==='grid'&&cFiles.length>100){calculateVirtualScroll();rend()}});virtualScroll.resizeObserver.observe(scrollContainer)}}
+async function initFileSystem(){try{rH=await window.showDirectoryPicker({mode:"readwrite"});document.getElementById('wel').classList.add('hidden');document.getElementById('load').classList.remove('hidden');await iDB();await fullScan();}catch(e){alert("Access denied.")}}
+async function fullScan(){document.getElementById('load').classList.remove('hidden');cache.clear();fReg.clear();dReg.clear();dReg.set('',rH);await dAll();await scD(rH,"");rTree();await opD(rH,"");document.getElementById('load').classList.add('hidden')}
+async function scD(h,p){for await(const e of h.values()){const ep=p?`${p}/${e.name}`:e.name;if(e.kind==='directory'){dReg.set(ep,e);await scD(e,ep)}else if(/\.(png|jpg|jpeg|webp|mp4|webm)$/i.test(e.name)){fReg.set(ep,e);if(!cache.has(ep))await proc(e,ep)}}}
 
 // --- BRAIN (Accumulative Fix) ---
 async function decompressZlib(data) {try {const ds = new DecompressionStream('deflate-raw'); const writer = ds.writable.getWriter(); writer.write(data.slice(2, data.length - 4)); writer.close(); return new TextDecoder().decode(await new Response(ds.readable).arrayBuffer());} catch (e) {try {const ds = new DecompressionStream('deflate'); const writer = ds.writable.getWriter(); writer.write(data); writer.close(); return new TextDecoder().decode(await new Response(ds.readable).arrayBuffer());} catch(e2) { return null; }}}
-function cleanTextForParsing(text) {
-    if (!text) return "";
-    // Remove null bytes (common in UTF-16 encoded EXIF UserComment)
-    let cleaned = text.replace(/\0/g, '');
-    // Remove other control characters except newlines
-    cleaned = cleaned.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F]/g, '');
-    // Normalize whitespace
-    cleaned = cleaned.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    return cleaned;
-}
-
-function extractEXIFUserComment(exifData) {
-    // Extract UserComment from EXIF data (tag 37510 = 0x927C)
-    // This matches the working implementation in 3.3
-    try {
-        const dataView = new DataView(exifData.buffer || exifData);
-        let offset = 0;
-        
-        // EXIF structure: TIFF header, IFD entries
-        // Look for UserComment tag (37510 = 0x927C)
-        while (offset < exifData.length - 12) {
-            const tag = dataView.getUint16(offset, true); // little-endian
-            if (tag === 37510) { // UserComment tag
-                const type = dataView.getUint16(offset + 2, true);
-                const count = dataView.getUint32(offset + 4, true);
-                const valueOffset = dataView.getUint32(offset + 8, true);
-                
-                if (count > 0 && valueOffset < exifData.length) {
-                    const valueData = new Uint8Array(exifData, valueOffset, Math.min(count, exifData.length - valueOffset));
-                    
-                    // Check encoding indicator (first 8 bytes)
-                    if (valueData.length > 8) {
-                        const encoding = String.fromCharCode(...valueData.slice(0, 8)).replace(/\0/g, '');
-                        
-                        if (encoding.includes('UNICODE') || encoding.includes('Unicode')) {
-                            // UTF-16 encoding - try both LE and BE, use whichever produces valid text
-                            const textData = valueData.slice(8);
-                            try {
-                                const decodedLE = new TextDecoder('utf-16le', {fatal: false}).decode(textData);
-                                // Check if UTF-16LE produced valid-looking text (contains expected markers)
-                                if (decodedLE && (decodedLE.includes('Negative prompt:') || decodedLE.includes('Steps:') || 
-                                    decodedLE.includes('负面提示') || decodedLE.includes('步骤') ||
-                                    (decodedLE.length > 50 && /Steps?\s*[:：]\s*\d+/.test(decodedLE)))) {
-                                    return decodedLE;
-                                }
-                            } catch(e) {}
-                            
-                            // Try UTF-16BE
-                            try {
-                                const decodedBE = new TextDecoder('utf-16be', {fatal: false}).decode(textData);
-                                // Check if UTF-16BE produced valid-looking text
-                                if (decodedBE && (decodedBE.includes('Negative prompt:') || decodedBE.includes('Steps:') || 
-                                    decodedBE.includes('负面提示') || decodedBE.includes('步骤') ||
-                                    (decodedBE.length > 50 && /Steps?\s*[:：]\s*\d+/.test(decodedBE)))) {
-                                    return decodedBE;
-                                }
-                                // If LE didn't work but BE decoded something, prefer BE
-                                if (decodedBE && decodedBE.length > 10) {
-                                    return decodedBE;
-                                }
-                            } catch(e2) {}
-                            
-                            // Fallback: return LE result even if it doesn't look perfect
-                            try {
-                                return new TextDecoder('utf-16le', {fatal: false}).decode(textData);
-                            } catch(e3) {
-                                return new TextDecoder('utf-8', {fatal: false}).decode(valueData.slice(8));
-                            }
-                        } else if (encoding.includes('ASCII')) {
-                            // ASCII encoding
-                            return new TextDecoder('ascii', {fatal: false}).decode(valueData.slice(8));
-                        } else {
-                            // Try UTF-8
-                            return new TextDecoder('utf-8', {fatal: false}).decode(valueData);
-                        }
-                    } else {
-                        // Short value, try direct decode
-                        return new TextDecoder('utf-8', {fatal: false}).decode(valueData);
-                    }
-                }
-            }
-            offset += 12; // Move to next IFD entry
-        }
-    } catch(e) {
-        // EXIF parsing failed, return null
-    }
-    return null;
-}
-
-function extractEXIFUserCommentFromJPEG(buffer) {
-    // Extract EXIF from JPEG (starts with 0xFFE1 APP1 marker)
-    try {
-        const view = new DataView(buffer);
-        let offset = 2; // Skip JPEG SOI marker (0xFFD8)
-        
-        while (offset < buffer.byteLength - 4) {
-            // Look for APP1 marker (0xFFE1) which contains EXIF
-            if (view.getUint8(offset) === 0xFF && view.getUint8(offset + 1) === 0xE1) {
-                const segmentLength = view.getUint16(offset + 2);
-                const segmentData = new Uint8Array(buffer, offset + 4, segmentLength - 2);
-                
-                // Check if this is EXIF segment (starts with "Exif\0\0")
-                if (segmentLength > 6) {
-                    const header = String.fromCharCode(...segmentData.slice(0, 6));
-                    if (header === 'Exif\0\0') {
-                        // Extract UserComment from EXIF data
-                        const exifData = segmentData.slice(6);
-                        const userComment = extractEXIFUserComment(exifData);
-                        if (userComment) return userComment;
-                    }
-                }
-                
-                offset += segmentLength + 2;
-            } else {
-                offset++;
-            }
-        }
-        
-        // Fallback: Search for UserComment text patterns directly in buffer
-        // This is more reliable than parsing EXIF structure
-        const bufferArray = new Uint8Array(buffer);
-        
-        // Search for "UNICODE" marker followed by text patterns
-        const unicodeMarker = new TextEncoder().encode('UNICODE');
-        for (let i = 0; i < bufferArray.length - unicodeMarker.length - 100; i++) {
-            let match = true;
-            for (let j = 0; j < unicodeMarker.length; j++) {
-                if (bufferArray[i + j] !== unicodeMarker[j]) {
-                    match = false;
-                    break;
-                }
-            }
-            if (match) {
-                // Found UNICODE marker, try to decode as UTF-16LE from this point
-                try {
-                    const textData = bufferArray.slice(i + 8); // Skip "UNICODE\0\0"
-                    const decoded = new TextDecoder('utf-16le', {fatal: false}).decode(textData);
-                    if (decoded.includes('Negative prompt:') || decoded.includes('Steps:') || decoded.includes('masterpiece')) {
-                        return decoded;
-                    }
-                } catch(e) {}
-            }
-        }
-    } catch(e) {
-        // Extraction failed
-    }
-    return null;
-}
-
 async function extractText(buffer) {
     const view = new DataView(buffer); 
     let fullText = ""; 
     try {
         if (view.getUint32(0) === 0x89504E47) {
-            // PNG file - extract text chunks and EXIF
             let offset = 8; 
             while (offset < view.byteLength) {
                 if (offset + 4 > view.byteLength) break; 
@@ -321,54 +175,16 @@ async function extractText(buffer) {
                 } else if (type === 'zTXt') { 
                     const inflated = await decompressZlib(data); 
                     if (inflated) fullText += inflated + "\n"; 
-                } else if (type === 'eXIf') {
-                    // EXIF chunk in PNG - extract UserComment
-                    // Match 3.3's simple approach exactly
-                    const exifText = extractEXIFUserComment(data);
-                    if (exifText) {
-                        fullText += exifText + "\n";
-                    }
-                }
+                } 
                 offset += len + 12; 
                 if (type === 'IEND') break;
             }
         } else if (view.getUint32(0) === 0x52494646 || view.getUint16(0) === 0xFFD8) {
-            // JPEG or WebP - extract EXIF UserComment
-            const exifText = extractEXIFUserCommentFromJPEG(buffer);
-            if (exifText) {
-                fullText = exifText;
-            } else {
-                // Fallback: try multiple decoding methods to find metadata
-                        // Fallback: try multiple decoding methods to find metadata
-                        // Method 1: Try UTF-16LE (common in EXIF UserComment)
-                        try {
-                            const utf16Text = new TextDecoder('utf-16le', {fatal: false}).decode(new Uint8Array(buffer));
-                            if (utf16Text.includes('Negative prompt:') || utf16Text.includes('Steps:')) {
-                                fullText = utf16Text;
-                            }
-                        } catch(e) {}
-                        
-                        // Method 2: Try UTF-16BE
-                        if (!fullText) {
-                            try {
-                                const utf16Text = new TextDecoder('utf-16be', {fatal: false}).decode(new Uint8Array(buffer));
-                                if (utf16Text.includes('Negative prompt:') || utf16Text.includes('Steps:')) {
-                                    fullText = utf16Text;
-                                }
-                            } catch(e) {}
-                        }
-                
-                // Method 3: Try UTF-8 (may have null bytes)
-                if (!fullText) {
-                    fullText = new TextDecoder('utf-8', {fatal: false}).decode(new Uint8Array(buffer));
-                }
-            }
+            fullText = new TextDecoder().decode(new Uint8Array(buffer));
         }
     } catch(e) {
         console.warn('Metadata extraction error:', e);
     }
-    // Clean up null bytes and normalize text (handles UTF-16 encoding issues)
-    fullText = cleanTextForParsing(fullText);
     return fullText;
 }
 function parseMetadata(text) {function extractJSON(str,startPos=0) {const start = str.indexOf('{',startPos); if (start === -1) return null; let count = 0, end = -1; for (let i = start; i < str.length; i++) { if (str[i] === '{') count++; else if (str[i] === '}') count--; if (count === 0) { end = i; break; } } if (end !== -1) try { return {json:JSON.parse(str.substring(start, end + 1)),end:end+1}; } catch(e) { return null; } return null;} let comfyResult=null;if (text.includes('"class_type"') && text.includes('"inputs"')) { let pos=0;while(true){const result=extractJSON(text,pos);if(!result)break;const json=result.json;pos=result.end;if(json&&(json.class_type||json.nodes||Object.values(json).some(v=>v&&typeof v==='object'&&(v.class_type||v.type)))){const parsed=parseComfy(json);if(parsed&&(parsed.pos||parsed.meta.model!=="?")){comfyResult=parsed;break}}}} if(!comfyResult&&(text.includes('"class_type"') || text.includes('"type"') || (text.includes('"inputs"') && (text.includes('KSampler') || text.includes('CLIPTextEncode') || text.includes('SaveImage') || text.includes('CLIPLoader') || text.includes('VAELoader'))))) { let pos=0;while(true){const result=extractJSON(text,pos);if(!result)break;const json=result.json;pos=result.end;if(json&&(json.class_type||json.nodes||json.type||Object.values(json).some(v=>v&&typeof v==='object'&&(v.class_type||v.type)))){const parsed=parseComfy(json);if(parsed&&(parsed.pos||parsed.meta.model!=="?")){comfyResult=parsed;break}}}} if(comfyResult)return comfyResult;return parseA1111(text);}
@@ -425,127 +241,18 @@ function parseComfy(json) {
 }
 
 function parseA1111(text) {
-    let pos = "", neg = "";
-    let resources = [];
-    let meta = { model: "?", size: "?", seed: "?", steps: "?", cfg: "?", sampler: "?" };
-    
-    // Clean text - remove any remaining control characters
-    text = text.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F]/g, '');
-    
-    let match;
-    LR.lastIndex = 0;
-    while ((match = LR.exec(text)) !== null) {
-        resources.push({ type: 'LoRA', name: match[1], str: match[2] || "1.0" });
-    }
-    
-    // Try multiple marker variations (case-insensitive)
-    // Also support Chinese markers
-    const negMarkers = ["Negative prompt:", "Negative Prompt:", "negative prompt:", "Negative prompt", "负面提示:", "负面提示"];
-    const stepsMarkers = ["Steps:", "Steps", "Step:", "步骤:", "步数:"];
-    
-    let negIdx = -1, stepsIdx = -1;
-    let negMarker = "";
-    
-    // Find negative prompt marker
-    for (const marker of negMarkers) {
-        const idx = text.indexOf(marker);
-        if (idx !== -1) {
-            negIdx = idx;
-            negMarker = marker;
-            break;
-        }
-    }
-    
-    // Find steps marker
-    for (const marker of stepsMarkers) {
-        const idx = text.indexOf(marker);
-        if (idx !== -1) {
-            stepsIdx = idx;
-            break;
-        }
-    }
-    
-    // Extract prompts
-    if (negIdx !== -1 && stepsIdx !== -1 && negIdx < stepsIdx) {
-        pos = text.substring(0, negIdx).replace(/parameters\s*/i, "").trim();
-        neg = text.substring(negIdx + negMarker.length, stepsIdx).trim();
-    } else if (stepsIdx !== -1) {
-        pos = text.substring(0, stepsIdx).replace(/parameters\s*/i, "").trim();
-    } else if (negIdx !== -1) {
-        // Only negative marker found
-        pos = text.substring(0, negIdx).replace(/parameters\s*/i, "").trim();
-        neg = text.substring(negIdx + negMarker.length).trim();
-    } else {
-        // No markers found - try to extract from JSON or use whole text
-        if(text.includes('"widgets_values"')) {
-            const parts = text.split(/"text":\s*"/);
-            if(parts.length > 1) pos = parts[1].split('"')[0];
-        } else {
-            pos = text.trim();
-        }
-    }
-    
-    // Extract parameters - improved regex patterns
-    if (stepsIdx !== -1) {
-        const block = text.substring(stepsIdx);
-        
-        // More flexible parameter extraction
-        const getParam = (key, patterns) => {
-            for (const pattern of patterns) {
-                const regex = new RegExp(pattern, 'i');
-                const match = block.match(regex);
-                if (match && match[1]) {
-                    return match[1].trim();
-                }
-            }
-            return "?";
-        };
-        
-        meta.steps = getParam("Steps", [
-            "Steps:\\s*([0-9]+)",
-            "Steps\\s*:\\s*([0-9]+)",
-            "Steps\\s+([0-9]+)"
-        ]);
-        
-        meta.sampler = getParam("Sampler", [
-            "Sampler:\\s*([^,\\n]+)",
-            "Sampler\\s*:\\s*([^,\\n]+)",
-            "Sampler\\s+([^,\\n]+)"
-        ]);
-        
-        meta.cfg = getParam("CFG", [
-            "CFG\\s+scale:\\s*([0-9.]+)",
-            "CFG\\s*scale\\s*:\\s*([0-9.]+)",
-            "CFG\\s*:\\s*([0-9.]+)",
-            "CFG scale\\s*:\\s*([0-9.]+)"
-        ]);
-        
-        meta.seed = getParam("Seed", [
-            "Seed:\\s*([0-9]+)",
-            "Seed\\s*:\\s*([0-9]+)",
-            "Seed\\s+([0-9]+)"
-        ]);
-        
-        meta.size = getParam("Size", [
-            "Size:\\s*([0-9xX]+)",
-            "Size\\s*:\\s*([0-9xX]+)",
-            "Size\\s+([0-9xX]+)"
-        ]);
-        
-        meta.model = getParam("Model", [
-            "Model:\\s*([^,\\n]+)",
-            "Model\\s*:\\s*([^,\\n]+)",
-            "Model\\s+([^,\\n]+)"
-        ]);
-    }
-    
-    return { pos, neg, resources, meta };
+    let pos="", neg="", resources=[], meta={model:"?",seed:"?",steps:"?",cfg:"?",sampler:"?",size:"?"}, match;
+    LR.lastIndex=0; while((match=LR.exec(text))!==null) resources.push({type:'LoRA', name:match[1], str:match[2]||"1.0"});
+    const negIdx=text.indexOf("Negative prompt:"); const stepsIdx=text.indexOf("Steps:");
+    if(negIdx!==-1&&stepsIdx!==-1){pos=text.substring(0,negIdx).replace(/parameters\s*/i,"").trim();neg=text.substring(negIdx+16,stepsIdx).trim()}else if(stepsIdx!==-1)pos=text.substring(0,stepsIdx).trim();
+    if(stepsIdx!==-1){const b=text.substring(stepsIdx);const get=k=>{const m=b.match(new RegExp(`${k}:\\s*([^,]+)`));return m?m[1].trim():"?"};meta.steps=get("Steps");meta.sampler=get("Sampler");meta.cfg=get("CFG scale");meta.seed=get("Seed");meta.size=get("Size");meta.model=get("Model");}
+    return {pos,neg,resources,meta};
 }
 
 // --- LOGIC ---
-async function proc(h,p){try{const f=await h.getFile(),vid=/\.(mp4|webm)$/i.test(f.name);let m=null;if(vid)m={meta:{model:"Video",size:(f.size/1e6).toFixed(1)+"MB"},resources:[]};else{const b=await f.arrayBuffer(),t=await extractText(b);if(!t||t.trim().length===0){console.warn('No text extracted from',f.name,'- file may not have metadata')}else if(t.length>0&&t.length<100){console.log('Extracted text from',f.name,':',t.substring(0,100))}m=parseMetadata(t)}const i={p,n:f.name,d:f.lastModified,m,v:vid};cache.set(p,i);dPut(i)}catch(e){console.error('Error processing',p,e)}}
+async function proc(h,p){try{const f=await h.getFile(),vid=/\.(mp4|webm)$/i.test(f.name);let m=null;if(vid)m={meta:{model:"Video",size:(f.size/1e6).toFixed(1)+"MB"},resources:[]};else{const b=await f.arrayBuffer(),t=await extractText(b);m=parseMetadata(t)}const i={p,n:f.name,d:f.lastModified,m,v:vid};cache.set(p,i);dPut(i)}catch{}}
 
-function setView(m){vMode=m;document.getElementById('bGrid').classList.toggle('active',m==='grid');document.getElementById('bList').classList.toggle('active',m==='list');document.getElementById('bStats').classList.toggle('active',m==='stats');if(m==='grid'&&cFiles.length>100){setupVirtualScroll()}rend()}
+function setView(m){vMode=m;document.getElementById('bStats').classList.toggle('active',m==='stats');rend()}
 function renderStats(container){const stats={models:new Map(),samplers:new Map(),loras:new Map(),sizes:new Map(),cfgs:new Map(),steps:new Map(),totalImages:0,aiImages:0};for(const [path,item] of cache.entries()){if(!item.m)continue;stats.totalImages++;const meta=item.m.meta||{};const resources=item.m.resources||[];if(meta.model&&meta.model!=="?"){stats.aiImages++;stats.models.set(meta.model,(stats.models.get(meta.model)||0)+1)}if(meta.sampler&&meta.sampler!=="?")stats.samplers.set(meta.sampler,(stats.samplers.get(meta.sampler)||0)+1);if(meta.size&&meta.size!=="?")stats.sizes.set(meta.size,(stats.sizes.get(meta.size)||0)+1);if(meta.cfg&&meta.cfg!=="?"){const cfg=parseFloat(meta.cfg);if(!isNaN(cfg)){const cfgKey=cfg.toFixed(1);stats.cfgs.set(cfgKey,(stats.cfgs.get(cfgKey)||0)+1)}}if(meta.steps&&meta.steps!=="?"){const steps=parseInt(meta.steps);if(!isNaN(steps))stats.steps.set(steps.toString(),(stats.steps.get(steps.toString())||0)+1)}resources.forEach(res=>{if(res.type==='LoRA'&&res.name)stats.loras.set(res.name,(stats.loras.get(res.name)||0)+1)})}const statsHtml=`<div style="padding:20px;max-width:1200px;margin:0 auto;"><h2 style="color:var(--txt);margin-bottom:30px;">📊 Metadata Statistics</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;"><div class="stat-card"><h3>📈 Overview</h3><div class="stat-item">Total Images: <strong>${stats.totalImages}</strong></div><div class="stat-item">AI Images: <strong>${stats.aiImages}</strong></div><div class="stat-item">Non-AI Images: <strong>${stats.totalImages-stats.aiImages}</strong></div><div class="stat-item">AI Coverage: <strong>${stats.totalImages?Math.round((stats.aiImages/stats.totalImages)*100):0}%</strong></div></div><div class="stat-card"><h3>🎨 Top Models</h3>${Array.from(stats.models.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([model,count])=>`<div class="stat-item">${model}: <strong>${count}</strong></div>`).join('')||'<div class="stat-item">No model data</div>'}</div><div class="stat-card"><h3>🔧 Top LoRAs</h3>${Array.from(stats.loras.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([lora,count])=>`<div class="stat-item">${lora}: <strong>${count}</strong></div>`).join('')||'<div class="stat-item">No LoRA data</div>'}</div><div class="stat-card"><h3>⚙️ Samplers</h3>${Array.from(stats.samplers.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([sampler,count])=>`<div class="stat-item">${sampler}: <strong>${count}</strong></div>`).join('')||'<div class="stat-item">No sampler data</div>'}</div><div class="stat-card"><h3>📐 Image Sizes</h3>${Array.from(stats.sizes.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([size,count])=>`<div class="stat-item">${size}: <strong>${count}</strong></div>`).join('')||'<div class="stat-item">No size data</div>'}</div><div class="stat-card"><h3>🎛️ CFG Scale</h3>${Array.from(stats.cfgs.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([cfg,count])=>`<div class="stat-item">${cfg}: <strong>${count}</strong></div>`).join('')||'<div class="stat-item">No CFG data</div>'}</div><div class="stat-card"><h3>🔄 Steps</h3>${Array.from(stats.steps.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([steps,count])=>`<div class="stat-item">${steps}: <strong>${count}</strong></div>`).join('')||'<div class="stat-item">No steps data</div>'}</div></div></div>`;container.innerHTML=statsHtml}
 function toggleTheme(){const body=document.body;const currentTheme=body.getAttribute('data-theme')||'dark';const newTheme=currentTheme==='dark'?'light':'dark';body.setAttribute('data-theme',newTheme);localStorage.setItem('guru-theme',newTheme);const toggleBtn=document.getElementById('themeToggle');if(toggleBtn){toggleBtn.textContent=newTheme==='dark'?'🌙':'☀️';toggleBtn.title=`Switch to ${newTheme==='dark'?'Light':'Dark'} Mode`}}
 (function(){const savedTheme=localStorage.getItem('guru-theme')||'dark';document.body.setAttribute('data-theme',savedTheme);const toggleBtn=document.getElementById('themeToggle');if(toggleBtn){toggleBtn.textContent=savedTheme==='dark'?'🌙':'☀️';toggleBtn.title=`Switch to ${savedTheme==='dark'?'Light':'Dark'} Mode`}const savedFavorites=localStorage.getItem('guru-favorites');if(savedFavorites){favorites=new Set(JSON.parse(savedFavorites))}})();
@@ -555,61 +262,84 @@ let contextTarget=null,contextPath="",contextIsFile=false;
 function showContextMenu(e,element,path,isFile=false){e.preventDefault();contextTarget=element;contextPath=path;contextIsFile=isFile;const menu=document.getElementById('contextMenu');menu.style.display='block';menu.style.left=e.pageX+'px';menu.style.top=e.pageY+'px';document.addEventListener('click',hideContextMenu,{once:true})}
 function hideContextMenu(){document.getElementById('contextMenu').style.display='none';contextTarget=null;contextPath="";contextIsFile=false}
 async function contextDelete(){if(!contextPath)return;const name=contextPath.split('/').pop();if(!confirm(`Delete "${name}"? This cannot be undone.`))return;try{if(contextIsFile){const parentPath=contextPath.includes('/')?contextPath.substring(0,contextPath.lastIndexOf('/')):"";const parentHandle=parentPath?dReg.get(parentPath)||rH:rH;await parentHandle.removeEntry(name);fReg.delete(contextPath);cache.delete(contextPath);await dDel(contextPath)}else{const parentPath=contextPath.includes('/')?contextPath.substring(0,contextPath.lastIndexOf('/')):"";const parentHandle=parentPath?dReg.get(parentPath)||rH:rH;await parentHandle.removeEntry(name);dReg.delete(contextPath)}await fullScan();showToast('Deleted successfully','success')}catch(e){showToast('Delete failed: '+e.message,'error')}hideContextMenu()}
-function showHelp(){const content=document.getElementById('helpContent');content.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;"><div><h3 style="color:var(--acc);margin-top:0;">⌨️ Keyboard Shortcuts</h3><div style="display:grid;gap:8px;font-size:0.9rem;"><div><kbd>Arrow Keys</kbd> Navigate in detail view</div><div><kbd>Enter</kbd> Open selected image</div><div><kbd>Delete</kbd> Delete selected item</div><div><kbd>Esc</kbd> Close overlays / Exit detail</div><div><kbd>1-3</kbd> Switch views (Grid/List/Stats)</div><div><kbd>G</kbd> Grid view</div><div><kbd>L</kbd> List view</div><div><kbd>S</kbd> Statistics view</div><div><kbd>T</kbd> Toggle theme</div><div><kbd>?</kbd> Show this help</div><div><kbd>F</kbd> Focus search</div><div><kbd>R</kbd> Refresh folder</div></div></div><div><h3 style="color:var(--acc);margin-top:0;">🖱️ Mouse Actions</h3><div style="display:grid;gap:8px;font-size:0.9rem;"><div><strong>Click</strong> Image to view details</div><div><strong>Right-click</strong> File/Folder for context menu</div><div><strong>Drag & Drop</strong> Files to move between folders</div><div><strong>Click Star</strong> ⭐ to favorite/unfavorite</div><div><strong>Ctrl+Click</strong> Select multiple (coming soon)</div><div><strong>Shift+Click</strong> Range select (coming soon)</div></div></div><div><h3 style="color:var(--acc);margin-top:0;">📋 Functions</h3><div style="display:grid;gap:8px;font-size:0.9rem;"><div><strong>Open Folder</strong> Select folder to browse</div><div><strong>↻ Refresh</strong> Rescan folder for new files</div><div><strong>Search</strong> Filter images by name/metadata</div><div><strong>Statistics</strong> View metadata analytics</div><div><strong>Theme Toggle</strong> Switch dark/light mode</div><div><strong>Favorites</strong> Star images for quick access</div><div><strong>Delete</strong> Remove files/folders (right-click)</div></div></div><div><h3 style="color:var(--acc);margin-top:0;">🎯 Tips</h3><div style="display:grid;gap:8px;font-size:0.9rem;"><div>• Use drag-and-drop to organize files</div><div>• Right-click folders for context menu</div><div>• Statistics view shows metadata insights</div><div>• Favorites persist across sessions</div><div>• Search works on filenames and metadata</div><div>• Theme preference is saved automatically</div></div></div></div>`;document.getElementById('helpOverlay').classList.remove('hidden')}
+function showHelp(){const content=document.getElementById('helpContent');content.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;"><div><h3 style="color:var(--acc);margin-top:0;">⌨️ Keyboard Shortcuts</h3><div style="display:grid;gap:8px;font-size:0.9rem;"><div><kbd>Arrow Keys</kbd> Navigate in detail view</div><div><kbd>Enter</kbd> Open selected image</div><div><kbd>Delete</kbd> Delete selected item</div><div><kbd>Esc</kbd> Close overlays / Exit detail</div><div><kbd>3</kbd> Statistics view</div><div><kbd>S</kbd> Statistics view</div><div><kbd>T</kbd> Toggle theme</div><div><kbd>?</kbd> Show this help</div><div><kbd>F</kbd> Focus search</div><div><kbd>R</kbd> Refresh folder</div></div></div><div><h3 style="color:var(--acc);margin-top:0;">🖱️ Mouse Actions</h3><div style="display:grid;gap:8px;font-size:0.9rem;"><div><strong>Click</strong> Image to view details</div><div><strong>Right-click</strong> File/Folder for context menu</div><div><strong>Drag & Drop</strong> Files to move between folders</div><div><strong>Click Star</strong> ⭐ to favorite/unfavorite</div><div><strong>Ctrl+Click</strong> Select multiple (coming soon)</div><div><strong>Shift+Click</strong> Range select (coming soon)</div></div></div><div><h3 style="color:var(--acc);margin-top:0;">📋 Functions</h3><div style="display:grid;gap:8px;font-size:0.9rem;"><div><strong>Open Folder</strong> Select folder to browse</div><div><strong>↻ Refresh</strong> Rescan folder for new files</div><div><strong>Search</strong> Filter images by name/metadata</div><div><strong>Statistics</strong> View metadata analytics</div><div><strong>Theme Toggle</strong> Switch dark/light mode</div><div><strong>Favorites</strong> Star images for quick access</div><div><strong>Delete</strong> Remove files/folders (right-click)</div></div></div><div><h3 style="color:var(--acc);margin-top:0;">🎯 Tips</h3><div style="display:grid;gap:8px;font-size:0.9rem;"><div>• Use drag-and-drop to organize files</div><div>• Right-click folders for context menu</div><div>• Statistics view shows metadata insights</div><div>• Favorites persist across sessions</div><div>• Search works on filenames and metadata</div><div>• Theme preference is saved automatically</div></div></div></div>`;document.getElementById('helpOverlay').classList.remove('hidden')}
 function hideHelp(){document.getElementById('helpOverlay').classList.add('hidden')}
 function showToast(message,type='info'){const toast=document.createElement('div');toast.className=`toast ${type}`;const closeBtn=document.createElement('button');closeBtn.textContent='✕';closeBtn.style.cssText='background:none;border:none;color:var(--txt);cursor:pointer;font-size:1.2rem;';closeBtn.onclick=()=>toast.remove();toast.innerHTML=`<div style="flex:1;">${message}</div>`;toast.appendChild(closeBtn);document.body.appendChild(toast);setTimeout(()=>{toast.style.animation='toastSlide 0.3s ease reverse';setTimeout(()=>toast.remove(),300)},3000)}
 function rTree(){const c=document.getElementById('tree');c.innerHTML='';const a=document.createElement('div');a.className='folder active';a.innerText='📁 All Files';a.ondragover=e=>{e.preventDefault();a.classList.add('drag-over')};a.ondragleave=()=>a.classList.remove('drag-over');a.ondrop=e=>{e.preventDefault();a.classList.remove('drag-over');moveFile(e.dataTransfer.getData("text"),"")};a.onclick=()=>{document.querySelectorAll('.folder').forEach(e=>e.classList.remove('active'));a.classList.add('active');opD(null,"")};a.oncontextmenu=e=>{e.preventDefault();showContextMenu(e,a,"")};c.appendChild(a);[...dReg.keys()].sort().forEach(p=>{if(!p)return;const d=document.createElement('div');d.className='folder';d.innerText="📁 "+p.split('/').pop();d.style.paddingLeft=(p.split('/').length*16)+'px';d.ondragover=e=>{e.preventDefault();d.classList.add('drag-over')};d.ondragleave=()=>d.classList.remove('drag-over');d.ondrop=e=>{e.preventDefault();d.classList.remove('drag-over');moveFile(e.dataTransfer.getData("text"),p)};d.onclick=()=>{document.querySelectorAll('.folder').forEach(e=>e.classList.remove('active'));d.classList.add('active');opD(dReg.get(p),p)};d.oncontextmenu=e=>{e.preventDefault();showContextMenu(e,d,p)};c.appendChild(d)})}
-async function opD(h,p){cDir=h;const pathText=p||"All Files";const displayText=showFavoritesOnly?`${pathText} (Favorites Only)`:pathText;document.getElementById('pathDisplay').innerText=displayText;const oldFiles=new Set(cFiles.map(f=>f.p));cFiles=[];for(const [fp,fh] of fReg.entries()){const par=fp.includes('/')?fp.substring(0,fp.lastIndexOf('/')):"";if(!h||par===p){const item=cache.get(fp)||{};const fileInfo={p:fp,h:fh,d:item.d||0,n:item.n||fh.name};if(showFavoritesOnly&&!favorites.has(fp))continue;cFiles.push(fileInfo)}}
-// Clean up object URLs for files no longer in view
-const newFiles=new Set(cFiles.map(f=>f.p));oldFiles.forEach(fp=>{if(!newFiles.has(fp)&&objectUrlCache.has(fp)){URL.revokeObjectURL(objectUrlCache.get(fp));objectUrlCache.delete(fp)}});
-await applySort();rend()}
-async function applySort(){if(sortBy==='name'){cFiles.sort((a,b)=>a.n.localeCompare(b.n))}else if(sortBy==='created'){for(const f of cFiles){if(!f.created){try{const file=await f.h.getFile();f.created=file.lastModified}catch(e){f.created=0}}}cFiles.sort((a,b)=>(b.created||0)-(a.created||0))}else{cFiles.sort((a,b)=>b.d-a.d)}}
-async function changeSort(){sortBy=document.getElementById('sortSelect').value;await applySort();rend()}
+async function opD(h,p){cDir=h;const pathText=p||"All Files";const displayText=showFavoritesOnly?`${pathText} (Favorites Only)`:pathText;document.getElementById('pathDisplay').innerText=displayText;cFiles=[];for(const [fp,fh] of fReg.entries()){const par=fp.includes('/')?fp.substring(0,fp.lastIndexOf('/')):"";if(!h||par===p){const item=cache.get(fp)||{};const fileInfo={p:fp,h:fh,d:item.d||0,n:item.n||fh.name};if(showFavoritesOnly&&!favorites.has(fp))continue;cFiles.push(fileInfo)}}await applySort();rend()}
+async function applySort(){
+    if(sortBy==='name'){
+        cFiles.sort((a,b)=>{
+            const cmp=a.n.localeCompare(b.n);
+            return sortDirection==='asc'?cmp:-cmp;
+        });
+    }else if(sortBy==='model'){
+        cFiles.sort((a,b)=>{
+            const mtA=cache.get(a.p)||{},mmA=(mtA.m&&mtA.m.meta)?mtA.m.meta:{};
+            const mtB=cache.get(b.p)||{},mmB=(mtB.m&&mtB.m.meta)?mtB.m.meta:{};
+            const modelA=(mmA.model||"").toLowerCase();
+            const modelB=(mmB.model||"").toLowerCase();
+            const cmp=modelA.localeCompare(modelB);
+            return sortDirection==='asc'?cmp:-cmp;
+        });
+    }else if(sortBy==='modified'){
+        cFiles.sort((a,b)=>{
+            const cmp=(b.d||0)-(a.d||0);
+            return sortDirection==='asc'?-cmp:cmp;
+        });
+    }else if(sortBy==='created'){
+        for(const f of cFiles){if(!f.created){try{const file=await f.h.getFile();f.created=file.lastModified}catch(e){f.created=0}}}
+        cFiles.sort((a,b)=>{
+            const cmp=(b.created||0)-(a.created||0);
+            return sortDirection==='asc'?-cmp:cmp;
+        });
+    }else{
+        cFiles.sort((a,b)=>{
+            const cmp=(b.d||0)-(a.d||0);
+            return sortDirection==='asc'?-cmp:cmp;
+        });
+    }
+}
+function sortByColumn(col){
+    if(sortBy===col){
+        sortDirection=sortDirection==='asc'?'desc':'asc';
+    }else{
+        sortBy=col;
+        sortDirection='asc';
+    }
+    applySort().then(()=>rend());
+}
+function getSortArrow(col){
+    if(sortBy===col)return sortDirection==='asc'?'↑':'↓';
+    return'<span class="sort-arrow">↕</span>';
+}
+async function changeSort(){
+    const val=document.getElementById('sortSelect').value;
+    if(val==='name'){sortBy='name';sortDirection='asc'}
+    else if(val==='created'){sortBy='created';sortDirection='desc'}
+    else{sortBy='date';sortDirection='desc'}
+    await applySort();rend();
+}
 async function toggleFavoritesFilter(){showFavoritesOnly=!showFavoritesOnly;const btn=document.getElementById('favFilterBtn');btn.classList.toggle('active',showFavoritesOnly);btn.title=showFavoritesOnly?'Show All Files':'Show Only Favorites';let currentPath=document.getElementById('pathDisplay').innerText.replace(' (Favorites Only)','');if(currentPath==='All Files')currentPath=null;await opD(cDir,currentPath)}
 
-function calculateVirtualScroll(){
-    if(vMode!=='grid'||cFiles.length<=100){virtualScroll.enabled=false;return}
-    const scrollContainer=document.querySelector('.grid-scroll');if(!scrollContainer){virtualScroll.enabled=false;return}
-    const grid=document.getElementById('grid');if(!grid){virtualScroll.enabled=false;return}
-    const containerWidth=scrollContainer.clientWidth-40;
-    const cardMinWidth=160;const gap=16;const itemsPerRow=Math.max(1,Math.floor((containerWidth+gap)/(cardMinWidth+gap)));
-    const cardHeight=cardMinWidth+gap;const rowHeight=cardHeight;
-    virtualScroll.itemsPerRow=itemsPerRow;virtualScroll.rowHeight=rowHeight;
-    const totalRows=Math.ceil(cFiles.length/itemsPerRow);const scrollTop=scrollContainer.scrollTop||0;const viewportHeight=scrollContainer.clientHeight;
-    const bufferRows=3;const startRow=Math.max(0,Math.floor(scrollTop/rowHeight)-bufferRows);const endRow=Math.min(totalRows-1,Math.ceil((scrollTop+viewportHeight)/rowHeight)+bufferRows);
-    virtualScroll.visibleStart=startRow*itemsPerRow;virtualScroll.visibleEnd=Math.min(cFiles.length,(endRow+1)*itemsPerRow);virtualScroll.scrollTop=scrollTop;virtualScroll.enabled=true
-}
-function createCardElement(f,i){
-    const mt=cache.get(f.p)||{},mm=(mt.m&&mt.m.meta)?mt.m.meta:{},div=document.createElement('div');
-    div.draggable=true;div.ondragstart=e=>{e.dataTransfer.setData("text",f.p);e.dataTransfer.effectAllowed="move"};
-    const isSelected=selectedIndex===i||selectedItems.has(f.p);
-    if(vMode==='grid'){const isFavorite=favorites.has(f.p);div.className=`card${isFavorite?' favorite':''}${isSelected?' selected':''}`;if(isSelected){div.style.borderColor='var(--acc)';div.style.borderWidth='3px'}else{div.style.borderWidth='1px'}
-    const starDiv=document.createElement('div');starDiv.className='favorite-star';starDiv.textContent=isFavorite?'⭐':'☆';starDiv.onclick=(e)=>{e.stopPropagation();toggleFavorite(f.p)};
-    div.innerHTML=mt.v?`<video></video>`:`<img>`;div.appendChild(starDiv);
-    // Use cached object URL if available, otherwise create and cache it
-    if(objectUrlCache.has(f.p)){const media=div.querySelector(mt.v?'video':'img');if(media)media.src=objectUrlCache.get(f.p)}else{f.h.getFile().then(x=>{const url=URL.createObjectURL(x);objectUrlCache.set(f.p,url);const media=div.querySelector(mt.v?'video':'img');if(media)media.src=url})}}
-    else{div.className=`list-row${isSelected?' selected':''}`;if(isSelected)div.style.backgroundColor='rgba(139,92,246,0.2)';const tag=mt.v?'video':'img';div.innerHTML=`<${tag} class="list-img"></${tag}><div>${f.h.name}</div><div>${mm.model||""}</div><div>${mm.sampler||""}</div><div>${mm.seed||""}</div>`;
-    // Use cached object URL if available, otherwise create and cache it
-    if(objectUrlCache.has(f.p)){const media=div.querySelector(tag);if(media)media.src=objectUrlCache.get(f.p)}else{f.h.getFile().then(x=>{const url=URL.createObjectURL(x);objectUrlCache.set(f.p,url);const media=div.querySelector(tag);if(media)media.src=url})}}
-    div.onclick=(e)=>{if(e.ctrlKey){selectedItems.has(f.p)?selectedItems.delete(f.p):selectedItems.add(f.p);rend()}else if(e.shiftKey&&selectedIndex>=0){const start=Math.min(selectedIndex,i);const end=Math.max(selectedIndex,i);for(let j=start;j<=end;j++)selectedItems.add(cFiles[j].p);rend()}else{selectedIndex=i;selectedItems.clear();selectedItems.add(f.p);enterDet(i)}};
-    div.oncontextmenu=(e)=>{e.preventDefault();showContextMenu(e,div,f.p,true)};return div
-}
 function rend(){
-    const c=document.getElementById('grid');
-    // Only clear and rebuild if not in virtual scroll mode or if visible range changed
-    const needsFullRebuild=vMode!=='grid'||cFiles.length<=100||!virtualScroll.enabled;
-    if(needsFullRebuild){c.innerHTML=''}
-    c.className=vMode==='grid'?'grid':vMode==='stats'?'stats-view':'list-view';document.getElementById('fCount').innerText=`${cFiles.length} items`;
+    const c=document.getElementById('grid');c.innerHTML='';c.className=vMode==='stats'?'stats-view':'list-view';document.getElementById('fCount').innerText=`${cFiles.length} items`;
     if(vMode==='stats'){renderStats(c);return}
-    if(vMode==='list'){if(needsFullRebuild){const h=document.createElement('div');h.className='list-head';h.innerHTML=`<div></div><div>Name</div><div>Model</div><div>Sampler</div><div>Seed</div>`;c.appendChild(h)}cFiles.forEach((f,i)=>{if(needsFullRebuild||!c.querySelector(`[data-path="${f.p.replace(/"/g,'&quot;')}"]`)){const el=createCardElement(f,i);el.setAttribute('data-path',f.p);c.appendChild(el)}});return}
-    if(vMode==='grid'&&cFiles.length>100){calculateVirtualScroll();if(virtualScroll.enabled&&virtualScroll.itemsPerRow>0){const totalRows=Math.ceil(cFiles.length/virtualScroll.itemsPerRow);const totalHeight=totalRows*virtualScroll.rowHeight;c.style.height=totalHeight+'px';c.style.position='relative';
-    // Remove elements outside visible range
-    Array.from(c.children).forEach(child=>{if(child.dataset.index!==undefined){const idx=parseInt(child.dataset.index);if(idx<virtualScroll.visibleStart||idx>=virtualScroll.visibleEnd){child.remove()}}});
-    // Add/update visible elements
-    const topSpacer=document.createElement('div');topSpacer.style.height=(Math.floor(virtualScroll.visibleStart/virtualScroll.itemsPerRow)*virtualScroll.rowHeight)+'px';topSpacer.className='virtual-spacer-top';if(!c.querySelector('.virtual-spacer-top'))c.insertBefore(topSpacer,c.firstChild);else c.replaceChild(topSpacer,c.querySelector('.virtual-spacer-top'));
-    for(let i=virtualScroll.visibleStart;i<virtualScroll.visibleEnd;i++){if(i>=cFiles.length)break;const existing=c.querySelector(`[data-index="${i}"]`);if(!existing){const el=createCardElement(cFiles[i],i);el.setAttribute('data-index',i);c.insertBefore(el,c.querySelector('.virtual-spacer-bottom'))}else{const el=createCardElement(cFiles[i],i);el.setAttribute('data-index',i);c.replaceChild(el,existing)}}
-    const bottomSpacer=document.createElement('div');const remainingRows=totalRows-Math.ceil(virtualScroll.visibleEnd/virtualScroll.itemsPerRow);bottomSpacer.style.height=Math.max(0,remainingRows*virtualScroll.rowHeight)+'px';bottomSpacer.className='virtual-spacer-bottom';if(!c.querySelector('.virtual-spacer-bottom'))c.appendChild(bottomSpacer);else c.replaceChild(bottomSpacer,c.querySelector('.virtual-spacer-bottom'));return}}
-    if(needsFullRebuild){cFiles.forEach((f,i)=>{c.appendChild(createCardElement(f,i))})}
+    const h=document.createElement('div');h.className='list-head';
+    h.innerHTML=`<div></div><div class="sortable ${sortBy==='name'?'sorted':''}" onclick="sortByColumn('name')">Name ${getSortArrow('name')}</div><div class="sortable ${sortBy==='model'?'sorted':''}" onclick="sortByColumn('model')">Model ${getSortArrow('model')}</div><div class="sortable ${sortBy==='modified'?'sorted':''}" onclick="sortByColumn('modified')">Date Modified ${getSortArrow('modified')}</div><div class="sortable ${sortBy==='created'?'sorted':''}" onclick="sortByColumn('created')">Date Created ${getSortArrow('created')}</div>`;
+    c.appendChild(h);
+    cFiles.forEach((f,i)=>{
+        const mt=cache.get(f.p)||{},mm=(mt.m&&mt.m.meta)?mt.m.meta:{},div=document.createElement('div');
+        div.draggable=true;
+        div.ondragstart=e=>{e.dataTransfer.setData("text",f.p);e.dataTransfer.effectAllowed="move"};
+        const isSelected=selectedIndex===i||selectedItems.has(f.p);
+        const formatDate=(d)=>{if(!d)return"";const dt=new Date(d);return dt.toLocaleDateString()+" "+dt.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})};
+        const dateModified=f.d?formatDate(f.d):"";
+        let dateCreated="";
+        if(f.created){dateCreated=formatDate(f.created)}else{dateCreated="Loading...";f.h.getFile().then(x=>{f.created=x.lastModified;const createdCell=div.querySelector('.date-created');if(createdCell)createdCell.textContent=formatDate(f.created)})}
+        div.className=`list-row${isSelected?' selected':''}`;if(isSelected)div.style.backgroundColor='rgba(139,92,246,0.2)';const tag=mt.v?'video':'img';div.innerHTML=`<${tag} class="list-img"></${tag}><div>${f.h.name}</div><div>${mm.model||""}</div><div class="date-modified">${dateModified}</div><div class="date-created">${dateCreated}</div>`;f.h.getFile().then(x=>{div.querySelector(tag).src=URL.createObjectURL(x)});
+        div.onclick=(e)=>{if(e.ctrlKey){selectedItems.has(f.p)?selectedItems.delete(f.p):selectedItems.add(f.p);rend()}else if(e.shiftKey&&selectedIndex>=0){const start=Math.min(selectedIndex,i);const end=Math.max(selectedIndex,i);for(let j=start;j<=end;j++)selectedItems.add(cFiles[j].p);rend()}else{selectedIndex=i;selectedItems.clear();selectedItems.add(f.p);enterDet(i)}};div.oncontextmenu=(e)=>{e.preventDefault();showContextMenu(e,div,f.p,true)};c.appendChild(div)
+    })
 }
 
 // MOVE ENGINE
@@ -640,7 +370,7 @@ async function moveFile(srcPath, destFolder){
 }
 
 async function enterDet(i){aIdx=i;document.body.className='mode-detail';document.getElementById('detailView').classList.add('active');document.getElementById('sidebar').classList.add('collapsed');upDet()}
-function exitDetail(){document.body.className='mode-grid';document.getElementById('detailView').classList.remove('active');document.getElementById('sidebar').classList.remove('collapsed');document.getElementById('inspector').classList.remove('open')}
+function exitDetail(){document.body.className='mode-list';document.getElementById('detailView').classList.remove('active');document.getElementById('sidebar').classList.remove('collapsed');document.getElementById('inspector').classList.remove('open')}
 function togInsp(f){const i=document.getElementById('inspector');if(f!==undefined)i.classList.toggle('open',f);else i.classList.toggle('open')}
 async function upDet(){
     if(aIdx<0||aIdx>=cFiles.length)return;
@@ -648,7 +378,24 @@ async function upDet(){
     const con=document.getElementById('mediaCon');con.innerHTML='';
     const fl=await f.h.getFile(),u=URL.createObjectURL(fl),el=document.createElement(mt.v?'video':'img');
     el.src=u;el.className='detail-media';if(mt.v){el.controls=true;el.autoplay=true}con.appendChild(el);
+    const starBtn=document.getElementById('detailFavoriteStar');
+    if(starBtn){
+        const isFavorite=favorites.has(f.p);
+        starBtn.textContent=isFavorite?'⭐':'☆';
+        starBtn.classList.toggle('favorited',isFavorite);
+    }
     pop(f,mt);
+}
+function toggleFavoriteFromDetail(){
+    if(aIdx<0||aIdx>=cFiles.length)return;
+    const f=cFiles[aIdx];
+    toggleFavorite(f.p);
+    const starBtn=document.getElementById('detailFavoriteStar');
+    if(starBtn){
+        const isFavorite=favorites.has(f.p);
+        starBtn.textContent=isFavorite?'⭐':'☆';
+        starBtn.classList.toggle('favorited',isFavorite);
+    }
 }
 function pop(f,mt){
     document.getElementById('mFile').innerText=f.h.name;
@@ -661,7 +408,7 @@ function pop(f,mt){
         s.innerHTML = x.name + (x.str ? ` <span style="opacity:0.6;font-size:0.9em">| ${x.str}</span>` : "");
         b.appendChild(s)
     });
-    if(document.body.classList.contains('mode-grid'))togInsp(true);
+    if(document.body.classList.contains('mode-list'))togInsp(true);
 }
 function nav(d){const n=aIdx+d;if(n>=0&&n<cFiles.length){aIdx=n;upDet()}}
 document.addEventListener('keydown',e=>{
@@ -674,13 +421,9 @@ document.addEventListener('keydown',e=>{
     if(e.key==='f'||e.key==='F'){if(!e.ctrlKey){e.preventDefault();document.getElementById('sIn').focus();return}}
     if(e.key==='r'||e.key==='R'){if(!e.ctrlKey){e.preventDefault();fullScan();return}}
     if(e.key==='t'||e.key==='T'){if(!e.ctrlKey){e.preventDefault();toggleTheme();return}}
-    if(e.key==='1'){e.preventDefault();setView('grid');return}
-    if(e.key==='2'){e.preventDefault();setView('list');return}
     if(e.key==='3'){e.preventDefault();setView('stats');return}
-    if(e.key==='g'||e.key==='G'){if(!e.ctrlKey){e.preventDefault();setView('grid');return}}
-    if(e.key==='l'||e.key==='L'){if(!e.ctrlKey){e.preventDefault();setView('list');return}}
     if(e.key==='s'||e.key==='S'){if(!e.ctrlKey){e.preventDefault();setView('stats');return}}
-    if(vMode==='grid'&&cFiles.length>0){if(e.key==='ArrowDown'){e.preventDefault();selectedIndex=Math.min(selectedIndex+1,cFiles.length-1);rend();scrollToSelected();return}
+    if(vMode==='list'&&cFiles.length>0){if(e.key==='ArrowDown'){e.preventDefault();selectedIndex=Math.min(selectedIndex+1,cFiles.length-1);rend();scrollToSelected();return}
     if(e.key==='ArrowUp'){e.preventDefault();selectedIndex=Math.max(selectedIndex-1,0);rend();scrollToSelected();return}
     if(e.key==='Home'){e.preventDefault();selectedIndex=0;rend();scrollToSelected();return}
     if(e.key==='End'){e.preventDefault();selectedIndex=cFiles.length-1;rend();scrollToSelected();return}}
@@ -720,5 +463,43 @@ async function mkDir(){
     }
 }
 function saveJSON(){if(!cItem)return;const d={filename:document.getElementById('mFile').innerText,positive:document.getElementById('mPos').value,negative:document.getElementById('mNeg').value,meta:{model:document.getElementById('mModel').value,seed:document.getElementById('mSeed').value}};const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=d.filename+".json";a.click()}
-document.getElementById('sIn').addEventListener('input',async e=>{const t=e.target.value.toLowerCase(),a=[];for(const[p,v]of cache){if((v.name+JSON.stringify(v.m)).toLowerCase().includes(t))a.push({p,h:fReg.get(p),d:v.d})}cFiles=a;rend()});
+document.getElementById('sIn').addEventListener('input',async e=>{
+    const t=e.target.value.toLowerCase().trim();
+    if(!t){
+        await opD(cDir,cDir===rH?"":Array.from(dReg.entries()).find(([k,v])=>v===cDir)?.[0]||"");
+        return;
+    }
+    const a=[];
+    for(const[p,v]of cache){
+        if(!v)continue;
+        const fh=fReg.get(p);
+        if(!fh)continue;
+        let matches=false;
+        const fileName=(v.n||'').toLowerCase();
+        if(fileName.includes(t)){matches=true}
+        if(!matches&&v.m){
+            const m=v.m;
+            if(m.pos&&m.pos.toLowerCase().includes(t)){matches=true}
+            if(!matches&&m.neg&&m.neg.toLowerCase().includes(t)){matches=true}
+            if(!matches&&m.meta){
+                const meta=m.meta;
+                if(meta.model&&meta.model.toLowerCase().includes(t)){matches=true}
+                if(!matches&&meta.sampler&&meta.sampler.toLowerCase().includes(t)){matches=true}
+                if(!matches&&meta.seed&&meta.seed.toString().includes(t)){matches=true}
+                if(!matches&&meta.steps&&meta.steps.toString().includes(t)){matches=true}
+                if(!matches&&meta.cfg&&meta.cfg.toString().includes(t)){matches=true}
+                if(!matches&&meta.size&&meta.size.toLowerCase().includes(t)){matches=true}
+            }
+            if(!matches&&m.resources&&Array.isArray(m.resources)){
+                for(const r of m.resources){
+                    if(r.name&&r.name.toLowerCase().includes(t)){matches=true;break}
+                }
+            }
+        }
+        if(matches){a.push({p,h:fh,d:v.d||0,n:v.n||fh.name})}
+    }
+    cFiles=a;
+    await applySort();
+    rend();
+});
 </script></body></html>

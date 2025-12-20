@@ -93,10 +93,25 @@ Quick reference guide to find everything in this project.
 |--------|---------|
 | `backup/` | Automatic backups of HTML files before changes |
 | `Archive/` | Archived projects and code |
-| `.cursor/` | Cursor IDE configuration and rules |
+| `.cursor/` | Cursor IDE configuration and rules (see below) |
 | `my-project/` | Project templates and agent configurations |
 
 **Important:** `.cursorrules` file in root is automatically loaded by Cursor at conversation start.
+
+---
+
+## 🔧 Cursor IDE Configuration (`.cursor/`)
+
+**Location:** `.cursor/`
+
+| File | Purpose | Status |
+|------|---------|--------|
+| `coding_guru.md` | **Learning file** - Knowledge bank with learned patterns, best practices, and solutions | ✅ Exists |
+| `commands/rules.md` | **ComfyUI rules** - ComfyUI-specific coding standards and node development rules | ✅ Exists |
+| `spec.md` | **Project specification** - History Guru project requirements and technical implementation details | ✅ Exists |
+| `todo.md` | **Todo list** - Task tracking and project todos | ✅ Exists (empty) |
+
+**Note:** These files are referenced in `.cursorrules` and should be read at the start of every new conversation.
 
 ---
 
@@ -110,6 +125,8 @@ Quick reference guide to find everything in this project.
 - **File index?** → `INDEX.md` (this file)
 - **AI rules?** → `.cursorrules` (auto-loaded) or `docs/AI_CODING_RULES.md`
 - **Learning file?** → `.cursor/coding_guru.md`
+- **ComfyUI rules?** → `.cursor/commands/rules.md`
+- **Project spec?** → `.cursor/spec.md`
 - **AI tools?** → `tools/`
 - **Coding references?** → `data/coding_reference_*.json`
 - **Backups?** → `backup/`
@@ -129,6 +146,11 @@ art/
 ├── backup/                  # Automatic backups
 ├── Archive/                 # Archived projects
 ├── .cursor/                 # IDE configuration
+│   ├── coding_guru.md      # Learning file (patterns & best practices)
+│   ├── commands/
+│   │   └── rules.md        # ComfyUI-specific rules
+│   ├── spec.md             # Project specification
+│   └── todo.md             # Todo list
 ├── my-project/              # Project templates
 ├── Readme.md                # Main README (stays in root)
 ├── README_QUICK_START.md    # Quick start guide
@@ -139,6 +161,8 @@ art/
 
 **Last Updated:** 2025-12-19  
 **Maintained by:** AI Assistant
+
+**Note:** Updated to include complete `.cursor/` directory structure documentation.
 
 ---
 

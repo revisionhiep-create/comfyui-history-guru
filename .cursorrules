@@ -91,6 +91,45 @@ art/
 └── Readme.md                    # Project overview
 ```
 
+## 🔗 Project Repository
+
+**GitHub Repository:** https://github.com/revisionhiep-create/comfyui-history-guru
+
+- **Use GitHub to restore originals** if needed
+- **Check repository for latest versions** before making changes
+- **Reference repository** for project structure and file locations
+
+## 💾 Backup System (MANDATORY)
+
+**CRITICAL: Always create backups before making ANY changes to files.**
+
+### Automatic Backup Rules:
+
+1. **Before ANY file edit:**
+   - Create a timestamped backup in `backup/` directory
+   - Format: `{filename}_{YYYYMMDD}_{HHMMSS}.html` (or appropriate extension)
+   - Example: `Guru Manager ChromeEdge Edition_20251219_143022.html`
+
+2. **Maintain up to 10 revisions:**
+   - Keep the 10 most recent backups for each file
+   - Delete older backups automatically (keep only last 10)
+   - This ensures easy restoration without cluttering the backup folder
+
+3. **Backup locations:**
+   - Main files: `backup/` directory
+   - Use `tools/backup_file.py` script when available
+   - Or create manual backups with timestamp format
+
+4. **Restoration:**
+   - Use backup files from `backup/` directory
+   - Or fetch originals from GitHub repository
+   - Always verify backup before restoring
+
+### Backup Script Usage:
+```bash
+python tools/backup_file.py "Guru Manager ChromeEdge Edition.html"
+```
+
 ## ⚠️ Critical Rules
 
 1. **Always read INDEX.md first** - It shows where everything is
@@ -98,8 +137,9 @@ art/
 3. **Always check coding_guru.md** - Contains learned patterns and solutions
 4. **Always research first** - Internet search is MANDATORY before coding
 5. **Always use tools** - Analysis and testing tools are MANDATORY
-6. **Always backup** - Create backup before ANY file changes
+6. **Always backup** - Create timestamped backup before ANY file changes (maintain last 10 revisions)
 7. **Always update learning files** - Document new patterns in coding_guru.md
+8. **Check GitHub** - Use repository to restore originals or verify current state
 
 ## 🎓 Knowledge Growth
 
@@ -110,3 +150,4 @@ art/
 - Reference the problem it solved
 
 **This ensures future conversations benefit from past learnings.**
+

@@ -16,12 +16,23 @@ You can now **organize, sort, move, and fix** your AI generations without ever l
 * **🎬 Cinema Mode:** A new split-screen "Detail View." Click an image to see it full-height on the left while editing metadata on the right. Supports keyboard navigation (Arrow Keys) for fast review.
 * **🎥 Video Support:** Now supports playing and organizing `.mp4` and `.webm` files (Sora/AnimateDiff workflows) alongside your images.
 * **💾 Instant Fix & Save:** The "Fix Metadata" button no longer downloads a file to your "Downloads" folder. It now **writes the fixed image directly to your disk** (next to the original), injecting the missing metadata losslessly.
-* **⭐ Favorites System:** Star your favorite images for quick access. Filter to show only favorites with one click.
+* **⭐ Favorites System:** Star your favorite images for quick access. Filter to show only favorites with one click. Favorite button available in detail view for easy access.
 * **🔍 Enhanced Metadata Parsing:** Now supports Civitai metadata formats, including "prompt" and "workflow" chunks. Handles both ComfyUI workflow formats (direct nodes and nodes array).
-* **📊 Sort Options:** Sort images by name, date modified, or date created.
+* **📊 Clickable Column Sorting:** Click any column header (Name, Model, Date Modified, Date Created) in list view to sort ascending/descending. Visual indicators show current sort direction.
+* **📋 Improved List View:** List view is now the default and primary view mode. Shows Model, Date Modified, and Date Created columns. Images are slightly larger for better visibility.
+* **🔎 Enhanced Search:** Search now works across file names, prompts, models, samplers, seeds, steps, CFG, size, and LoRA resources. Empty search restores folder view.
 * **⌨️ Keyboard Shortcuts:** Comprehensive keyboard navigation and shortcuts (press `?` for help).
 * **❓ Help System:** Built-in help overlay showing all functions and keyboard shortcuts.
 * **🗑️ Context Menu:** Right-click files and folders for quick actions (delete, etc.).
+
+## 🆕 Latest Improvements (EXIF & Parsing Enhancements)
+
+* **📸 EXIF UserComment Extraction:** Full support for extracting metadata from EXIF UserComment fields in both PNG (`eXIf` chunks) and JPEG (APP1 segments). This enables parsing of Civitai images that store metadata in EXIF format.
+* **🌐 UTF-16 Encoding Support:** Properly decodes UTF-16LE and UTF-16BE encoded EXIF UserComment fields, handling the encoding format commonly used by Civitai and other platforms.
+* **🧹 Enhanced Text Cleaning:** Improved text cleaning function removes null bytes, control characters, and encoding artifacts that can break metadata parsing, ensuring reliable extraction from various sources.
+* **🔤 Case-Insensitive Parsing:** The A1111 parser now uses case-insensitive marker matching, handling variations like "Negative prompt:", "Negative Prompt:", and "negative prompt:" automatically.
+* **🎯 Flexible Parameter Extraction:** Enhanced regex patterns for extracting Steps, Sampler, CFG Scale, Seed, Size, and Model parameters with flexible spacing and formatting variations.
+* **🔄 Fallback Decoding:** Multiple fallback methods for extracting metadata from JPEG files, including direct UTF-16 decoding when EXIF structure parsing fails.
 
 ## 🧠 Core Features (Retained)
 
@@ -29,7 +40,7 @@ You can now **organize, sort, move, and fix** your AI generations without ever l
 * **✏️ Metadata Editor:** Manually edit missing or broken metadata fields (Prompt, Seed, Steps, etc.) directly in the sidebar.
 * **🕸️ Deep Recursive Tracing:** The "Brain" of the operation. It recursively traces upstream nodes to find prompts hidden behind `SeedVarianceEnhancers`, `Logic Gates`, or complex `Lora Stackers` that standard viewers miss.
 * **🔒 100% Private:** Zero server uploads. Your images never leave your hard drive.
-* **📱 Multiple View Modes:** Grid view, List view, and Statistics view for different browsing needs.
+* **📱 List View (Primary):** Optimized list view with clickable column sorting. Shows Model, Date Modified, and Date Created. Larger thumbnails for better visibility.
 * **🌓 Theme Toggle:** Switch between dark and light themes with persistent preference storage.
 * **📈 Statistics Dashboard:** View comprehensive metadata analytics including model usage, LoRA popularity, and more.
 
@@ -56,9 +67,7 @@ You can now **organize, sort, move, and fix** your AI generations without ever l
 
 ## ⌨️ Keyboard Shortcuts
 
-* `G` - Switch to Grid view
-* `L` - Switch to List view
-* `S` - Switch to Statistics view
+* `S` or `3` - Switch to Statistics view
 * `T` - Toggle theme (dark/light)
 * `?` - Show help overlay
 * `F` - Focus search box
@@ -67,6 +76,8 @@ You can now **organize, sort, move, and fix** your AI generations without ever l
 * `Enter` - Open selected image
 * `Delete` - Delete selected item
 * `Esc` - Close overlays / Exit detail view
+
+**Note:** List view is now the default and primary view mode. Grid view has been removed for better performance.
 
 Press `?` anytime to see the full list of shortcuts and features.
 
@@ -87,16 +98,18 @@ Press `?` anytime to see the full list of shortcuts and features.
 The **Firefox Edition** (`Guru Universal Node Version 3.3.html`) provides the same UI/UX experience as v4.0, but without file management features (since Firefox doesn't support the File System Access API).
 
 **✅ Available in Firefox Edition:**
-- ⭐ Favorites system with filter
-- 🔍 Full metadata search and parsing
-- 📊 Sort by name, date modified, or date created
+- ⭐ Favorites system with filter (favorite button in detail view)
+- 🔍 Enhanced search across file names, prompts, models, and all metadata fields
+- 📊 Clickable column sorting (Name, Model, Date Modified, Date Created) with ascending/descending toggle
+- 📋 Improved list view (default view) with larger images and better column layout
 - 🌓 Theme toggle (dark/light)
 - ⌨️ Keyboard shortcuts (press `?` for help)
 - 🖼️ Full-screen detail view with arrow key navigation
 - ❓ Help system overlay
-- 🚀 Enhanced metadata parsing (ComfyUI, Civitai, A1111)
+- 🚀 Enhanced metadata parsing (ComfyUI, Civitai, A1111, EXIF UserComment)
+- 📸 EXIF extraction support (PNG eXIf chunks, JPEG APP1 segments, UTF-16 decoding)
 - 📈 Statistics dashboard
-- 📱 Multiple view modes (Grid, List, Statistics)
+- 📱 List and Statistics view modes (Grid view removed for better performance)
 
 **❌ Not Available in Firefox Edition:**
 - File/folder creation
@@ -114,18 +127,29 @@ History Guru v4 uses a hybrid engine:
 * **Virtual Scrolling:** For collections with 100+ images, only visible items are rendered, dramatically improving performance and memory usage.
 * **Recursive Node Tracing:** Traces `positive` -> `conditioning` -> `node` links upwards endlessly until it finds the original text prompt.
 * **CRC32 Binary Injection:** Calculates valid checksums to insert new `tEXt` chunks into existing PNG binaries without re-encoding the image pixel data (lossless patching).
-* **Enhanced Metadata Parsing:** Supports multiple ComfyUI workflow formats (direct node objects and nodes array), Civitai "prompt" chunks, and A1111 parameters format.
+* **Enhanced Metadata Parsing:** Supports multiple ComfyUI workflow formats (direct node objects and nodes array), Civitai "prompt" chunks, EXIF UserComment fields, and A1111 parameters format.
+* **EXIF Extraction Engine:** Parses EXIF structure to locate UserComment tags (37510/0x927C), handles encoding indicators (UNICODE/ASCII), and decodes UTF-16 text properly.
+* **Text Cleaning Pipeline:** Removes null bytes, control characters, and encoding artifacts before parsing to ensure reliable metadata extraction.
 * **Debounced Scroll Events:** Optimized scroll handling with 16ms throttling for smooth virtual scrolling performance.
 
 ## 📋 Supported Metadata Formats
 
 * **ComfyUI Workflows:** Full support for ComfyUI workflow JSON in "workflow" and "prompt" chunks
-* **Civitai Format:** Supports Civitai's metadata format with "prompt" chunks
-* **A1111 Parameters:** Automatic1111-style text parameters
-* **PNG Text Chunks:** tEXt, iTXt, and zTXt (compressed) chunks
-* **JPEG/EXIF:** Basic EXIF metadata detection
+* **Civitai Format:** Supports Civitai's metadata format with "prompt" chunks and EXIF UserComment fields
+* **A1111 Parameters:** Automatic1111-style text parameters with enhanced parsing (case-insensitive markers, flexible patterns)
+* **PNG Text Chunks:** tEXt, iTXt, zTXt (compressed), and eXIf (EXIF) chunks
+* **JPEG/EXIF:** Full EXIF UserComment extraction with UTF-16LE/BE decoding support
 * **WebP:** WebP image format support
 * **MP4/WebM:** Video file support for Sora/AnimateDiff workflows
+
+### EXIF Metadata Support
+
+History Guru now fully supports extracting metadata from EXIF UserComment fields, which is the format used by many Civitai images:
+
+* **PNG Files:** Extracts metadata from `eXIf` chunks containing EXIF data
+* **JPEG Files:** Extracts metadata from APP1 segments containing EXIF data
+* **Encoding Support:** Handles UTF-16LE, UTF-16BE, ASCII, and UTF-8 encoded UserComment fields
+* **Fallback Methods:** Multiple fallback decoding strategies ensure maximum compatibility
 
 ## 🎯 Performance Features
 

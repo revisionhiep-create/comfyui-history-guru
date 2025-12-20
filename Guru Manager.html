@@ -145,16 +145,166 @@ const dAll=()=>new Promise(r=>{const t=db.transaction("i","readonly");t.objectSt
 // FS
 async function initFileSystem(){try{rH=await window.showDirectoryPicker({mode:"readwrite"});document.getElementById('wel').classList.add('hidden');document.getElementById('load').classList.remove('hidden');await iDB();await fullScan();setupVirtualScroll()}catch(e){alert("Access denied.")}}
 async function fullScan(){document.getElementById('load').classList.remove('hidden');cache.clear();fReg.clear();dReg.clear();dReg.set('',rH);objectUrlCache.forEach(url=>URL.revokeObjectURL(url));objectUrlCache.clear();await dAll();await scD(rH,"");rTree();await opD(rH,"");document.getElementById('load').classList.add('hidden')}
-async function scD(h,p){for await(const e of h.values()){const ep=p?`${p}/${e.name}`:e.name;if(e.kind==='directory'){dReg.set(ep,e);await scD(e,ep)}else if(/\.(png|jpg|jpeg|webp|mp4|webm)$/i.test(e.name)){fReg.set(ep,e);if(!cache.has(ep))await proc(e,ep)}}}
+async function scD(h,p){for await(const e of h.values()){const ep=p?`${p}/${e.name}`:e.name;if(e.kind==='directory'){dReg.set(ep,e);await scD(e,ep)}else if(/\.(png|jpg|jpeg|webp|mp4|webm)$/i.test(e.name)){fReg.set(ep,e);const cached=cache.get(ep);if(!cached||!cached.m||!cached.m.pos&&!cached.m.meta||cached.m.meta&&cached.m.meta.model==="?")await proc(e,ep)}}}
 function setupVirtualScroll(){const scrollContainer=document.querySelector('.grid-scroll');if(!scrollContainer)return;let scrollHandler=null;if(!scrollContainer.dataset.virtualScrollSetup){scrollHandler=()=>{if(vMode==='grid'&&cFiles.length>100){if(virtualScroll.scrollTimeout)clearTimeout(virtualScroll.scrollTimeout);virtualScroll.scrollTimeout=setTimeout(()=>{const oldStart=virtualScroll.visibleStart,oldEnd=virtualScroll.visibleEnd;calculateVirtualScroll();if(oldStart!==virtualScroll.visibleStart||oldEnd!==virtualScroll.visibleEnd){rend()}virtualScroll.scrollTimeout=null},16)}};scrollContainer.addEventListener('scroll',scrollHandler,{passive:true});scrollContainer.dataset.virtualScrollSetup='true'}if(!virtualScroll.resizeObserver){virtualScroll.resizeObserver=new ResizeObserver(()=>{if(vMode==='grid'&&cFiles.length>100){calculateVirtualScroll();rend()}});virtualScroll.resizeObserver.observe(scrollContainer)}}
 
 // --- BRAIN (Accumulative Fix) ---
 async function decompressZlib(data) {try {const ds = new DecompressionStream('deflate-raw'); const writer = ds.writable.getWriter(); writer.write(data.slice(2, data.length - 4)); writer.close(); return new TextDecoder().decode(await new Response(ds.readable).arrayBuffer());} catch (e) {try {const ds = new DecompressionStream('deflate'); const writer = ds.writable.getWriter(); writer.write(data); writer.close(); return new TextDecoder().decode(await new Response(ds.readable).arrayBuffer());} catch(e2) { return null; }}}
+function cleanTextForParsing(text) {
+    if (!text) return "";
+    // Remove null bytes (common in UTF-16 encoded EXIF UserComment)
+    let cleaned = text.replace(/\0/g, '');
+    // Remove other control characters except newlines
+    cleaned = cleaned.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F]/g, '');
+    // Normalize whitespace
+    cleaned = cleaned.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    return cleaned;
+}
+
+function extractEXIFUserComment(exifData) {
+    // Extract UserComment from EXIF data (tag 37510 = 0x927C)
+    // This matches the working implementation in 3.3
+    try {
+        const dataView = new DataView(exifData.buffer || exifData);
+        let offset = 0;
+        
+        // EXIF structure: TIFF header, IFD entries
+        // Look for UserComment tag (37510 = 0x927C)
+        while (offset < exifData.length - 12) {
+            const tag = dataView.getUint16(offset, true); // little-endian
+            if (tag === 37510) { // UserComment tag
+                const type = dataView.getUint16(offset + 2, true);
+                const count = dataView.getUint32(offset + 4, true);
+                const valueOffset = dataView.getUint32(offset + 8, true);
+                
+                if (count > 0 && valueOffset < exifData.length) {
+                    const valueData = new Uint8Array(exifData, valueOffset, Math.min(count, exifData.length - valueOffset));
+                    
+                    // Check encoding indicator (first 8 bytes)
+                    if (valueData.length > 8) {
+                        const encoding = String.fromCharCode(...valueData.slice(0, 8)).replace(/\0/g, '');
+                        
+                        if (encoding.includes('UNICODE') || encoding.includes('Unicode')) {
+                            // UTF-16 encoding - try both LE and BE, use whichever produces valid text
+                            const textData = valueData.slice(8);
+                            try {
+                                const decodedLE = new TextDecoder('utf-16le', {fatal: false}).decode(textData);
+                                // Check if UTF-16LE produced valid-looking text (contains expected markers)
+                                if (decodedLE && (decodedLE.includes('Negative prompt:') || decodedLE.includes('Steps:') || 
+                                    decodedLE.includes('负面提示') || decodedLE.includes('步骤') ||
+                                    (decodedLE.length > 50 && /Steps?\s*[:：]\s*\d+/.test(decodedLE)))) {
+                                    return decodedLE;
+                                }
+                            } catch(e) {}
+                            
+                            // Try UTF-16BE
+                            try {
+                                const decodedBE = new TextDecoder('utf-16be', {fatal: false}).decode(textData);
+                                // Check if UTF-16BE produced valid-looking text
+                                if (decodedBE && (decodedBE.includes('Negative prompt:') || decodedBE.includes('Steps:') || 
+                                    decodedBE.includes('负面提示') || decodedBE.includes('步骤') ||
+                                    (decodedBE.length > 50 && /Steps?\s*[:：]\s*\d+/.test(decodedBE)))) {
+                                    return decodedBE;
+                                }
+                                // If LE didn't work but BE decoded something, prefer BE
+                                if (decodedBE && decodedBE.length > 10) {
+                                    return decodedBE;
+                                }
+                            } catch(e2) {}
+                            
+                            // Fallback: return LE result even if it doesn't look perfect
+                            try {
+                                return new TextDecoder('utf-16le', {fatal: false}).decode(textData);
+                            } catch(e3) {
+                                return new TextDecoder('utf-8', {fatal: false}).decode(valueData.slice(8));
+                            }
+                        } else if (encoding.includes('ASCII')) {
+                            // ASCII encoding
+                            return new TextDecoder('ascii', {fatal: false}).decode(valueData.slice(8));
+                        } else {
+                            // Try UTF-8
+                            return new TextDecoder('utf-8', {fatal: false}).decode(valueData);
+                        }
+                    } else {
+                        // Short value, try direct decode
+                        return new TextDecoder('utf-8', {fatal: false}).decode(valueData);
+                    }
+                }
+            }
+            offset += 12; // Move to next IFD entry
+        }
+    } catch(e) {
+        // EXIF parsing failed, return null
+    }
+    return null;
+}
+
+function extractEXIFUserCommentFromJPEG(buffer) {
+    // Extract EXIF from JPEG (starts with 0xFFE1 APP1 marker)
+    try {
+        const view = new DataView(buffer);
+        let offset = 2; // Skip JPEG SOI marker (0xFFD8)
+        
+        while (offset < buffer.byteLength - 4) {
+            // Look for APP1 marker (0xFFE1) which contains EXIF
+            if (view.getUint8(offset) === 0xFF && view.getUint8(offset + 1) === 0xE1) {
+                const segmentLength = view.getUint16(offset + 2);
+                const segmentData = new Uint8Array(buffer, offset + 4, segmentLength - 2);
+                
+                // Check if this is EXIF segment (starts with "Exif\0\0")
+                if (segmentLength > 6) {
+                    const header = String.fromCharCode(...segmentData.slice(0, 6));
+                    if (header === 'Exif\0\0') {
+                        // Extract UserComment from EXIF data
+                        const exifData = segmentData.slice(6);
+                        const userComment = extractEXIFUserComment(exifData);
+                        if (userComment) return userComment;
+                    }
+                }
+                
+                offset += segmentLength + 2;
+            } else {
+                offset++;
+            }
+        }
+        
+        // Fallback: Search for UserComment text patterns directly in buffer
+        // This is more reliable than parsing EXIF structure
+        const bufferArray = new Uint8Array(buffer);
+        
+        // Search for "UNICODE" marker followed by text patterns
+        const unicodeMarker = new TextEncoder().encode('UNICODE');
+        for (let i = 0; i < bufferArray.length - unicodeMarker.length - 100; i++) {
+            let match = true;
+            for (let j = 0; j < unicodeMarker.length; j++) {
+                if (bufferArray[i + j] !== unicodeMarker[j]) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
+                // Found UNICODE marker, try to decode as UTF-16LE from this point
+                try {
+                    const textData = bufferArray.slice(i + 8); // Skip "UNICODE\0\0"
+                    const decoded = new TextDecoder('utf-16le', {fatal: false}).decode(textData);
+                    if (decoded.includes('Negative prompt:') || decoded.includes('Steps:') || decoded.includes('masterpiece')) {
+                        return decoded;
+                    }
+                } catch(e) {}
+            }
+        }
+    } catch(e) {
+        // Extraction failed
+    }
+    return null;
+}
+
 async function extractText(buffer) {
     const view = new DataView(buffer); 
     let fullText = ""; 
     try {
         if (view.getUint32(0) === 0x89504E47) {
+            // PNG file - extract text chunks and EXIF
             let offset = 8; 
             while (offset < view.byteLength) {
                 if (offset + 4 > view.byteLength) break; 
@@ -171,16 +321,54 @@ async function extractText(buffer) {
                 } else if (type === 'zTXt') { 
                     const inflated = await decompressZlib(data); 
                     if (inflated) fullText += inflated + "\n"; 
-                } 
+                } else if (type === 'eXIf') {
+                    // EXIF chunk in PNG - extract UserComment
+                    // Match 3.3's simple approach exactly
+                    const exifText = extractEXIFUserComment(data);
+                    if (exifText) {
+                        fullText += exifText + "\n";
+                    }
+                }
                 offset += len + 12; 
                 if (type === 'IEND') break;
             }
         } else if (view.getUint32(0) === 0x52494646 || view.getUint16(0) === 0xFFD8) {
-            fullText = new TextDecoder().decode(new Uint8Array(buffer));
+            // JPEG or WebP - extract EXIF UserComment
+            const exifText = extractEXIFUserCommentFromJPEG(buffer);
+            if (exifText) {
+                fullText = exifText;
+            } else {
+                // Fallback: try multiple decoding methods to find metadata
+                        // Fallback: try multiple decoding methods to find metadata
+                        // Method 1: Try UTF-16LE (common in EXIF UserComment)
+                        try {
+                            const utf16Text = new TextDecoder('utf-16le', {fatal: false}).decode(new Uint8Array(buffer));
+                            if (utf16Text.includes('Negative prompt:') || utf16Text.includes('Steps:')) {
+                                fullText = utf16Text;
+                            }
+                        } catch(e) {}
+                        
+                        // Method 2: Try UTF-16BE
+                        if (!fullText) {
+                            try {
+                                const utf16Text = new TextDecoder('utf-16be', {fatal: false}).decode(new Uint8Array(buffer));
+                                if (utf16Text.includes('Negative prompt:') || utf16Text.includes('Steps:')) {
+                                    fullText = utf16Text;
+                                }
+                            } catch(e) {}
+                        }
+                
+                // Method 3: Try UTF-8 (may have null bytes)
+                if (!fullText) {
+                    fullText = new TextDecoder('utf-8', {fatal: false}).decode(new Uint8Array(buffer));
+                }
+            }
         }
     } catch(e) {
         console.warn('Metadata extraction error:', e);
     }
+    // Clean up null bytes and normalize text (handles UTF-16 encoding issues)
+    fullText = cleanTextForParsing(fullText);
     return fullText;
 }
 function parseMetadata(text) {function extractJSON(str,startPos=0) {const start = str.indexOf('{',startPos); if (start === -1) return null; let count = 0, end = -1; for (let i = start; i < str.length; i++) { if (str[i] === '{') count++; else if (str[i] === '}') count--; if (count === 0) { end = i; break; } } if (end !== -1) try { return {json:JSON.parse(str.substring(start, end + 1)),end:end+1}; } catch(e) { return null; } return null;} let comfyResult=null;if (text.includes('"class_type"') && text.includes('"inputs"')) { let pos=0;while(true){const result=extractJSON(text,pos);if(!result)break;const json=result.json;pos=result.end;if(json&&(json.class_type||json.nodes||Object.values(json).some(v=>v&&typeof v==='object'&&(v.class_type||v.type)))){const parsed=parseComfy(json);if(parsed&&(parsed.pos||parsed.meta.model!=="?")){comfyResult=parsed;break}}}} if(!comfyResult&&(text.includes('"class_type"') || text.includes('"type"') || (text.includes('"inputs"') && (text.includes('KSampler') || text.includes('CLIPTextEncode') || text.includes('SaveImage') || text.includes('CLIPLoader') || text.includes('VAELoader'))))) { let pos=0;while(true){const result=extractJSON(text,pos);if(!result)break;const json=result.json;pos=result.end;if(json&&(json.class_type||json.nodes||json.type||Object.values(json).some(v=>v&&typeof v==='object'&&(v.class_type||v.type)))){const parsed=parseComfy(json);if(parsed&&(parsed.pos||parsed.meta.model!=="?")){comfyResult=parsed;break}}}} if(comfyResult)return comfyResult;return parseA1111(text);}
@@ -237,16 +425,125 @@ function parseComfy(json) {
 }
 
 function parseA1111(text) {
-    let pos="", neg="", resources=[], meta={model:"?",seed:"?",steps:"?",cfg:"?",sampler:"?",size:"?"}, match;
-    LR.lastIndex=0; while((match=LR.exec(text))!==null) resources.push({type:'LoRA', name:match[1], str:match[2]||"1.0"});
-    const negIdx=text.indexOf("Negative prompt:"); const stepsIdx=text.indexOf("Steps:");
-    if(negIdx!==-1&&stepsIdx!==-1){pos=text.substring(0,negIdx).replace(/parameters\s*/i,"").trim();neg=text.substring(negIdx+16,stepsIdx).trim()}else if(stepsIdx!==-1)pos=text.substring(0,stepsIdx).trim();
-    if(stepsIdx!==-1){const b=text.substring(stepsIdx);const get=k=>{const m=b.match(new RegExp(`${k}:\\s*([^,]+)`));return m?m[1].trim():"?"};meta.steps=get("Steps");meta.sampler=get("Sampler");meta.cfg=get("CFG scale");meta.seed=get("Seed");meta.size=get("Size");meta.model=get("Model");}
-    return {pos,neg,resources,meta};
+    let pos = "", neg = "";
+    let resources = [];
+    let meta = { model: "?", size: "?", seed: "?", steps: "?", cfg: "?", sampler: "?" };
+    
+    // Clean text - remove any remaining control characters
+    text = text.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F]/g, '');
+    
+    let match;
+    LR.lastIndex = 0;
+    while ((match = LR.exec(text)) !== null) {
+        resources.push({ type: 'LoRA', name: match[1], str: match[2] || "1.0" });
+    }
+    
+    // Try multiple marker variations (case-insensitive)
+    // Also support Chinese markers
+    const negMarkers = ["Negative prompt:", "Negative Prompt:", "negative prompt:", "Negative prompt", "负面提示:", "负面提示"];
+    const stepsMarkers = ["Steps:", "Steps", "Step:", "步骤:", "步数:"];
+    
+    let negIdx = -1, stepsIdx = -1;
+    let negMarker = "";
+    
+    // Find negative prompt marker
+    for (const marker of negMarkers) {
+        const idx = text.indexOf(marker);
+        if (idx !== -1) {
+            negIdx = idx;
+            negMarker = marker;
+            break;
+        }
+    }
+    
+    // Find steps marker
+    for (const marker of stepsMarkers) {
+        const idx = text.indexOf(marker);
+        if (idx !== -1) {
+            stepsIdx = idx;
+            break;
+        }
+    }
+    
+    // Extract prompts
+    if (negIdx !== -1 && stepsIdx !== -1 && negIdx < stepsIdx) {
+        pos = text.substring(0, negIdx).replace(/parameters\s*/i, "").trim();
+        neg = text.substring(negIdx + negMarker.length, stepsIdx).trim();
+    } else if (stepsIdx !== -1) {
+        pos = text.substring(0, stepsIdx).replace(/parameters\s*/i, "").trim();
+    } else if (negIdx !== -1) {
+        // Only negative marker found
+        pos = text.substring(0, negIdx).replace(/parameters\s*/i, "").trim();
+        neg = text.substring(negIdx + negMarker.length).trim();
+    } else {
+        // No markers found - try to extract from JSON or use whole text
+        if(text.includes('"widgets_values"')) {
+            const parts = text.split(/"text":\s*"/);
+            if(parts.length > 1) pos = parts[1].split('"')[0];
+        } else {
+            pos = text.trim();
+        }
+    }
+    
+    // Extract parameters - improved regex patterns
+    if (stepsIdx !== -1) {
+        const block = text.substring(stepsIdx);
+        
+        // More flexible parameter extraction
+        const getParam = (key, patterns) => {
+            for (const pattern of patterns) {
+                const regex = new RegExp(pattern, 'i');
+                const match = block.match(regex);
+                if (match && match[1]) {
+                    return match[1].trim();
+                }
+            }
+            return "?";
+        };
+        
+        meta.steps = getParam("Steps", [
+            "Steps:\\s*([0-9]+)",
+            "Steps\\s*:\\s*([0-9]+)",
+            "Steps\\s+([0-9]+)"
+        ]);
+        
+        meta.sampler = getParam("Sampler", [
+            "Sampler:\\s*([^,\\n]+)",
+            "Sampler\\s*:\\s*([^,\\n]+)",
+            "Sampler\\s+([^,\\n]+)"
+        ]);
+        
+        meta.cfg = getParam("CFG", [
+            "CFG\\s+scale:\\s*([0-9.]+)",
+            "CFG\\s*scale\\s*:\\s*([0-9.]+)",
+            "CFG\\s*:\\s*([0-9.]+)",
+            "CFG scale\\s*:\\s*([0-9.]+)"
+        ]);
+        
+        meta.seed = getParam("Seed", [
+            "Seed:\\s*([0-9]+)",
+            "Seed\\s*:\\s*([0-9]+)",
+            "Seed\\s+([0-9]+)"
+        ]);
+        
+        meta.size = getParam("Size", [
+            "Size:\\s*([0-9xX]+)",
+            "Size\\s*:\\s*([0-9xX]+)",
+            "Size\\s+([0-9xX]+)"
+        ]);
+        
+        meta.model = getParam("Model", [
+            "Model:\\s*([^,\\n]+)",
+            "Model\\s*:\\s*([^,\\n]+)",
+            "Model\\s+([^,\\n]+)"
+        ]);
+    }
+    
+    return { pos, neg, resources, meta };
 }
 
 // --- LOGIC ---
-async function proc(h,p){try{const f=await h.getFile(),vid=/\.(mp4|webm)$/i.test(f.name);let m=null;if(vid)m={meta:{model:"Video",size:(f.size/1e6).toFixed(1)+"MB"},resources:[]};else{const b=await f.arrayBuffer(),t=await extractText(b);m=parseMetadata(t)}const i={p,n:f.name,d:f.lastModified,m,v:vid};cache.set(p,i);dPut(i)}catch{}}
+async function proc(h,p){try{const f=await h.getFile(),vid=/\.(mp4|webm)$/i.test(f.name);let m=null;if(vid)m={meta:{model:"Video",size:(f.size/1e6).toFixed(1)+"MB"},resources:[]};else{const b=await f.arrayBuffer(),t=await extractText(b);if(!t||t.trim().length===0){console.warn('No text extracted from',f.name,'- file may not have metadata')}else if(t.length>0&&t.length<100){console.log('Extracted text from',f.name,':',t.substring(0,100))}m=parseMetadata(t)}const i={p,n:f.name,d:f.lastModified,m,v:vid};cache.set(p,i);dPut(i)}catch(e){console.error('Error processing',p,e)}}
 
 function setView(m){vMode=m;document.getElementById('bGrid').classList.toggle('active',m==='grid');document.getElementById('bList').classList.toggle('active',m==='list');document.getElementById('bStats').classList.toggle('active',m==='stats');if(m==='grid'&&cFiles.length>100){setupVirtualScroll()}rend()}
 function renderStats(container){const stats={models:new Map(),samplers:new Map(),loras:new Map(),sizes:new Map(),cfgs:new Map(),steps:new Map(),totalImages:0,aiImages:0};for(const [path,item] of cache.entries()){if(!item.m)continue;stats.totalImages++;const meta=item.m.meta||{};const resources=item.m.resources||[];if(meta.model&&meta.model!=="?"){stats.aiImages++;stats.models.set(meta.model,(stats.models.get(meta.model)||0)+1)}if(meta.sampler&&meta.sampler!=="?")stats.samplers.set(meta.sampler,(stats.samplers.get(meta.sampler)||0)+1);if(meta.size&&meta.size!=="?")stats.sizes.set(meta.size,(stats.sizes.get(meta.size)||0)+1);if(meta.cfg&&meta.cfg!=="?"){const cfg=parseFloat(meta.cfg);if(!isNaN(cfg)){const cfgKey=cfg.toFixed(1);stats.cfgs.set(cfgKey,(stats.cfgs.get(cfgKey)||0)+1)}}if(meta.steps&&meta.steps!=="?"){const steps=parseInt(meta.steps);if(!isNaN(steps))stats.steps.set(steps.toString(),(stats.steps.get(steps.toString())||0)+1)}resources.forEach(res=>{if(res.type==='LoRA'&&res.name)stats.loras.set(res.name,(stats.loras.get(res.name)||0)+1)})}const statsHtml=`<div style="padding:20px;max-width:1200px;margin:0 auto;"><h2 style="color:var(--txt);margin-bottom:30px;">📊 Metadata Statistics</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;"><div class="stat-card"><h3>📈 Overview</h3><div class="stat-item">Total Images: <strong>${stats.totalImages}</strong></div><div class="stat-item">AI Images: <strong>${stats.aiImages}</strong></div><div class="stat-item">Non-AI Images: <strong>${stats.totalImages-stats.aiImages}</strong></div><div class="stat-item">AI Coverage: <strong>${stats.totalImages?Math.round((stats.aiImages/stats.totalImages)*100):0}%</strong></div></div><div class="stat-card"><h3>🎨 Top Models</h3>${Array.from(stats.models.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([model,count])=>`<div class="stat-item">${model}: <strong>${count}</strong></div>`).join('')||'<div class="stat-item">No model data</div>'}</div><div class="stat-card"><h3>🔧 Top LoRAs</h3>${Array.from(stats.loras.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([lora,count])=>`<div class="stat-item">${lora}: <strong>${count}</strong></div>`).join('')||'<div class="stat-item">No LoRA data</div>'}</div><div class="stat-card"><h3>⚙️ Samplers</h3>${Array.from(stats.samplers.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([sampler,count])=>`<div class="stat-item">${sampler}: <strong>${count}</strong></div>`).join('')||'<div class="stat-item">No sampler data</div>'}</div><div class="stat-card"><h3>📐 Image Sizes</h3>${Array.from(stats.sizes.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([size,count])=>`<div class="stat-item">${size}: <strong>${count}</strong></div>`).join('')||'<div class="stat-item">No size data</div>'}</div><div class="stat-card"><h3>🎛️ CFG Scale</h3>${Array.from(stats.cfgs.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([cfg,count])=>`<div class="stat-item">${cfg}: <strong>${count}</strong></div>`).join('')||'<div class="stat-item">No CFG data</div>'}</div><div class="stat-card"><h3>🔄 Steps</h3>${Array.from(stats.steps.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([steps,count])=>`<div class="stat-item">${steps}: <strong>${count}</strong></div>`).join('')||'<div class="stat-item">No steps data</div>'}</div></div></div>`;container.innerHTML=statsHtml}

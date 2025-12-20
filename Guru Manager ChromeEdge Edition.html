@@ -219,21 +219,51 @@ function parseComfy(json) {
         let t = "";
         // 1. Local Text (from widgets_values for workflow format)
         if(Array.isArray(n.widgets_values)&&n.widgets_values.length>0&&typeof n.widgets_values[0]==='string')t+=n.widgets_values[0];
-        // 2. Local Text (from inputs for prompt format)
+        // 2. Standard text inputs (known patterns)
         if(typeof inputs.text==='string') t+=(t?", ":"")+inputs.text;
+        else if(Array.isArray(inputs.text)) {
+            // Text is a node reference (e.g., ["1", 0]) - recurse into it
+            const r = findUpstreamText(inputs.text,d+1);
+            if(r) t+=(t?", ":"")+r;
+        }
         if(typeof inputs.text_g==='string') t+=(t?", ":"")+inputs.text_g;
         if(typeof inputs.text_l==='string') t+=(t?", ":"")+inputs.text_l;
         if(inputs.string_field) t+=(t?", ":"")+inputs.string_field;
-        // 2. Special Lists (StandardTriggerWordsLoader)
+        // 3. Generic string input extraction (handles StringConcatenate, StringJoin, etc. without hardcoding)
+        // Look for any input that starts with "string_" or is a string value
+        for(const key in inputs){
+            if(key.startsWith('string_')||key.startsWith('str_')||key.includes('text')||key.includes('prompt')){
+                const val=inputs[key];
+                if(typeof val==='string'&&val.length>0){
+                    // Skip delimiter-only values
+                    if(key!=='delimiter'||val.length>1)t+=(t?"":"")+val;
+                }else if(Array.isArray(val)&&val.length>0){
+                    // If it's an array reference, recurse
+                    const r=findUpstreamText(val,d+1);
+                    if(r)t+=(t?", ":"")+r;
+                }
+            }
+        }
+        // 4. Special Lists (StandardTriggerWordsLoader)
         if(inputs.trigger_words_display && Array.isArray(inputs.trigger_words_display.__value__)) {
             const tags = inputs.trigger_words_display.__value__.filter(x=>x.active).map(x=>x.text).join(", ");
             if(tags) t+=(t?", ":"")+tags;
         }
-        // 3. Recurse Keys
-        const keys=['positive','negative','conditioning','clip','prompt','trigger_words']; // Added trigger_words
+        // 5. Recurse through known link keys
+        const keys=['positive','negative','conditioning','clip','prompt','trigger_words'];
         for(const k of keys) if(inputs[k]) {
             const r = findUpstreamText(inputs[k],d+1);
             if(r) t+=(t?", ":"")+r;
+        }
+        // 6. Generic fallback: if no text found yet, try recursing any array inputs that might be node references
+        if(!t){
+            for(const key in inputs){
+                const val=inputs[key];
+                if(Array.isArray(val)&&val.length>0&&(typeof val[0]==='string'||typeof val[0]==='number')){
+                    const r=findUpstreamText(val,d+1);
+                    if(r){t=r;break;}
+                }
+            }
         }
         return t;
     };
@@ -269,7 +299,7 @@ function parseA1111(text) {
 // --- LOGIC ---
 async function proc(h,p){try{const f=await h.getFile(),vid=/\.(mp4|webm)$/i.test(f.name);let m=null;if(vid)m={meta:{model:"Video",size:(f.size/1e6).toFixed(1)+"MB"},resources:[]};else{const b=await f.arrayBuffer(),t=await extractText(b);m=parseMetadata(t)}const i={p,n:f.name,d:f.lastModified,m,v:vid};cache.set(p,i);dPut(i)}catch{}}
 
-function setView(m){if(vMode === m) {vMode = 'list';} else {vMode = m;}document.getElementById('bStats').classList.toggle('active', vMode === 'stats');rend();}
+function setView(m){if(vMode === m) {vMode = 'list';} else {vMode = m;}document.getElementById('bStats').classList.toggle('active', vMode === 'stats');rend()}
 function renderStats(container){const stats={models:new Map(),samplers:new Map(),loras:new Map(),sizes:new Map(),cfgs:new Map(),steps:new Map(),totalImages:0,aiImages:0};for(const [path,item] of cache.entries()){if(!item.m)continue;stats.totalImages++;const meta=item.m.meta||{};const resources=item.m.resources||[];if(meta.model&&meta.model!=="?"){stats.aiImages++;stats.models.set(meta.model,(stats.models.get(meta.model)||0)+1)}if(meta.sampler&&meta.sampler!=="?")stats.samplers.set(meta.sampler,(stats.samplers.get(meta.sampler)||0)+1);if(meta.size&&meta.size!=="?")stats.sizes.set(meta.size,(stats.sizes.get(meta.size)||0)+1);if(meta.cfg&&meta.cfg!=="?"){const cfg=parseFloat(meta.cfg);if(!isNaN(cfg)){const cfgKey=cfg.toFixed(1);stats.cfgs.set(cfgKey,(stats.cfgs.get(cfgKey)||0)+1)}}if(meta.steps&&meta.steps!=="?"){const steps=parseInt(meta.steps);if(!isNaN(steps))stats.steps.set(steps.toString(),(stats.steps.get(steps.toString())||0)+1)}resources.forEach(res=>{if(res.type==='LoRA'&&res.name)stats.loras.set(res.name,(stats.loras.get(res.name)||0)+1)})}const statsHtml=`<div style="padding:20px;max-width:1200px;margin:0 auto;"><h2 style="color:var(--txt);margin-bottom:30px;">📊 Metadata Statistics</h2><button class="btn" onclick="setView('list')" style="margin-bottom:20px;">← Back to Gallery</button><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;"><div class="stat-card"><h3>📈 Overview</h3><div class="stat-item">Total Images: <strong>${stats.totalImages}</strong></div><div class="stat-item">AI Images: <strong>${stats.aiImages}</strong></div><div class="stat-item">Non-AI Images: <strong>${stats.totalImages-stats.aiImages}</strong></div><div class="stat-item">AI Coverage: <strong>${stats.totalImages?Math.round((stats.aiImages/stats.totalImages)*100):0}%</strong></div></div><div class="stat-card"><h3>🎨 Top Models</h3>${Array.from(stats.models.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([model,count])=>`<div class="stat-item">${model}: <strong>${count}</strong></div>`).join('')||'<div class="stat-item">No model data</div>'}</div><div class="stat-card"><h3>🔧 Top LoRAs</h3>${Array.from(stats.loras.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([lora,count])=>`<div class="stat-item">${lora}: <strong>${count}</strong></div>`).join('')||'<div class="stat-item">No LoRA data</div>'}</div><div class="stat-card"><h3>⚙️ Samplers</h3>${Array.from(stats.samplers.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([sampler,count])=>`<div class="stat-item">${sampler}: <strong>${count}</strong></div>`).join('')||'<div class="stat-item">No sampler data</div>'}</div><div class="stat-card"><h3>📐 Image Sizes</h3>${Array.from(stats.sizes.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([size,count])=>`<div class="stat-item">${size}: <strong>${count}</strong></div>`).join('')||'<div class="stat-item">No size data</div>'}</div><div class="stat-card"><h3>🎛️ CFG Scale</h3>${Array.from(stats.cfgs.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([cfg,count])=>`<div class="stat-item">${cfg}: <strong>${count}</strong></div>`).join('')||'<div class="stat-item">No CFG data</div>'}</div><div class="stat-card"><h3>🔄 Steps</h3>${Array.from(stats.steps.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([steps,count])=>`<div class="stat-item">${steps}: <strong>${count}</strong></div>`).join('')||'<div class="stat-item">No steps data</div>'}</div></div></div>`;container.innerHTML=statsHtml}
 function toggleTheme(){const body=document.body;const currentTheme=body.getAttribute('data-theme')||'dark';const newTheme=currentTheme==='dark'?'light':'dark';body.setAttribute('data-theme',newTheme);localStorage.setItem('guru-theme',newTheme);const toggleBtn=document.getElementById('themeToggle');if(toggleBtn){toggleBtn.textContent=newTheme==='dark'?'🌙':'☀️';toggleBtn.title=`Switch to ${newTheme==='dark'?'Light':'Dark'} Mode`}}
 (function(){const savedTheme=localStorage.getItem('guru-theme')||'dark';document.body.setAttribute('data-theme',savedTheme);const toggleBtn=document.getElementById('themeToggle');if(toggleBtn){toggleBtn.textContent=savedTheme==='dark'?'🌙':'☀️';toggleBtn.title=`Switch to ${savedTheme==='dark'?'Light':'Dark'} Mode`}const savedFavorites=localStorage.getItem('guru-favorites');if(savedFavorites){favorites=new Set(JSON.parse(savedFavorites))}})();

@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History Guru Universal Node v3.3 (Hello Creator)</title>
+    <style>
+        :root {
+            --bg: #09090b;
+            --header-bg: rgba(9, 9, 11, 0.95);
+            --card-bg: #18181b;
+            --border: #27272a;
+            --accent: #8b5cf6;
+            --text-main: #e4e4e7;
+            --text-muted: #a1a1aa;
+            --input-bg: #121214;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; background-color: var(--bg); color: var(--text-main); font-family: system-ui, -apple-system, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* Header */
+        header { height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; background: var(--header-bg); backdrop-filter: blur(4px); z-index: 50; gap: 20px; flex-shrink: 0; }
+        h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.03em; margin: 0; display: flex; align-items: center; gap: 8px; }
+        h1 span { color: var(--accent); }
+        .version { font-size: 0.7rem; background: rgba(139, 92, 246, 0.1); color: #c4b5fd; padding: 2px 6px; border-radius: 4px; font-weight: 600; letter-spacing: 0.05em; }
+
+        /* Search */
+        .search-container { flex: 1; max-width: 600px; position: relative; }
+        .search-input { width: 100%; background: #121214; border: 1px solid var(--border); color: var(--text-main); padding: 10px 16px 10px 44px; border-radius: 12px; outline: none; transition: all 0.2s; font-size: 0.9rem; }
+        .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1); background: var(--card-bg); }
+        .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; height: 18px; pointer-events: none; }
+        .count-badge { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 0.75rem; color: var(--text-muted); font-family: monospace; font-weight: 600; background: #27272a; padding: 2px 6px; border-radius: 4px; }
+
+        /* Button */
+        .btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); }
+        .btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .btn:active { transform: scale(0.98); }
+
+        /* Main Grid */
+        main { flex: 1; overflow-y: auto; padding: 24px; scroll-behavior: smooth; position: relative; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; padding-bottom: 100px; }
+        .card { 
+            aspect-ratio: 1; background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; 
+            overflow: hidden; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .card:hover { transform: translateY(-6px); border-color: var(--accent); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); z-index: 10; }
+        .card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+        .card:hover img { transform: scale(1.05); }
+
+        .welcome { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); gap: 20px; }
+        .welcome svg { width: 80px; height: 80px; color: #27272a; }
+
+        /* CLICK BLOCKER */
+        .backdrop { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); 
+            backdrop-filter: blur(3px); z-index: 60; opacity: 0; pointer-events: none; 
+            transition: opacity 0.3s ease; 
+        }
+        .backdrop.active { opacity: 1; pointer-events: auto; }
+
+        /* DETAIL VIEW - Full Screen Image + Metadata Panel */
+        .detail-view { 
+            position: fixed; inset: 0; background: #000; z-index: 70; 
+            display: flex; flex-direction: row; visibility: hidden; opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .detail-view.active { visibility: visible; opacity: 1; }
+        
+        .detail-image-container { 
+            flex: 1; display: flex; align-items: center; justify-content: center; 
+            background: #09090b; position: relative; overflow: hidden;
+        }
+        .detail-image-container img { 
+            max-width: 100%; max-height: 100%; object-fit: contain; 
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+        .nav-btn { 
+            position: absolute; top: 50%; transform: translateY(-50%); 
+            background: rgba(0,0,0,0.6); color: #fff; border: none; 
+            width: 50px; height: 50px; border-radius: 50%; cursor: pointer; 
+            font-size: 1.5rem; display: flex; align-items: center; justify-content: center; 
+            z-index: 10; transition: all 0.2s;
+        }
+        .nav-btn:hover { background: var(--accent); }
+        .nav-prev { left: 20px; }
+        .nav-next { right: 20px; }
+        .back-btn { 
+            position: absolute; top: 20px; left: 20px; 
+            background: rgba(0,0,0,0.6); color: #fff; padding: 8px 16px; 
+            border-radius: 20px; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); 
+            z-index: 10; font-size: 0.9rem;
+        }
+        .back-btn:hover { background: rgba(0,0,0,0.8); }
+        .favorite-star { 
+            position: absolute; top: 20px; right: 20px; 
+            font-size: 2rem; cursor: pointer; z-index: 10; 
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            transition: transform 0.2s;
+        }
+        .favorite-star:hover { transform: scale(1.2); }
+
+        /* SIDEBAR - Metadata Panel */
+        aside { 
+            width: 450px; background: #0c0c0e; border-left: 1px solid var(--border); 
+            display: flex; flex-direction: column; flex-shrink: 0;
+        }
+        
+        .sidebar-header { min-height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; background: rgba(12, 12, 14, 0.95); backdrop-filter: blur(10px); flex-shrink: 0; gap: 10px; }
+        .sidebar-title-group { display: flex; flex-direction: column; overflow: hidden; }
+        .sidebar-title { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); }
+        .file-name { font-size: 0.9rem; color: #fff; font-family: 'JetBrains Mono', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; }
+        
+        .close-btn { background: transparent; border: 1px solid var(--border); color: var(--text-muted); border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
+        .close-btn:hover { color: white; background: rgba(255,255,255,0.1); }
+
+        .sidebar-content { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+
+        /* Stats Inputs */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .stat-item { background: #121214; border: 1px solid var(--border); padding: 8px; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; transition: border-color 0.2s; }
+        .stat-item:focus-within { border-color: var(--accent); }
+        
+        .stat-label { font-size: 0.65rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+        
+        .stat-input { 
+            width: 100%; background: transparent; border: none; color: #fff; 
+            font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; 
+            outline: none; padding: 0; margin: 0;
+        }
+        .stat-input::placeholder { color: #333; }
+
+        /* Textareas */
+        .prompt-group { display: flex; flex-direction: column; gap: 10px; }
+        .prompt-header { display: flex; justify-content: space-between; align-items: center; }
+        .prompt-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px; }
+        
+        .dot { width: 6px; height: 6px; border-radius: 50%; }
+        .pos-label .dot { background: #4ade80; box-shadow: 0 0 8px rgba(74, 222, 128, 0.4); }
+        .pos-label { color: #4ade80; }
+        .neg-label .dot { background: #f87171; box-shadow: 0 0 8px rgba(248, 113, 113, 0.4); }
+        .neg-label { color: #f87171; }
+
+        .prompt-text { 
+            background: #121214; border: 1px solid var(--border); border-radius: 10px; padding: 14px; 
+            font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.6; color: #d4d4d8; 
+            width: 100%; min-height: 120px; resize: vertical; outline: none; transition: border-color 0.2s;
+        }
+        .prompt-text:focus { border-color: var(--accent); }
+
+        /* Chips */
+        .chips-container { display: flex; flex-wrap: wrap; gap: 8px; }
+        .chip { font-size: 0.75rem; padding: 6px 12px; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; border: 1px solid transparent; font-family: 'JetBrains Mono', monospace; }
+        .chip-lora { background: rgba(139, 92, 246, 0.1); color: #c4b5fd; border-color: rgba(139, 92, 246, 0.25); }
+        .chip-model { background: rgba(59, 130, 246, 0.1); color: #93c5fd; border-color: rgba(59, 130, 246, 0.25); }
+        .chip:hover { transform: translateY(-2px); filter: brightness(1.2); }
+        .strength-badge { background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.7em; }
+
+        /* Tools */
+        .tool-bar { display: flex; gap: 10px; padding-top: 20px; border-top: 1px solid var(--border); }
+        .action-btn { 
+            flex: 1; background: #27272a; color: white; border: none; padding: 12px; 
+            border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem;
+        }
+        .action-btn:hover { background: #3f3f46; }
+        .action-btn.primary { background: var(--accent); }
+        .action-btn.primary:hover { filter: brightness(1.1); }
+
+        .loader { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.875rem; display: none; }
+        .loader.active { display: block; }
+        
+        /* Favorites */
+        .card.favorite { border-color: #fbbf24; box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.3); }
+        .favorite-star-small { position: absolute; top: 8px; right: 8px; font-size: 1.2rem; z-index: 5; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
+        .btn-icon.active { background: rgba(139, 92, 246, 0.2); border-color: var(--accent); }
+        
+        /* Theme Toggle */
+        .btn-icon { background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 8px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .btn-icon:hover { background: rgba(255,255,255,0.1); border-color: var(--accent); }
+        
+        /* Help Overlay */
+        .help-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: all 0.3s; }
+        .help-overlay.active { visibility: visible; opacity: 1; }
+        .help-content { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 30px; max-width: 900px; max-height: 85vh; overflow-y: auto; width: 90%; }
+        
+        /* Sort Dropdown */
+        .sort-select { background: #121214; border: 1px solid var(--border); color: var(--text-main); padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; }
+        
+        /* List View */
+        .list-view { display: flex; flex-direction: column; }
+        .list-head { display: grid; grid-template-columns: 55px 3fr 2fr 1.5fr 1fr; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 0.75rem; color: var(--text-muted); font-weight: 700; position: sticky; top: 0; background: var(--bg); z-index: 10; }
+        .list-head>div { cursor: pointer; user-select: none; display: flex; align-items: center; gap: 4px; transition: color 0.2s; }
+        .list-head>div:hover { color: var(--accent); }
+        .list-head>div:first-child { cursor: default; }
+        .list-head>div.sortable:hover { color: var(--text-main); }
+        .list-head>div.sorted { color: var(--accent); }
+        .sort-arrow { font-size: 0.7rem; opacity: 0.6; }
+        .list-head>div.sorted .sort-arrow { opacity: 1; }
+        .list-row { display: grid; grid-template-columns: 55px 3fr 2fr 1.5fr 1fr; gap: 12px; padding: 6px 16px; border-bottom: 1px solid #1f1f22; align-items: center; font-size: 0.85rem; cursor: pointer; height: 55px; transition: background 0.2s; }
+        .list-row:hover { background: #27272a; }
+        .list-img { width: 37px; height: 37px; border-radius: 4px; object-fit: cover; background: #000; }
+        .list-row.selected { background: rgba(139, 92, 246, 0.2) !important; }
+        
+        /* Light Theme */
+        [data-theme="light"] {
+            --bg: #ffffff;
+            --header-bg: rgba(255, 255, 255, 0.95);
+            --card-bg: #f5f5f5;
+            --border: #e5e5e5;
+            --accent: #8b5cf6;
+            --text-main: #18181b;
+            --text-muted: #52525b;
+            --input-bg: #ffffff;
+        }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>History<span>Guru</span> <span class="version">Firefox Edition</span></h1>
+        
+        <div class="search-container">
+            <svg class="search-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" id="search" class="search-input" placeholder="Search prompts, models, seeds...">
+            <span id="count" class="count-badge"></span>
+        </div>
+
+        <select id="sortSelect" class="sort-select" title="Sort By">
+            <option value="date">Date Modified</option>
+            <option value="name">Name</option>
+            <option value="created">Date Created</option>
+        </select>
+
+        <div style="width:1px;height:24px;background:var(--border)"></div>
+        <button class="btn-icon" id="refreshBtn" onclick="refreshFolder()" title="Refresh Folder">↻</button>
+        <button class="btn-icon" id="themeToggle" title="Toggle Theme">🌙</button>
+        <button class="btn-icon" id="helpBtn" title="Help">❓</button>
+        <button class="btn-icon" id="favFilterBtn" title="Show Only Favorites">⭐</button>
+
+        <label class="btn">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Load Folder
+            <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none">
+        </label>
+    </header>
+
+    <main id="mainScroll">
+        <div id="welcome" class="welcome">
+            <svg class="welcome-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <div style="text-align:center">
+                <h2 style="font-size:1.5rem; font-weight:700; margin-bottom:8px; color:white;">Ready to Scan</h2>
+                <p>Select your local ComfyUI or A1111 output folder.</p>
+            </div>
+        </div>
+        <div id="grid" class="grid"></div>
+        <div id="loader" class="loader">Loading more images...</div>
+    </main>
+
+    <!-- Detail View: Full Screen Image + Metadata Panel -->
+    <div id="detailView" class="detail-view">
+        <div class="detail-image-container">
+            <button class="back-btn" onclick="closeDetailView()">← Back (Esc)</button>
+            <button class="nav-btn nav-prev" onclick="navigateDetail(-1)">‹</button>
+            <img id="detailImage" src="" alt="Detail View">
+            <button class="nav-btn nav-next" onclick="navigateDetail(1)">›</button>
+            <div id="detailFavorite" class="favorite-star" onclick="toggleFavoriteCurrent()">☆</div>
+        </div>
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title-group">
+                    <span class="sidebar-title">Metadata Inspector</span>
+                    <span id="fileName" class="file-name">filename.png</span>
+                </div>
+                <button class="close-btn" onclick="closeDetailView()">✕</button>
+            </div>
+            <div class="sidebar-content">
+
+            <div class="stats-grid">
+                <div class="stat-item"><div class="stat-label">Model</div><input id="metaModel" class="stat-input" placeholder="?"></div>
+                <div class="stat-item"><div class="stat-label">Size</div><input id="metaSize" class="stat-input" placeholder="?"></div>
+                <div class="stat-item"><div class="stat-label">Sampler</div><input id="metaSampler" class="stat-input" placeholder="?"></div>
+                <div class="stat-item"><div class="stat-label">Seed</div><input id="metaSeed" class="stat-input" placeholder="?"></div>
+                <div class="stat-item"><div class="stat-label">Steps</div><input id="metaSteps" class="stat-input" placeholder="?"></div>
+                <div class="stat-item"><div class="stat-label">CFG</div><input id="metaCFG" class="stat-input" placeholder="?"></div>
+            </div>
+
+            <div class="prompt-group">
+                <div class="prompt-header">
+                    <span class="prompt-label pos-label"><span class="dot"></span> Positive</span>
+                </div>
+                <textarea id="posPrompt" class="prompt-text" spellcheck="false"></textarea>
+            </div>
+
+            <div class="prompt-group">
+                <div class="prompt-header">
+                    <span class="prompt-label neg-label"><span class="dot"></span> Negative</span>
+                </div>
+                <textarea id="negPrompt" class="prompt-text" spellcheck="false"></textarea>
+            </div>
+
+            <div class="prompt-group">
+                <div class="prompt-header"><span class="prompt-label" style="color:#c4b5fd">Resources</span></div>
+                <div id="resourceTags" class="chips-container"></div>
+            </div>
+
+            <div class="tool-bar">
+                <button class="action-btn" onclick="downloadSidecar()">
+                    <span>📄</span> Save JSON
+                </button>
+                <button class="action-btn primary" onclick="fixAndDownloadImage()">
+                    <span>💾</span> Fix & Download Image
+                </button>
+            </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Help Overlay -->
+    <div id="helpOverlay" class="help-overlay" onclick="if(event.target.id==='helpOverlay')hideHelp()">
+        <div class="help-content" onclick="event.stopPropagation()">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 style="color:var(--accent);margin:0;">❓ Help & Shortcuts</h2>
+                <button class="close-btn" onclick="hideHelp()">✕</button>
+            </div>
+            <div id="helpContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let allItems = [];
+        let filteredItems = [];
+        let visibleCount = 0;
+        let currentItem = null;
+        let currentIndex = -1; // Index in filteredItems for navigation
+        let favorites = new Set();
+        let showFavoritesOnly = false;
+        let sortBy = 'date';
+        let vMode = 'list'; // View mode: 'grid' or 'list'
+        let sortDirection = 'desc';
+        const BATCH_SIZE = 50;
+        const LORA_REGEX = /<lora:([^:>]+)(?::([^:>]+))?(?::([^:>]+))?>/g;
+        
+        // Load favorites from localStorage
+        (function() {
+            const saved = localStorage.getItem('guru-favorites');
+            if (saved) favorites = new Set(JSON.parse(saved));
+            const theme = localStorage.getItem('guru-theme') || 'dark';
+            document.body.setAttribute('data-theme', theme);
+            const toggleBtn = document.getElementById('themeToggle');
+            if (toggleBtn) toggleBtn.textContent = theme === 'dark' ? '🌙' : '☀️';
+        })();
+
+        const grid = document.getElementById('grid');
+        const mainScroll = document.getElementById('mainScroll');
+        const loader = document.getElementById('loader');
+        const detailView = document.getElementById('detailView');
+        const detailImage = document.getElementById('detailImage');
+
+        // --- CRC32 Table for PNG writing ---
+        const crcTable = [];
+        for (let n = 0; n < 256; n++) {
+            let c = n;
+            for (let k = 0; k < 8; k++) {
+                if (c & 1) c = 0xedb88320 ^ (c >>> 1);
+                else c = c >>> 1;
+            }
+            crcTable[n] = c;
+        }
+
+        function crc32(buf) {
+            let c = 0xffffffff;
+            for (let i = 0; i < buf.length; i++) {
+                c = crcTable[(c ^ buf[i]) & 0xff] ^ (c >>> 8);
+            }
+            return c ^ 0xffffffff;
+        }
+
+        let scrollTimeout = null;
+        mainScroll.addEventListener('scroll', () => {
+            // Debounce scroll events to avoid excessive calls
+            if (scrollTimeout) clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                // Check if we're near the bottom (within 500px)
+                const scrollBottom = mainScroll.scrollTop + mainScroll.clientHeight;
+                const scrollHeight = mainScroll.scrollHeight;
+                if (scrollBottom >= scrollHeight - 500 && visibleCount < filteredItems.length) {
+                    renderBatch();
+                }
+            }, 16); // ~60fps throttling
+        });
+
+        function renderBatch() {
+            // Check if there are more items to render
+            if (visibleCount >= filteredItems.length) {
+                loader.classList.remove('active');
+                return;
+            }
+            
+            loader.classList.add('active');
+            
+            const fragment = document.createDocumentFragment();
+            const nextBatch = filteredItems.slice(visibleCount, visibleCount + BATCH_SIZE);
+            
+            // If no items in batch, hide loader and return
+            if (nextBatch.length === 0) {
+                loader.classList.remove('active');
+                return;
+            }
+            
+            // Render list view header on first batch
+            if (vMode === 'list' && visibleCount === 0) {
+                const header = document.createElement('div');
+                header.className = 'list-head';
+                const emptyDiv = document.createElement('div');
+                header.appendChild(emptyDiv);
+                
+                const nameCol = document.createElement('div');
+                nameCol.className = `sortable ${sortBy==='name'?'sorted':''}`;
+                nameCol.innerHTML = `Name ${getSortArrow('name')}`;
+                nameCol.onclick = () => sortByColumn('name');
+                header.appendChild(nameCol);
+                
+                const modelCol = document.createElement('div');
+                modelCol.className = `sortable ${sortBy==='model'?'sorted':''}`;
+                modelCol.innerHTML = `Model ${getSortArrow('model')}`;
+                modelCol.onclick = () => sortByColumn('model');
+                header.appendChild(modelCol);
+                
+                const modifiedCol = document.createElement('div');
+                modifiedCol.className = `sortable ${sortBy==='modified'?'sorted':''}`;
+                modifiedCol.innerHTML = `Date Modified ${getSortArrow('modified')}`;
+                modifiedCol.onclick = () => sortByColumn('modified');
+                header.appendChild(modifiedCol);
+                
+                const createdCol = document.createElement('div');
+                createdCol.className = `sortable ${sortBy==='created'?'sorted':''}`;
+                createdCol.innerHTML = `Date Created ${getSortArrow('created')}`;
+                createdCol.onclick = () => sortByColumn('created');
+                header.appendChild(createdCol);
+                
+                fragment.appendChild(header);
+            }
+            
+            nextBatch.forEach((item, idx) => {
+                const globalIdx = visibleCount + idx;
+                const isFavorite = favorites.has(item.file.name);
+                
+                // Ensure URL is valid - recreate if needed (Firefox may revoke object URLs)
+                let imageUrl = item.url;
+                if (!imageUrl || imageUrl.startsWith('blob:') === false) {
+                    try {
+                        imageUrl = URL.createObjectURL(item.file);
+                        item.url = imageUrl;
+                    } catch (e) {
+                        console.warn('Failed to create object URL for', item.file.name, e);
+                        return;
+                    }
+                }
+                
+                if (vMode === 'list') {
+                    const row = document.createElement('div');
+                    row.className = `list-row${isFavorite ? ' favorite' : ''}`;
+                    const formatDate = (d) => {
+                        if (!d) return '';
+                        const dt = new Date(d);
+                        return dt.toLocaleDateString() + ' ' + dt.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+                    };
+                    const dateModified = item.file.lastModified ? formatDate(item.file.lastModified) : '';
+                    const dateCreated = item.file.lastModified ? formatDate(item.file.lastModified) : '';
+                    row.innerHTML = `
+                        <img src="${imageUrl}" class="list-img" alt="${item.file.name}">
+                        <div>${item.file.name}</div>
+                        <div>${item.meta?.model || ''}</div>
+                        <div class="date-modified">${dateModified}</div>
+                        <div class="date-created">${dateCreated}</div>
+                    `;
+                    row.onclick = () => openDetailView(globalIdx);
+                    fragment.appendChild(row);
+                } else {
+                    const card = document.createElement('div');
+                    card.className = `card${isFavorite ? ' favorite' : ''}`;
+                    card.innerHTML = `<img src="${imageUrl}" loading="lazy" decoding="async" alt="${item.file.name}">${isFavorite ? '<div class="favorite-star-small">⭐</div>' : ''}`;
+                    card.onclick = () => openDetailView(globalIdx);
+                    fragment.appendChild(card);
+                }
+            });
+            
+            grid.appendChild(fragment);
+            visibleCount += nextBatch.length;
+            document.getElementById('count').innerText = `${visibleCount} / ${filteredItems.length}`;
+            
+            // Hide loader if we've rendered all items
+            if (visibleCount >= filteredItems.length) {
+                loader.classList.remove('active');
+            }
+        }
+        
+        function setView(mode) {
+            vMode = mode;
+            grid.innerHTML = '';
+            visibleCount = 0;
+            renderBatch();
+        }
+        
+        function refreshFolder() {
+            // Trigger file input click to reload folder
+            document.getElementById('folderInput').click();
+        }
+
+        document.getElementById('search').addEventListener('input', () => {
+            applyFilters();
+        });
+
+        async function decompressZlib(data) {
+            try {
+                const ds = new DecompressionStream('deflate-raw');
+                const writer = ds.writable.getWriter();
+                writer.write(data.slice(2, data.length - 4));
+                writer.close();
+                const output = await new Response(ds.readable).arrayBuffer();
+                return new TextDecoder().decode(output);
+            } catch (e) {
+                try {
+                    const ds = new DecompressionStream('deflate');
+                    const writer = ds.writable.getWriter();
+                    writer.write(data);
+                    writer.close();
+                    const output = await new Response(ds.readable).arrayBuffer();
+                    return new TextDecoder().decode(output);
+                } catch(e2) { return null; }
+            }
+        }
+
+        document.getElementById('folderInput').addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files).filter(f => /\.(png|webp|jpeg|jpg)$/i.test(f.name));
+            if(files.length === 0) return;
+
+            document.getElementById('welcome').style.display = 'none';
+            grid.innerHTML = '';
+            grid.className = vMode === 'list' ? 'list-view' : 'grid';
+            
+            // Sort by selected option
+            if (sortBy === 'name') {
+                files.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (sortBy === 'created') {
+                files.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
+            } else {
+                files.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
+            }
+            allItems = [];
+
+            const chunkSize = 15;
+            visibleCount = 0; // Reset visible count when loading new folder
+            for (let i = 0; i < files.length; i += chunkSize) {
+                const chunk = files.slice(i, i + chunkSize);
+                const results = await Promise.all(chunk.map(processFile));
+                allItems.push(...results);
+                
+                // Update filteredItems and sort as we go
+                filteredItems = allItems;
+                applySort();
+                
+                // Render initial batch on first chunk, then let scroll handle the rest
+                if (i === 0) {
+                    renderBatch();
+                }
+                
+                document.getElementById('count').innerText = `Scanning ${allItems.length}`;
+                await new Promise(r => setTimeout(r, 0));
+            }
+            // Final filter application - this will reset and render properly
+            applyFilters();
+        });
+
+        async function processFile(file) {
+            try {
+                let text = "";
+                let buffer = null;
+                try {
+                    buffer = await file.arrayBuffer();
+                    text = await extractText(buffer);
+                } catch (e) { console.error("Text extraction failed", file.name, e); }
+                
+                const data = parseMetadata(text);
+                return { file, buffer, url: URL.createObjectURL(file), ...data };
+            } catch (err) {
+                console.error("Critical failure parsing file:", file.name, err);
+                return { 
+                    file, 
+                    url: URL.createObjectURL(file), 
+                    pos: "", neg: "", resources: [], 
+                    meta: { model: "?", size: "?", seed: "?", steps: "?", cfg: "?", sampler: "?" } 
+                };
+            }
+        }
+
+        async function extractText(buffer) {
+            const view = new DataView(buffer);
+            let fullText = "";
+            try {
+                if (view.getUint32(0) === 0x89504E47) {
+                    // PNG file - extract text chunks and EXIF
+                    let offset = 8;
+                    while (offset < view.byteLength) {
+                        if (offset + 4 > view.byteLength) break;
+                        const len = view.getUint32(offset);
+                        const type = String.fromCharCode(...new Uint8Array(buffer, offset + 4, 4));
+                        if (offset + 8 + len > view.byteLength) break;
+                        const data = new Uint8Array(buffer, offset + 8, len);
+                        if (type === 'tEXt' || type === 'iTXt') {
+                            try {
+                                fullText += new TextDecoder('utf-8').decode(data).replace(/\0/g, '') + "\n";
+                            } catch(e) {
+                                fullText += new TextDecoder('latin1').decode(data).replace(/\0/g, '') + "\n";
+                            }
+                        } else if (type === 'zTXt') {
+                            const inflated = await decompressZlib(data);
+                            if (inflated) fullText += inflated + "\n";
+                        } else if (type === 'eXIf') {
+                            // EXIF chunk in PNG - extract UserComment
+                            const exifText = extractEXIFUserComment(data);
+                            if (exifText) fullText += exifText + "\n";
+                        }
+                        offset += len + 12;
+                        if (type === 'IEND') break;
+                    }
+                } else if (view.getUint32(0) === 0x52494646 || view.getUint16(0) === 0xFFD8) {
+                    // JPEG or WebP - extract EXIF UserComment
+                    const exifText = extractEXIFUserCommentFromJPEG(buffer);
+                    if (exifText) {
+                        fullText = exifText;
+                    } else {
+                        // Fallback: try multiple decoding methods to find metadata
+                        // Method 1: Try UTF-16LE (common in EXIF UserComment)
+                        try {
+                            const utf16Text = new TextDecoder('utf-16le', {fatal: false}).decode(new Uint8Array(buffer));
+                            if (utf16Text.includes('Negative prompt:') || utf16Text.includes('Steps:')) {
+                                fullText = utf16Text;
+                            }
+                        } catch(e) {}
+                        
+                        // Method 2: Try UTF-16BE
+                        if (!fullText) {
+                            try {
+                                const utf16Text = new TextDecoder('utf-16be', {fatal: false}).decode(new Uint8Array(buffer));
+                                if (utf16Text.includes('Negative prompt:') || utf16Text.includes('Steps:')) {
+                                    fullText = utf16Text;
+                                }
+                            } catch(e) {}
+                        }
+                        
+                        // Method 3: Try UTF-8 (may have null bytes)
+                        if (!fullText) {
+                            fullText = new TextDecoder('utf-8', {fatal: false}).decode(new Uint8Array(buffer));
+                        }
+                    }
+                }
+            } catch(e) {
+                console.warn('Metadata extraction error:', e);
+            }
+            // Clean up null bytes and normalize text (handles UTF-16 encoding issues)
+            fullText = cleanTextForParsing(fullText);
+            return fullText;
+        }
+
+        function cleanTextForParsing(text) {
+            if (!text) return "";
+            // Remove null bytes (common in UTF-16 encoded EXIF UserComment)
+            let cleaned = text.replace(/\0/g, '');
+            // Remove other control characters except newlines
+            cleaned = cleaned.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F]/g, '');
+            // Normalize whitespace
+            cleaned = cleaned.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            return cleaned;
+        }
+
+        function extractEXIFUserComment(exifData) {
+            // Extract UserComment from EXIF data (tag 37510 = 0x927C)
+            try {
+                const dataView = new DataView(exifData.buffer || exifData);
+                let offset = 0;
+                
+                // EXIF structure: TIFF header, IFD entries
+                // Look for UserComment tag (37510 = 0x927C)
+                while (offset < exifData.length - 12) {
+                    const tag = dataView.getUint16(offset, true); // little-endian
+                    if (tag === 37510) { // UserComment tag
+                        const type = dataView.getUint16(offset + 2, true);
+                        const count = dataView.getUint32(offset + 4, true);
+                        const valueOffset = dataView.getUint32(offset + 8, true);
+                        
+                        if (count > 0 && valueOffset < exifData.length) {
+                            const valueData = new Uint8Array(exifData, valueOffset, Math.min(count, exifData.length - valueOffset));
+                            
+                            // Check encoding indicator (first 8 bytes)
+                            if (valueData.length > 8) {
+                                const encoding = String.fromCharCode(...valueData.slice(0, 8)).replace(/\0/g, '');
+                                
+                                if (encoding.includes('UNICODE') || encoding.includes('Unicode')) {
+                                    // UTF-16 encoding - try both LE and BE, use whichever produces valid text
+                                    const textData = valueData.slice(8);
+                                    try {
+                                        const decodedLE = new TextDecoder('utf-16le', {fatal: false}).decode(textData);
+                                        // Check if UTF-16LE produced valid-looking text (contains expected markers)
+                                        if (decodedLE && (decodedLE.includes('Negative prompt:') || decodedLE.includes('Steps:') || 
+                                            decodedLE.includes('负面提示') || decodedLE.includes('步骤') ||
+                                            (decodedLE.length > 50 && /Steps?\s*[:：]\s*\d+/.test(decodedLE)))) {
+                                            return decodedLE;
+                                        }
+                                    } catch(e) {}
+                                    
+                                    // Try UTF-16BE
+                                    try {
+                                        const decodedBE = new TextDecoder('utf-16be', {fatal: false}).decode(textData);
+                                        // Check if UTF-16BE produced valid-looking text
+                                        if (decodedBE && (decodedBE.includes('Negative prompt:') || decodedBE.includes('Steps:') || 
+                                            decodedBE.includes('负面提示') || decodedBE.includes('步骤') ||
+                                            (decodedBE.length > 50 && /Steps?\s*[:：]\s*\d+/.test(decodedBE)))) {
+                                            return decodedBE;
+                                        }
+                                        // If LE didn't work but BE decoded something, prefer BE
+                                        if (decodedBE && decodedBE.length > 10) {
+                                            return decodedBE;
+                                        }
+                                    } catch(e2) {}
+                                    
+                                    // Fallback: return LE result even if it doesn't look perfect
+                                    try {
+                                        return new TextDecoder('utf-16le', {fatal: false}).decode(textData);
+                                    } catch(e3) {
+                                        return new TextDecoder('utf-8', {fatal: false}).decode(valueData.slice(8));
+                                    }
+                                } else if (encoding.includes('ASCII')) {
+                                    // ASCII encoding
+                                    return new TextDecoder('ascii', {fatal: false}).decode(valueData.slice(8));
+                                } else {
+                                    // Try UTF-8
+                                    return new TextDecoder('utf-8', {fatal: false}).decode(valueData);
+                                }
+                            } else {
+                                // Short value, try direct decode
+                                return new TextDecoder('utf-8', {fatal: false}).decode(valueData);
+                            }
+                        }
+                    }
+                    offset += 12; // Move to next IFD entry
+                }
+            } catch(e) {
+                // EXIF parsing failed, return null
+            }
+            return null;
+        }
+
+        function extractEXIFUserCommentFromJPEG(buffer) {
+            // Extract EXIF from JPEG (starts with 0xFFE1 APP1 marker)
+            try {
+                const view = new DataView(buffer);
+                let offset = 2; // Skip JPEG SOI marker (0xFFD8)
+                
+                while (offset < buffer.byteLength - 4) {
+                    // Look for APP1 marker (0xFFE1) which contains EXIF
+                    if (view.getUint8(offset) === 0xFF && view.getUint8(offset + 1) === 0xE1) {
+                        const segmentLength = view.getUint16(offset + 2);
+                        const segmentData = new Uint8Array(buffer, offset + 4, segmentLength - 2);
+                        
+                        // Check if this is EXIF segment (starts with "Exif\0\0")
+                        if (segmentLength > 6) {
+                            const header = String.fromCharCode(...segmentData.slice(0, 6));
+                            if (header === 'Exif\0\0') {
+                                // Extract UserComment from EXIF data
+                                const exifData = segmentData.slice(6);
+                                const userComment = extractEXIFUserComment(exifData);
+                                if (userComment) return userComment;
+                            }
+                        }
+                        
+                        offset += segmentLength + 2;
+                    } else {
+                        offset++;
+                    }
+                }
+                
+                // Fallback: Search for UserComment text patterns directly in buffer
+                // This is more reliable than parsing EXIF structure
+                const bufferArray = new Uint8Array(buffer);
+                
+                // Search for "UNICODE" marker followed by text patterns
+                const unicodeMarker = new TextEncoder().encode('UNICODE');
+                for (let i = 0; i < bufferArray.length - unicodeMarker.length - 100; i++) {
+                    let match = true;
+                    for (let j = 0; j < unicodeMarker.length; j++) {
+                        if (bufferArray[i + j] !== unicodeMarker[j]) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) {
+                        // Found UNICODE marker, try to decode as UTF-16LE from this point
+                        try {
+                            const textData = bufferArray.slice(i + 8); // Skip "UNICODE\0\0"
+                            const decoded = new TextDecoder('utf-16le', {fatal: false}).decode(textData);
+                            if (decoded.includes('Negative prompt:') || decoded.includes('Steps:') || decoded.includes('masterpiece')) {
+                                return decoded;
+                            }
+                        } catch(e) {}
+                    }
+                }
+            } catch(e) {
+                // EXIF extraction failed
+            }
+            return null;
+        }
+
+        function parseMetadata(text) {
+            function extractJSON(str, startPos = 0) {
+                const start = str.indexOf('{', startPos);
+                if (start === -1) return null;
+                let count = 0, end = -1;
+                for (let i = start; i < str.length; i++) {
+                    if (str[i] === '{') count++;
+                    else if (str[i] === '}') count--;
+                    if (count === 0) { end = i; break; }
+                }
+                if (end !== -1) {
+                    try {
+                        return {json: JSON.parse(str.substring(start, end + 1)), end: end + 1};
+                    } catch(e) { return null; }
+                }
+                return null;
+            }
+            let comfyResult = null;
+            if (text.includes('"class_type"') && text.includes('"inputs"')) {
+                let pos = 0;
+                while (true) {
+                    const result = extractJSON(text, pos);
+                    if (!result) break;
+                    const json = result.json;
+                    pos = result.end;
+                    if (json && (json.class_type || json.nodes || Object.values(json).some(v => v && typeof v === 'object' && (v.class_type || v.type)))) {
+                        const parsed = parseComfy(json);
+                        if (parsed && (parsed.pos || parsed.meta.model !== "?")) {
+                            comfyResult = parsed;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!comfyResult && (text.includes('"class_type"') || text.includes('"type"') || (text.includes('"inputs"') && (text.includes('KSampler') || text.includes('CLIPTextEncode') || text.includes('SaveImage') || text.includes('CLIPLoader') || text.includes('VAELoader'))))) {
+                let pos = 0;
+                while (true) {
+                    const result = extractJSON(text, pos);
+                    if (!result) break;
+                    const json = result.json;
+                    pos = result.end;
+                    if (json && (json.class_type || json.nodes || json.type || Object.values(json).some(v => v && typeof v === 'object' && (v.class_type || v.type)))) {
+                        const parsed = parseComfy(json);
+                        if (parsed && (parsed.pos || parsed.meta.model !== "?")) {
+                            comfyResult = parsed;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (comfyResult) return comfyResult;
+            return parseA1111(text);
+        }
+
+        function parseComfy(json) {
+            let pos = "", neg = "";
+            let meta = { model: "?", size: "?", seed: "?", steps: "?", cfg: "?", sampler: "?" };
+            let resources = [];
+            let nodes = [];
+            let nodeMap = {};
+            if (json.nodes && Array.isArray(json.nodes)) {
+                nodes = json.nodes.map(n => {
+                    const node = {class_type: n.type || n.data?.class_type || "", inputs: n.inputs || n.data?.inputs || (n.widgets_values ? {} : {})};
+                    if (n.id !== undefined) nodeMap[n.id] = node;
+                    return node;
+                }).filter(n => n.class_type || n.inputs);
+            } else {
+                const vals = Object.values(json);
+                nodes = vals.filter(n => n && typeof n === 'object' && (n.class_type || n.inputs));
+                vals.forEach((n, i) => {
+                    if (n && typeof n === 'object' && (n.class_type || n.inputs)) {
+                        const key = Object.keys(json)[i];
+                        if (key && !isNaN(key)) nodeMap[key] = n;
+                    }
+                });
+            }
+
+            const findUpstreamText = (l, d = 0) => {
+                if (d > 10 || !l || !Array.isArray(l)) return "";
+                let n = null;
+                if (typeof l[0] === 'string' || typeof l[0] === 'number') {
+                    n = json[l[0]] || nodeMap[l[0]];
+                } else if (typeof l[0] === 'object') {
+                    n = l[0];
+                }
+                if (!n) return "";
+                const inputs = n.inputs || {};
+                if (!inputs && !n.widgets_values) return "";
+                let t = "";
+                if (Array.isArray(n.widgets_values) && n.widgets_values.length > 0 && typeof n.widgets_values[0] === 'string') t += n.widgets_values[0];
+                if (typeof inputs.text === 'string') t += (t ? ", " : "") + inputs.text;
+                if (typeof inputs.text_g === 'string') t += (t ? ", " : "") + inputs.text_g;
+                if (typeof inputs.text_l === 'string') t += (t ? ", " : "") + inputs.text_l;
+                if (inputs.string_field) t += (t ? ", " : "") + inputs.string_field;
+                if (inputs.trigger_words_display && Array.isArray(inputs.trigger_words_display.__value__)) {
+                    const tags = inputs.trigger_words_display.__value__.filter(x => x.active).map(x => x.text).join(", ");
+                    if (tags) t += (t ? ", " : "") + tags;
+                }
+                const keys = ['positive', 'negative', 'conditioning', 'clip', 'prompt', 'trigger_words'];
+                for (const k of keys) if (inputs[k]) {
+                    const r = findUpstreamText(inputs[k], d + 1);
+                    if (r) t += (t ? ", " : "") + r;
+                }
+                return t;
+            };
+
+            const findUpstreamModel = (l, d = 0) => {
+                if (d > 10 || !l || !Array.isArray(l)) return "";
+                let n = null;
+                if (typeof l[0] === 'string' || typeof l[0] === 'number') {
+                    n = json[l[0]] || nodeMap[l[0]];
+                } else if (typeof l[0] === 'object') {
+                    n = l[0];
+                }
+                if (!n) return "";
+                const inputs = n.inputs || {};
+                if (inputs.ckpt_name) return inputs.ckpt_name;
+                if (inputs.unet_name) return inputs.unet_name;
+                if (inputs.checkpoint_name) return inputs.checkpoint_name;
+                if (inputs.model_name) return inputs.model_name;
+                if (inputs.model) return findUpstreamModel(inputs.model, d + 1);
+                return "";
+            };
+
+            const samplerTypes = ["KSampler", "KSamplerAdvanced", "SamplerCustom", "SamplerEulerAncestralCFGPP", "SamplerLCM"];
+            const ksampler = nodes.find(n => n.class_type && samplerTypes.some(type => n.class_type.includes(type)));
+            if (ksampler) {
+                const inputs = ksampler.inputs || {};
+                meta.seed = inputs.seed || inputs.noise_seed || "?";
+                meta.steps = inputs.steps || "?";
+                meta.cfg = inputs.cfg || "?";
+                meta.sampler = inputs.sampler_name || ksampler.class_type || "?";
+                if (inputs.scheduler) meta.sampler += " " + inputs.scheduler;
+                if (inputs.positive) pos = findUpstreamText(inputs.positive);
+                if (inputs.negative) neg = findUpstreamText(inputs.negative);
+                if (inputs.model) meta.model = findUpstreamModel(inputs.model).replace(/\.(safetensors|ckpt)$/, "");
+            }
+
+            nodes.forEach(n => {
+                const nodeType = n.class_type || "";
+                const inputs = n.inputs || {};
+                if (inputs.lora_name) {
+                    resources.push({ type: 'LoRA', name: inputs.lora_name.replace(/\.(safetensors|ckpt)$/, ""), str: inputs.strength_model });
+                }
+                if (nodeType.includes("Power Lora Loader")) {
+                    for (const [k, v] of Object.entries(inputs)) {
+                        if (k.startsWith('lora_') && v && v.on) {
+                            resources.push({ type: 'LoRA', name: v.lora.replace(/\.(safetensors|ckpt)$/, ""), str: v.strength });
+                        }
+                    }
+                }
+                if (inputs.loras && Array.isArray(inputs.loras.__value__)) {
+                    inputs.loras.__value__.forEach(l => {
+                        if (l.name && l.active !== false) {
+                            resources.push({ type: 'LoRA', name: l.name, str: l.strength });
+                        }
+                    });
+                }
+                if (nodeType.includes("ControlNet") && inputs.control_net_name) {
+                    resources.push({ type: 'ControlNet', name: inputs.control_net_name, str: inputs.strength || "1.0" });
+                }
+                if (nodeType.includes("IPAdapter") && inputs.ipadapter_file) {
+                    resources.push({ type: 'IP-Adapter', name: inputs.ipadapter_file, str: inputs.weight || "1.0" });
+                }
+            });
+
+            const sizeNodes = ["EmptyLatentImage", "LatentUpscale", "LatentComposite", "EmptySD3LatentImage"];
+            const sizeNode = nodes.find(n => sizeNodes.includes(n.class_type));
+            if (sizeNode) {
+                const inputs = sizeNode.inputs || {};
+                if (inputs.width && inputs.height) meta.size = `${inputs.width}x${inputs.height}`;
+            }
+
+            return { pos, neg, meta, resources };
+        }
+
+        function parseA1111(text) {
+            let pos = "", neg = "";
+            let resources = [];
+            let meta = { model: "?", size: "?", seed: "?", steps: "?", cfg: "?", sampler: "?" };
+
+            // Clean text - remove any remaining control characters
+            text = text.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F]/g, '');
+
+            let match;
+            LORA_REGEX.lastIndex = 0;
+            while ((match = LORA_REGEX.exec(text)) !== null) {
+                resources.push({ type: 'LoRA', name: match[1], str: match[2] || "1.0" });
+            }
+
+            // Try multiple marker variations (case-insensitive)
+            const negMarkers = ["Negative prompt:", "Negative Prompt:", "negative prompt:", "Negative prompt"];
+            const stepsMarkers = ["Steps:", "Steps", "Step:"];
+            
+            let negIdx = -1, stepsIdx = -1;
+            let negMarker = "";
+            
+            // Find negative prompt marker
+            for (const marker of negMarkers) {
+                const idx = text.indexOf(marker);
+                if (idx !== -1) {
+                    negIdx = idx;
+                    negMarker = marker;
+                    break;
+                }
+            }
+            
+            // Find steps marker
+            for (const marker of stepsMarkers) {
+                const idx = text.indexOf(marker);
+                if (idx !== -1) {
+                    stepsIdx = idx;
+                    break;
+                }
+            }
+
+            // Extract prompts
+            if (negIdx !== -1 && stepsIdx !== -1 && negIdx < stepsIdx) {
+                pos = text.substring(0, negIdx).replace(/parameters\s*/i, "").trim();
+                neg = text.substring(negIdx + negMarker.length, stepsIdx).trim();
+            } else if (stepsIdx !== -1) {
+                pos = text.substring(0, stepsIdx).replace(/parameters\s*/i, "").trim();
+            } else if (negIdx !== -1) {
+                // Only negative marker found
+                pos = text.substring(0, negIdx).replace(/parameters\s*/i, "").trim();
+                neg = text.substring(negIdx + negMarker.length).trim();
+            } else {
+                // No markers found - try to extract from JSON or use whole text
+                if(text.includes('"widgets_values"')) {
+                    const parts = text.split(/"text":\s*"/);
+                    if(parts.length > 1) pos = parts[1].split('"')[0];
+                } else {
+                    // Check if it's just a prompt without metadata markers
+                    pos = text.trim();
+                }
+            }
+
+            // Extract parameters - improved regex patterns
+            if (stepsIdx !== -1) {
+                const block = text.substring(stepsIdx);
+                
+                // More flexible parameter extraction
+                const getParam = (key, patterns) => {
+                    for (const pattern of patterns) {
+                        const regex = new RegExp(pattern, 'i');
+                        const match = block.match(regex);
+                        if (match && match[1]) {
+                            return match[1].trim();
+                        }
+                    }
+                    return "?";
+                };
+                
+                meta.steps = getParam("Steps", [
+                    "Steps:\\s*([0-9]+)",
+                    "Steps\\s*:\\s*([0-9]+)",
+                    "Steps\\s+([0-9]+)"
+                ]);
+                
+                meta.sampler = getParam("Sampler", [
+                    "Sampler:\\s*([^,\\n]+)",
+                    "Sampler\\s*:\\s*([^,\\n]+)",
+                    "Sampler\\s+([^,\\n]+)"
+                ]);
+                
+                meta.cfg = getParam("CFG", [
+                    "CFG\\s+scale:\\s*([0-9.]+)",
+                    "CFG\\s*scale\\s*:\\s*([0-9.]+)",
+                    "CFG\\s*:\\s*([0-9.]+)",
+                    "CFG scale\\s*:\\s*([0-9.]+)"
+                ]);
+                
+                meta.seed = getParam("Seed", [
+                    "Seed:\\s*([0-9]+)",
+                    "Seed\\s*:\\s*([0-9]+)",
+                    "Seed\\s+([0-9]+)"
+                ]);
+                
+                meta.size = getParam("Size", [
+                    "Size:\\s*([0-9xX]+)",
+                    "Size\\s*:\\s*([0-9xX]+)",
+                    "Size\\s+([0-9xX]+)"
+                ]);
+                
+                meta.model = getParam("Model", [
+                    "Model:\\s*([^,\\n]+)",
+                    "Model\\s*:\\s*([^,\\n]+)",
+                    "Model\\s+([^,\\n]+)"
+                ]);
+            }
+
+            return { pos, neg, resources, meta };
+        }
+
+        function openDetailView(index) {
+            if (index < 0 || index >= filteredItems.length) return;
+            currentIndex = index;
+            currentItem = filteredItems[index];
+            updateDetailView();
+            detailView.classList.add('active');
+        }
+
+        function closeDetailView() {
+            detailView.classList.remove('active');
+            currentIndex = -1;
+        }
+
+        function updateDetailView() {
+            if (!currentItem) return;
+            detailImage.src = currentItem.url;
+            document.getElementById('fileName').innerText = currentItem.file.name;
+            
+            // Update favorite star
+            const favStar = document.getElementById('detailFavorite');
+            favStar.textContent = favorites.has(currentItem.file.name) ? '⭐' : '☆';
+            
+            // Populate Inputs
+            document.getElementById('metaModel').value = currentItem.meta.model || "";
+            document.getElementById('metaSize').value = currentItem.meta.size || "";
+            document.getElementById('metaSampler').value = currentItem.meta.sampler || "";
+            document.getElementById('metaSeed').value = currentItem.meta.seed || "";
+            document.getElementById('metaSteps').value = currentItem.meta.steps || "";
+            document.getElementById('metaCFG').value = currentItem.meta.cfg || "";
+            document.getElementById('posPrompt').value = currentItem.pos || "";
+            document.getElementById('negPrompt').value = currentItem.neg || "";
+
+            // Resource Chips
+            const tagContainer = document.getElementById('resourceTags');
+            tagContainer.innerHTML = '';
+            currentItem.resources.forEach(res => {
+                const chip = document.createElement('div');
+                chip.className = `chip ${res.type === 'Model' ? 'chip-model' : 'chip-lora'}`;
+                chip.innerHTML = `<span>${res.type}</span> ${res.name} <span class="strength-badge">${res.str || "1.0"}</span>`;
+                chip.onclick = () => {
+                    const search = document.getElementById('search');
+                    search.value = res.name;
+                    search.dispatchEvent(new Event('input'));
+                };
+                tagContainer.appendChild(chip);
+            });
+        }
+
+        function navigateDetail(direction) {
+            if (currentIndex === -1) return;
+            const newIndex = currentIndex + direction;
+            if (newIndex >= 0 && newIndex < filteredItems.length) {
+                openDetailView(newIndex);
+            }
+        }
+
+        function toggleFavoriteCurrent() {
+            if (!currentItem) return;
+            const name = currentItem.file.name;
+            if (favorites.has(name)) {
+                favorites.delete(name);
+            } else {
+                favorites.add(name);
+            }
+            localStorage.setItem('guru-favorites', JSON.stringify([...favorites]));
+            updateDetailView();
+            renderBatch(); // Re-render to update star icons
+        }
+
+        // Theme Toggle
+        document.getElementById('themeToggle').onclick = function() {
+            const current = document.body.getAttribute('data-theme') || 'dark';
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('guru-theme', newTheme);
+            this.textContent = newTheme === 'dark' ? '🌙' : '☀️';
+        };
+
+        // Help System
+        function showHelp() {
+            const content = document.getElementById('helpContent');
+            content.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;">
+                <div><h3 style="color:var(--accent);margin-top:0;">⌨️ Keyboard Shortcuts</h3>
+                <div style="display:grid;gap:8px;font-size:0.9rem;">
+                <div><kbd>Arrow Left/Right</kbd> Navigate images in detail view</div>
+                <div><kbd>Esc</kbd> Close detail view</div>
+                <div><kbd>G</kbd> Grid view</div>
+                <div><kbd>L</kbd> List view</div>
+                <div><kbd>R</kbd> Refresh folder</div>
+                <div><kbd>T</kbd> Toggle theme</div>
+                <div><kbd>?</kbd> Show this help</div>
+                <div><kbd>F</kbd> Focus search</div>
+                </div></div>
+                <div><h3 style="color:var(--accent);margin-top:0;">🖱️ Mouse Actions</h3>
+                <div style="display:grid;gap:8px;font-size:0.9rem;">
+                <div><strong>Click</strong> Image to view full-screen</div>
+                <div><strong>Click Star</strong> ⭐ to favorite/unfavorite</div>
+                <div><strong>Sort</strong> Use dropdown to sort by name/date</div>
+                </div></div>
+                <div><h3 style="color:var(--accent);margin-top:0;">📋 Features</h3>
+                <div style="display:grid;gap:8px;font-size:0.9rem;">
+                <div><strong>Favorites</strong> Star images for quick access</div>
+                <div><strong>Theme</strong> Switch dark/light mode</div>
+                <div><strong>Sort</strong> By name, date modified, or created</div>
+                <div><strong>Search</strong> Filter by prompt, model, seed</div>
+                </div></div></div>`;
+            document.getElementById('helpOverlay').classList.add('active');
+        }
+        function hideHelp() {
+            document.getElementById('helpOverlay').classList.remove('active');
+        }
+        document.getElementById('helpBtn').onclick = showHelp;
+
+        // Favorites Filter
+        document.getElementById('favFilterBtn').onclick = function() {
+            showFavoritesOnly = !showFavoritesOnly;
+            this.classList.toggle('active', showFavoritesOnly);
+            applyFilters();
+        };
+
+        // Sort
+        document.getElementById('sortSelect').onchange = function() {
+            const val = this.value;
+            if (val === 'name') {
+                sortBy = 'name';
+                sortDirection = 'asc';
+            } else if (val === 'created') {
+                sortBy = 'created';
+                sortDirection = 'desc';
+            } else {
+                sortBy = 'date';
+                sortDirection = 'desc';
+            }
+            applySort();
+            grid.innerHTML = '';
+            visibleCount = 0;
+            renderBatch();
+        };
+
+        function applySort() {
+            if (sortBy === 'name') {
+                filteredItems.sort((a, b) => {
+                    const cmp = a.file.name.localeCompare(b.file.name);
+                    return sortDirection === 'asc' ? cmp : -cmp;
+                });
+            } else if (sortBy === 'model') {
+                filteredItems.sort((a, b) => {
+                    const modelA = (a.meta?.model || '').toLowerCase();
+                    const modelB = (b.meta?.model || '').toLowerCase();
+                    const cmp = modelA.localeCompare(modelB);
+                    return sortDirection === 'asc' ? cmp : -cmp;
+                });
+            } else if (sortBy === 'modified') {
+                filteredItems.sort((a, b) => {
+                    const cmp = (b.file.lastModified || 0) - (a.file.lastModified || 0);
+                    return sortDirection === 'asc' ? -cmp : cmp;
+                });
+            } else if (sortBy === 'created') {
+                filteredItems.sort((a, b) => {
+                    const cmp = (b.file.lastModified || 0) - (a.file.lastModified || 0);
+                    return sortDirection === 'asc' ? -cmp : cmp;
+                });
+            } else { // date (modified)
+                filteredItems.sort((a, b) => {
+                    const cmp = (b.file.lastModified || 0) - (a.file.lastModified || 0);
+                    return sortDirection === 'asc' ? -cmp : cmp;
+                });
+            }
+        }
+        function sortByColumn(col) {
+            if (sortBy === col) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortBy = col;
+                sortDirection = 'asc';
+            }
+            applySort();
+            grid.innerHTML = '';
+            visibleCount = 0;
+            renderBatch();
+        }
+        function getSortArrow(col) {
+            if (sortBy === col) return sortDirection === 'asc' ? '↑' : '↓';
+            return '<span class="sort-arrow">↕</span>';
+        }
+
+        function applyFilters() {
+            const term = document.getElementById('search').value.toLowerCase();
+            if (!term) {
+                filteredItems = allItems.filter(item => {
+                    if (showFavoritesOnly && !favorites.has(item.file.name)) return false;
+                    return true;
+                });
+                applySort();
+                grid.innerHTML = '';
+                visibleCount = 0;
+                renderBatch();
+                return;
+            }
+            filteredItems = allItems.filter(item => {
+                if (showFavoritesOnly && !favorites.has(item.file.name)) return false;
+                const fileName = item.file.name.toLowerCase();
+                const text = ((item.pos || '') + " " + (item.neg || '')).toLowerCase();
+                const res = (item.resources || []).map(r => r.name.toLowerCase()).join(" ");
+                const model = (item.meta?.model || '').toLowerCase();
+                const sampler = (item.meta?.sampler || '').toLowerCase();
+                const seed = (item.meta?.seed || '').toString();
+                const steps = (item.meta?.steps || '').toString();
+                const cfg = (item.meta?.cfg || '').toString();
+                const size = (item.meta?.size || '').toString();
+                return fileName.includes(term) || text.includes(term) || res.includes(term) || model.includes(term) || sampler.includes(term) || seed.includes(term) || steps.includes(term) || cfg.includes(term) || size.includes(term);
+            });
+            applySort();
+            grid.innerHTML = '';
+            visibleCount = 0;
+            // Update grid class for view mode
+            grid.className = vMode === 'list' ? 'list-view' : 'grid';
+            renderBatch();
+        }
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                if (e.key === 'Escape') {
+                    e.target.blur();
+                    hideHelp();
+                }
+                return;
+            }
+            if (detailView.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') navigateDetail(-1);
+                if (e.key === 'ArrowRight') navigateDetail(1);
+                if (e.key === 'Escape') closeDetailView();
+                return;
+            }
+            if (e.key === 'Escape') hideHelp();
+            if (e.key === '?' || e.key === '/') { e.preventDefault(); showHelp(); }
+            if (e.key === 't' || e.key === 'T') { if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); document.getElementById('themeToggle').click(); } }
+            if (e.key === 'f' || e.key === 'F') { if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); document.getElementById('search').focus(); } }
+            if (e.key === 'r' || e.key === 'R') { if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); refreshFolder(); } }
+        });
+
+        function downloadSidecar() {
+            if (!currentItem) return;
+            const data = {
+                filename: currentItem.file.name,
+                positive: document.getElementById('posPrompt').value,
+                negative: document.getElementById('negPrompt').value,
+                meta: {
+                    model: document.getElementById('metaModel').value,
+                    seed: document.getElementById('metaSeed').value,
+                    steps: document.getElementById('metaSteps').value,
+                    cfg: document.getElementById('metaCFG').value,
+                    sampler: document.getElementById('metaSampler').value,
+                    size: document.getElementById('metaSize').value
+                }
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = currentItem.file.name.replace(/\.[^/.]+$/, "") + ".json";
+            a.click();
+        }
+
+        // --- INTELLIGENT TRANSPLANT ENGINE ---
+        async function fixAndDownloadImage() {
+            if (!currentItem || !currentItem.buffer) {
+                alert("Original file data missing.");
+                return;
+            }
+
+            const pos = document.getElementById('posPrompt').value.replace(/\n/g, " "); // Convert newlines to spaces to prevent mangling
+            const neg = document.getElementById('negPrompt').value.replace(/\n/g, " ");
+            const steps = document.getElementById('metaSteps').value;
+            const sampler = document.getElementById('metaSampler').value;
+            const cfg = document.getElementById('metaCFG').value;
+            const seed = document.getElementById('metaSeed').value;
+            const size = document.getElementById('metaSize').value;
+            const model = document.getElementById('metaModel').value;
+
+            const parameters = `${pos}\nNegative prompt: ${neg}\nSteps: ${steps}, Sampler: ${sampler}, CFG scale: ${cfg}, Seed: ${seed}, Size: ${size}, Model: ${model}`;
+
+            // 1. Prepare PNG Buffer (Convert if WebP/JPEG)
+            let pngBuffer = currentItem.buffer;
+            const viewHeader = new DataView(pngBuffer.slice(0, 8));
+            const isPng = viewHeader.getUint32(0) === 0x89504E47 && viewHeader.getUint32(4) === 0x0D0A1A0A;
+
+            if (!isPng) {
+                const btn = document.querySelector('.action-btn.primary');
+                const oldText = btn.innerHTML;
+                btn.innerHTML = "⌛ Converting...";
+                try {
+                    pngBuffer = await convertToPng(currentItem.url);
+                } catch(e) {
+                    alert("Failed to convert image to PNG: " + e.message);
+                    btn.innerHTML = oldText;
+                    return;
+                }
+                btn.innerHTML = oldText;
+            }
+
+            // 2. Filter Old Chunks (The Transplant)
+            // We must copy the PNG structure but OMIT any existing metadata chunks
+            // that might conflict (especially ComfyUI 'prompt' JSON chunks).
+            
+            const newChunks = [pngBuffer.slice(0, 8)]; // Start with signature
+            const view = new DataView(pngBuffer);
+            let offset = 8;
+            
+            while (offset < pngBuffer.byteLength) {
+                const len = view.getUint32(offset);
+                const type = new Uint8Array(pngBuffer, offset + 4, 4);
+                const typeStr = String.fromCharCode(...type);
+                const chunkSize = 12 + len;
+                
+                if (offset + chunkSize > pngBuffer.byteLength) break;
+
+                const chunkBuffer = pngBuffer.slice(offset, offset + chunkSize);
+
+                if (typeStr === 'IEND') {
+                    // Skip IEND, we append a new one later
+                    break;
+                }
+                else if (typeStr === 'tEXt' || typeStr === 'iTXt') {
+                    // Check for keywords: parameters, prompt, workflow
+                    // Data starts at offset + 8.
+                    // We check the first few bytes for the keyword string.
+                    const dataStart = offset + 8;
+                    // Read up to 20 bytes for keyword check
+                    const checkLen = Math.min(len, 20);
+                    const kwBytes = new Uint8Array(pngBuffer, dataStart, checkLen);
+                    let kw = "";
+                    for(let k=0; k<checkLen; k++) {
+                        if(kwBytes[k] === 0) break; // Null terminator
+                        kw += String.fromCharCode(kwBytes[k]);
+                    }
+
+                    if (kw === "parameters" || kw === "prompt" || kw === "workflow" || kw === "ComfyUI") {
+                        console.log(`Removing old metadata chunk: ${kw}`);
+                        // SKIP THIS CHUNK
+                    } else {
+                        newChunks.push(chunkBuffer);
+                    }
+                } 
+                else {
+                    newChunks.push(chunkBuffer);
+                }
+                offset += chunkSize;
+            }
+
+            // 3. Create NEW parameters chunk
+            const encoder = new TextEncoder();
+            const keyword = encoder.encode("parameters\0"); 
+            const content = encoder.encode(parameters);
+            const chunkData = new Uint8Array(keyword.length + content.length);
+            chunkData.set(keyword);
+            chunkData.set(content, keyword.length);
+
+            const len = chunkData.length;
+            const type = encoder.encode("tEXt");
+            
+            const crcData = new Uint8Array(type.length + chunkData.length);
+            crcData.set(type);
+            crcData.set(chunkData, type.length);
+            const crc = crc32(crcData);
+
+            const fullChunk = new Uint8Array(4 + 4 + len + 4);
+            const viewC = new DataView(fullChunk.buffer);
+            viewC.setUint32(0, len, false); 
+            fullChunk.set(type, 4);
+            fullChunk.set(chunkData, 8);
+            viewC.setUint32(8 + len, crc, false); 
+
+            newChunks.push(fullChunk);
+
+            // 4. Create fresh IEND
+            const iend = new Uint8Array([0,0,0,0, 0x49,0x45,0x4E,0x44, 0xAE,0x42,0x60,0x82]);
+            newChunks.push(iend);
+
+            // 5. Download
+            const blob = new Blob(newChunks, {type: 'image/png'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "fixed_" + currentItem.file.name.replace(/\.(webp|jpeg|jpg)$/i, ".png");
+            a.click();
+        }
+
+        function convertToPng(imageUrl) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    canvas.toBlob((blob) => {
+                        if(!blob) reject(new Error("Canvas conversion failed"));
+                        blob.arrayBuffer().then(resolve).catch(reject);
+                    }, 'image/png');
+                };
+                img.onerror = reject;
+                img.src = imageUrl;
+            });
+        }
+    </script>
+</body>
+</html>

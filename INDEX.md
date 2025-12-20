@@ -96,6 +96,8 @@ Quick reference guide to find everything in this project.
 | `.cursor/` | Cursor IDE configuration and rules |
 | `my-project/` | Project templates and agent configurations |
 
+**Important:** `.cursorrules` file in root is automatically loaded by Cursor at conversation start.
+
 ---
 
 ## 🔍 Quick Find
@@ -106,6 +108,8 @@ Quick reference guide to find everything in this project.
 - **Documentation?** → `docs/` or root `Readme.md`
 - **Quick start?** → `README_QUICK_START.md`
 - **File index?** → `INDEX.md` (this file)
+- **AI rules?** → `.cursorrules` (auto-loaded) or `docs/AI_CODING_RULES.md`
+- **Learning file?** → `.cursor/coding_guru.md`
 - **AI tools?** → `tools/`
 - **Coding references?** → `data/coding_reference_*.json`
 - **Backups?** → `backup/`

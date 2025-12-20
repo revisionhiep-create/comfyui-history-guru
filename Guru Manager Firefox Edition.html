@@ -817,6 +817,7 @@
             return null;
         }
 
+
         function parseMetadata(text) {
             function extractJSON(str, startPos = 0) {
                 const start = str.indexOf('{', startPos);
@@ -906,8 +907,21 @@
                 const inputs = n.inputs || {};
                 if (!inputs && !n.widgets_values) return "";
                 let t = "";
+                // 0. Handle StringConcatenate nodes (combine string_a and string_b)
+                if (n.class_type === 'StringConcatenate' || n.class_type?.includes('StringConcatenate')) {
+                    if (typeof inputs.string_a === 'string') t += inputs.string_a;
+                    if (typeof inputs.string_b === 'string') t += (t ? "" : "") + inputs.string_b;
+                    if (typeof inputs.delimiter === 'string' && inputs.delimiter) t += (t ? inputs.delimiter : "");
+                    return t;
+                }
                 if (Array.isArray(n.widgets_values) && n.widgets_values.length > 0 && typeof n.widgets_values[0] === 'string') t += n.widgets_values[0];
+                // 2. Local Text (from inputs for prompt format)
                 if (typeof inputs.text === 'string') t += (t ? ", " : "") + inputs.text;
+                else if (Array.isArray(inputs.text)) {
+                    // Text is a node reference (e.g., ["1", 0]) - recurse into it
+                    const r = findUpstreamText(inputs.text, d + 1);
+                    if (r) t += (t ? ", " : "") + r;
+                }
                 if (typeof inputs.text_g === 'string') t += (t ? ", " : "") + inputs.text_g;
                 if (typeof inputs.text_l === 'string') t += (t ? ", " : "") + inputs.text_l;
                 if (inputs.string_field) t += (t ? ", " : "") + inputs.string_field;

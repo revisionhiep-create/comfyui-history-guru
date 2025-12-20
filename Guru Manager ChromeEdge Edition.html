@@ -200,35 +200,53 @@ function parseComfy(json) {
         if(d>10||!l||!Array.isArray(l))return"";
         let n=null;if(typeof l[0]==='string'||typeof l[0]==='number'){n=json[l[0]]||nodeMap[l[0]]}else if(typeof l[0]==='object'){n=l[0]}if(!n)return"";const inputs=n.inputs||{};if(!inputs&&!n.widgets_values)return"";
         let t = "";
-        // 0. Handle StringConcatenate nodes (combine string_a and string_b)
-        if(n.class_type==='StringConcatenate'||n.class_type?.includes('StringConcatenate')){
-            if(typeof inputs.string_a==='string')t+=inputs.string_a;
-            if(typeof inputs.string_b==='string')t+=(t?"":"")+inputs.string_b;
-            if(typeof inputs.delimiter==='string'&&inputs.delimiter)t+=(t?inputs.delimiter:"");
-            return t;
-        }
         // 1. Local Text (from widgets_values for workflow format)
         if(Array.isArray(n.widgets_values)&&n.widgets_values.length>0&&typeof n.widgets_values[0]==='string')t+=n.widgets_values[0];
-        // 2. Local Text (from inputs for prompt format)
+        // 2. Standard text inputs (known patterns)
         if(typeof inputs.text==='string') t+=(t?", ":"")+inputs.text;
         else if(Array.isArray(inputs.text)) {
             // Text is a node reference (e.g., ["1", 0]) - recurse into it
-            const r = findUpstreamText(inputs.text, d+1);
+            const r = findUpstreamText(inputs.text,d+1);
             if(r) t+=(t?", ":"")+r;
         }
         if(typeof inputs.text_g==='string') t+=(t?", ":"")+inputs.text_g;
         if(typeof inputs.text_l==='string') t+=(t?", ":"")+inputs.text_l;
         if(inputs.string_field) t+=(t?", ":"")+inputs.string_field;
-        // 2. Special Lists (StandardTriggerWordsLoader)
+        // 3. Generic string input extraction (handles StringConcatenate, StringJoin, etc. without hardcoding)
+        // Look for any input that starts with "string_" or is a string value
+        for(const key in inputs){
+            if(key.startsWith('string_')||key.startsWith('str_')||key.includes('text')||key.includes('prompt')){
+                const val=inputs[key];
+                if(typeof val==='string'&&val.length>0){
+                    // Skip delimiter-only values
+                    if(key!=='delimiter'||val.length>1)t+=(t?"":"")+val;
+                }else if(Array.isArray(val)&&val.length>0){
+                    // If it's an array reference, recurse
+                    const r=findUpstreamText(val,d+1);
+                    if(r)t+=(t?", ":"")+r;
+                }
+            }
+        }
+        // 4. Special Lists (StandardTriggerWordsLoader)
         if(inputs.trigger_words_display && Array.isArray(inputs.trigger_words_display.__value__)) {
             const tags = inputs.trigger_words_display.__value__.filter(x=>x.active).map(x=>x.text).join(", ");
             if(tags) t+=(t?", ":"")+tags;
         }
-        // 3. Recurse Keys
-        const keys=['positive','negative','conditioning','clip','prompt','trigger_words']; // Added trigger_words
+        // 5. Recurse through known link keys
+        const keys=['positive','negative','conditioning','clip','prompt','trigger_words'];
         for(const k of keys) if(inputs[k]) {
             const r = findUpstreamText(inputs[k],d+1);
             if(r) t+=(t?", ":"")+r;
+        }
+        // 6. Generic fallback: if no text found yet, try recursing any array inputs that might be node references
+        if(!t){
+            for(const key in inputs){
+                const val=inputs[key];
+                if(Array.isArray(val)&&val.length>0&&(typeof val[0]==='string'||typeof val[0]==='number')){
+                    const r=findUpstreamText(val,d+1);
+                    if(r){t=r;break;}
+                }
+            }
         }
         return t;
     };

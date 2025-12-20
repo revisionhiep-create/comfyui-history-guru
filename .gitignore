@@ -1,0 +1,33 @@
+# Development tools and AI assistant files
+tools/
+data/
+.cursor/
+test-data/
+backup/
+
+# Development-only files (keep local, don't push to GitHub)
+.cursorrules
+INDEX.md
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Archive (keep local, don't push to GitHub)
+Archive/
+
+# My project templates (internal)
+my-project/

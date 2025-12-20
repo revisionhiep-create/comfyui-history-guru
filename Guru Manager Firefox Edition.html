@@ -14,6 +14,8 @@
             --text-main: #e4e4e7;
             --text-muted: #a1a1aa;
             --input-bg: #121214;
+            --hover-bg: #27272a;
+            --btn-bg: #27272a;
         }
         * { box-sizing: border-box; }
         body { margin: 0; background-color: var(--bg); color: var(--text-main); font-family: system-ui, -apple-system, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
@@ -26,10 +28,10 @@
 
         /* Search */
         .search-container { flex: 1; max-width: 600px; position: relative; }
-        .search-input { width: 100%; background: #121214; border: 1px solid var(--border); color: var(--text-main); padding: 10px 16px 10px 44px; border-radius: 12px; outline: none; transition: all 0.2s; font-size: 0.9rem; }
+        .search-input { width: 100%; background: var(--input-bg); border: 1px solid var(--border); color: var(--text-main); padding: 10px 16px 10px 44px; border-radius: 12px; outline: none; transition: all 0.2s; font-size: 0.9rem; }
         .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1); background: var(--card-bg); }
         .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; height: 18px; pointer-events: none; }
-        .count-badge { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 0.75rem; color: var(--text-muted); font-family: monospace; font-weight: 600; background: #27272a; padding: 2px 6px; border-radius: 4px; }
+        .count-badge { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 0.75rem; color: var(--text-muted); font-family: monospace; font-weight: 600; background: var(--btn-bg); padding: 2px 6px; border-radius: 4px; }
 
         /* Button */
         .btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); }
@@ -49,7 +51,7 @@
         .card:hover img { transform: scale(1.05); }
 
         .welcome { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); gap: 20px; }
-        .welcome svg { width: 80px; height: 80px; color: #27272a; }
+        .welcome svg { width: 80px; height: 80px; color: var(--border); }
 
         /* CLICK BLOCKER */
         .backdrop { 
@@ -118,17 +120,17 @@
 
         /* Stats Inputs */
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .stat-item { background: #121214; border: 1px solid var(--border); padding: 8px; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; transition: border-color 0.2s; }
+        .stat-item { background: var(--input-bg); border: 1px solid var(--border); padding: 8px; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; transition: border-color 0.2s; }
         .stat-item:focus-within { border-color: var(--accent); }
         
         .stat-label { font-size: 0.65rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
         
         .stat-input { 
-            width: 100%; background: transparent; border: none; color: #fff; 
+            width: 100%; background: transparent; border: none; color: var(--text-main); 
             font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; 
             outline: none; padding: 0; margin: 0;
         }
-        .stat-input::placeholder { color: #333; }
+        .stat-input::placeholder { color: var(--text-muted); }
 
         /* Textareas */
         .prompt-group { display: flex; flex-direction: column; gap: 10px; }
@@ -142,8 +144,8 @@
         .neg-label { color: #f87171; }
 
         .prompt-text { 
-            background: #121214; border: 1px solid var(--border); border-radius: 10px; padding: 14px; 
-            font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.6; color: #d4d4d8; 
+            background: var(--input-bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px; 
+            font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.6; color: var(--text-main); 
             width: 100%; min-height: 120px; resize: vertical; outline: none; transition: border-color 0.2s;
         }
         .prompt-text:focus { border-color: var(--accent); }
@@ -159,12 +161,12 @@
         /* Tools */
         .tool-bar { display: flex; gap: 10px; padding-top: 20px; border-top: 1px solid var(--border); }
         .action-btn { 
-            flex: 1; background: #27272a; color: white; border: none; padding: 12px; 
+            flex: 1; background: var(--btn-bg); color: var(--text-main); border: none; padding: 12px; 
             border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;
             display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem;
         }
-        .action-btn:hover { background: #3f3f46; }
-        .action-btn.primary { background: var(--accent); }
+        .action-btn:hover { background: var(--hover-bg); }
+        .action-btn.primary { background: var(--accent); color: #fff; }
         .action-btn.primary:hover { filter: brightness(1.1); }
 
         .loader { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.875rem; display: none; }
@@ -185,7 +187,7 @@
         .help-content { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 30px; max-width: 900px; max-height: 85vh; overflow-y: auto; width: 90%; }
         
         /* Sort Dropdown */
-        .sort-select { background: #121214; border: 1px solid var(--border); color: var(--text-main); padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; }
+        .sort-select { background: var(--input-bg); border: 1px solid var(--border); color: var(--text-main); padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; }
         
         /* List View */
         .list-view { display: flex; flex-direction: column; }
@@ -197,8 +199,8 @@
         .list-head>div.sorted { color: var(--accent); }
         .sort-arrow { font-size: 0.7rem; opacity: 0.6; }
         .list-head>div.sorted .sort-arrow { opacity: 1; }
-        .list-row { display: grid; grid-template-columns: 55px 3fr 2fr 1.5fr 1fr; gap: 12px; padding: 6px 16px; border-bottom: 1px solid #1f1f22; align-items: center; font-size: 0.85rem; cursor: pointer; height: 55px; transition: background 0.2s; }
-        .list-row:hover { background: #27272a; }
+        .list-row { display: grid; grid-template-columns: 55px 3fr 2fr 1.5fr 1fr; gap: 12px; padding: 6px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 0.85rem; cursor: pointer; height: 55px; transition: background 0.2s; }
+        .list-row:hover { background: var(--hover-bg); }
         .list-img { width: 37px; height: 37px; border-radius: 4px; object-fit: cover; background: #000; }
         .list-row.selected { background: rgba(139, 92, 246, 0.2) !important; }
         
@@ -212,6 +214,8 @@
             --text-main: #18181b;
             --text-muted: #52525b;
             --input-bg: #ffffff;
+            --hover-bg: #f3f4f6;
+            --btn-bg: #e5e7eb;
         }
         
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -254,7 +258,7 @@
         <div id="welcome" class="welcome">
             <svg class="welcome-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             <div style="text-align:center">
-                <h2 style="font-size:1.5rem; font-weight:700; margin-bottom:8px; color:white;">Ready to Scan</h2>
+            <h2 style="font-size:1.5rem; font-weight:700; margin-bottom:8px; color:var(--text-main);">Ready to Scan</h2>
                 <p>Select your local ComfyUI or A1111 output folder.</p>
             </div>
         </div>

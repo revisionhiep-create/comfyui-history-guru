@@ -904,6 +904,7 @@
                     n = l[0];
                 }
                 if (!n) return "";
+                if (n.class_type === 'ConditioningZeroOut') return null;
                 const inputs = n.inputs || {};
                 if (!inputs && !n.widgets_values) return "";
                 let t = "";
@@ -985,8 +986,14 @@
                 meta.cfg = inputs.cfg || "?";
                 meta.sampler = inputs.sampler_name || ksampler.class_type || "?";
                 if (inputs.scheduler) meta.sampler += " " + inputs.scheduler;
-                if (inputs.positive) pos = findUpstreamText(inputs.positive);
-                if (inputs.negative) neg = findUpstreamText(inputs.negative);
+                if (inputs.positive) {
+                    const p = findUpstreamText(inputs.positive);
+                    pos = (p === null) ? "" : (p || "");
+                }
+                if (inputs.negative) {
+                    const n = findUpstreamText(inputs.negative);
+                    neg = (n === null) ? "" : (n || "");
+                }
                 if (inputs.model) meta.model = findUpstreamModel(inputs.model).replace(/\.(safetensors|ckpt)$/, "");
             }
 

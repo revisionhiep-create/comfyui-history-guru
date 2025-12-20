@@ -6,7 +6,6 @@
 
 You can now **organize, sort, move, and fix** your AI generations without ever leaving the metadata view. It runs entirely in your browser using the modern *File System Access API*.
 
-![How History Guru Works](infograph.png)
 
 ## ✨ What's New in v4.0?
 

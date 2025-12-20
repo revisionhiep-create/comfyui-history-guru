@@ -6,7 +6,6 @@
 
 You can now **organize, sort, move, and fix** your AI generations without ever leaving the metadata view. It runs entirely in your browser using the modern *File System Access API*.
 
-![How History Guru Works](infograph.png)
 
 ## ✨ What's New in v4.0?
 
@@ -25,7 +24,7 @@ You can now **organize, sort, move, and fix** your AI generations without ever l
 * **❓ Help System:** Built-in help overlay showing all functions and keyboard shortcuts.
 * **🗑️ Context Menu:** Right-click files and folders for quick actions (delete, etc.).
 
-## 🆕 Latest Updates (December 2024)
+## 🆕 Latest Updates (December 2025)
 
 * **🖱️ Clickable Column Sorting:** Click any column header (Name, Model, Date Modified, Date Created) in list view to sort. Click again to reverse direction. Visual indicators (↑/↓) show current sort state.
 * **📋 List View Improvements:** List view is now the default and primary view mode. Images are 10-15% larger for better visibility. Grid view removed for optimal performance.

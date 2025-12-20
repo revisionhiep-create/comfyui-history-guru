@@ -14,9 +14,21 @@
             --text-main: #e4e4e7;
             --text-muted: #a1a1aa;
             --input-bg: #121214;
+            --hover-bg: #27272a;
+            --btn-bg: #27272a;
         }
         * { box-sizing: border-box; }
         body { margin: 0; background-color: var(--bg); color: var(--text-main); font-family: system-ui, -apple-system, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* New Layout Styles */
+        .layout { display: flex; flex: 1; overflow: hidden; }
+        .sidebar { width: 240px; background: var(--card-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-header-folders { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text-muted); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .tree { flex: 1; overflow-y: auto; padding: 8px 0; }
+        .folder { padding: 6px 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid transparent; transition: all 0.2s; }
+        .folder:hover { background: var(--hover-bg); color: var(--text-main); }
+        .folder.active { background: rgba(139, 92, 246, 0.15); color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+        .stage { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
         
         /* Header */
         header { height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; background: var(--header-bg); backdrop-filter: blur(4px); z-index: 50; gap: 20px; flex-shrink: 0; }
@@ -26,10 +38,10 @@
 
         /* Search */
         .search-container { flex: 1; max-width: 600px; position: relative; }
-        .search-input { width: 100%; background: #121214; border: 1px solid var(--border); color: var(--text-main); padding: 10px 16px 10px 44px; border-radius: 12px; outline: none; transition: all 0.2s; font-size: 0.9rem; }
+        .search-input { width: 100%; background: var(--input-bg); border: 1px solid var(--border); color: var(--text-main); padding: 10px 16px 10px 44px; border-radius: 12px; outline: none; transition: all 0.2s; font-size: 0.9rem; }
         .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1); background: var(--card-bg); }
         .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; height: 18px; pointer-events: none; }
-        .count-badge { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 0.75rem; color: var(--text-muted); font-family: monospace; font-weight: 600; background: #27272a; padding: 2px 6px; border-radius: 4px; }
+        .count-badge { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 0.75rem; color: var(--text-muted); font-family: monospace; font-weight: 600; background: var(--btn-bg); padding: 2px 6px; border-radius: 4px; }
 
         /* Button */
         .btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); }
@@ -49,7 +61,7 @@
         .card:hover img { transform: scale(1.05); }
 
         .welcome { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); gap: 20px; }
-        .welcome svg { width: 80px; height: 80px; color: #27272a; }
+        .welcome svg { width: 80px; height: 80px; color: var(--border); }
 
         /* CLICK BLOCKER */
         .backdrop { 
@@ -118,17 +130,17 @@
 
         /* Stats Inputs */
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .stat-item { background: #121214; border: 1px solid var(--border); padding: 8px; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; transition: border-color 0.2s; }
+        .stat-item { background: var(--input-bg); border: 1px solid var(--border); padding: 8px; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; transition: border-color 0.2s; }
         .stat-item:focus-within { border-color: var(--accent); }
         
         .stat-label { font-size: 0.65rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
         
         .stat-input { 
-            width: 100%; background: transparent; border: none; color: #fff; 
+            width: 100%; background: transparent; border: none; color: var(--text-main); 
             font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; 
             outline: none; padding: 0; margin: 0;
         }
-        .stat-input::placeholder { color: #333; }
+        .stat-input::placeholder { color: var(--text-muted); }
 
         /* Textareas */
         .prompt-group { display: flex; flex-direction: column; gap: 10px; }
@@ -142,8 +154,8 @@
         .neg-label { color: #f87171; }
 
         .prompt-text { 
-            background: #121214; border: 1px solid var(--border); border-radius: 10px; padding: 14px; 
-            font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.6; color: #d4d4d8; 
+            background: var(--input-bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px; 
+            font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.6; color: var(--text-main); 
             width: 100%; min-height: 120px; resize: vertical; outline: none; transition: border-color 0.2s;
         }
         .prompt-text:focus { border-color: var(--accent); }
@@ -159,12 +171,12 @@
         /* Tools */
         .tool-bar { display: flex; gap: 10px; padding-top: 20px; border-top: 1px solid var(--border); }
         .action-btn { 
-            flex: 1; background: #27272a; color: white; border: none; padding: 12px; 
+            flex: 1; background: var(--btn-bg); color: var(--text-main); border: none; padding: 12px; 
             border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;
             display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.85rem;
         }
-        .action-btn:hover { background: #3f3f46; }
-        .action-btn.primary { background: var(--accent); }
+        .action-btn:hover { background: var(--hover-bg); }
+        .action-btn.primary { background: var(--accent); color: #fff; }
         .action-btn.primary:hover { filter: brightness(1.1); }
 
         .loader { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.875rem; display: none; }
@@ -185,7 +197,7 @@
         .help-content { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 30px; max-width: 900px; max-height: 85vh; overflow-y: auto; width: 90%; }
         
         /* Sort Dropdown */
-        .sort-select { background: #121214; border: 1px solid var(--border); color: var(--text-main); padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; }
+        .sort-select { background: var(--input-bg); border: 1px solid var(--border); color: var(--text-main); padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; }
         
         /* List View */
         .list-view { display: flex; flex-direction: column; }
@@ -197,8 +209,8 @@
         .list-head>div.sorted { color: var(--accent); }
         .sort-arrow { font-size: 0.7rem; opacity: 0.6; }
         .list-head>div.sorted .sort-arrow { opacity: 1; }
-        .list-row { display: grid; grid-template-columns: 55px 3fr 2fr 1.5fr 1fr; gap: 12px; padding: 6px 16px; border-bottom: 1px solid #1f1f22; align-items: center; font-size: 0.85rem; cursor: pointer; height: 55px; transition: background 0.2s; }
-        .list-row:hover { background: #27272a; }
+        .list-row { display: grid; grid-template-columns: 55px 3fr 2fr 1.5fr 1fr; gap: 12px; padding: 6px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 0.85rem; cursor: pointer; height: 55px; transition: background 0.2s; }
+        .list-row:hover { background: var(--hover-bg); }
         .list-img { width: 37px; height: 37px; border-radius: 4px; object-fit: cover; background: #000; }
         .list-row.selected { background: rgba(139, 92, 246, 0.2) !important; }
         
@@ -212,6 +224,8 @@
             --text-main: #18181b;
             --text-muted: #52525b;
             --input-bg: #ffffff;
+            --hover-bg: #f3f4f6;
+            --btn-bg: #e5e7eb;
         }
         
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -250,24 +264,32 @@
         </label>
     </header>
 
-    <main id="mainScroll">
-        <div id="welcome" class="welcome">
-            <svg class="welcome-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            <div style="text-align:center">
-                <h2 style="font-size:1.5rem; font-weight:700; margin-bottom:8px; color:white;">Ready to Scan</h2>
-                <p>Select your local ComfyUI or A1111 output folder.</p>
-            </div>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header-folders">DIRECTORIES</div>
+            <div id="tree" class="tree"></div>
+        </aside>
+        <div class="stage">
+            <main id="mainScroll">
+                <div id="welcome" class="welcome">
+                    <svg class="welcome-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <div style="text-align:center">
+                        <h2 style="font-size:1.5rem; font-weight:700; margin-bottom:8px; color:var(--text-main);">Ready to Scan</h2>
+                        <p>Select your local ComfyUI or A1111 output folder.</p>
+                    </div>
+                </div>
+                <div id="grid" class="grid"></div>
+                <div id="loader" class="loader">Loading more images...</div>
+            </main>
         </div>
-        <div id="grid" class="grid"></div>
-        <div id="loader" class="loader">Loading more images...</div>
-    </main>
+    </div>
 
     <!-- Detail View: Full Screen Image + Metadata Panel -->
     <div id="detailView" class="detail-view">
         <div class="detail-image-container">
             <button class="back-btn" onclick="closeDetailView()">← Back (Esc)</button>
             <button class="nav-btn nav-prev" onclick="navigateDetail(-1)">‹</button>
-            <img id="detailImage" src="" alt="Detail View">
+            <div id="mediaContainer" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"></div>
             <button class="nav-btn nav-next" onclick="navigateDetail(1)">›</button>
             <div id="detailFavorite" class="favorite-star" onclick="toggleFavoriteCurrent()">☆</div>
         </div>
@@ -342,6 +364,8 @@
         let showFavoritesOnly = false;
         let sortBy = 'date';
         let vMode = 'list'; // View mode: 'grid' or 'list'
+        let dirStructure = new Set();
+        let currentDirectory = null;
         let sortDirection = 'desc';
         const BATCH_SIZE = 50;
         const LORA_REGEX = /<lora:([^:>]+)(?::([^:>]+))?(?::([^:>]+))?>/g;
@@ -450,6 +474,7 @@
             nextBatch.forEach((item, idx) => {
                 const globalIdx = visibleCount + idx;
                 const isFavorite = favorites.has(item.file.name);
+                const tag = item.isVideo ? 'video' : 'img';
                 
                 // Ensure URL is valid - recreate if needed (Firefox may revoke object URLs)
                 let imageUrl = item.url;
@@ -474,7 +499,7 @@
                     const dateModified = item.file.lastModified ? formatDate(item.file.lastModified) : '';
                     const dateCreated = item.file.lastModified ? formatDate(item.file.lastModified) : '';
                     row.innerHTML = `
-                        <img src="${imageUrl}" class="list-img" alt="${item.file.name}">
+                        <${tag} src="${imageUrl}" class="list-img" alt="${item.file.name}"></${tag}>
                         <div>${item.file.name}</div>
                         <div>${item.meta?.model || ''}</div>
                         <div class="date-modified">${dateModified}</div>
@@ -485,7 +510,7 @@
                 } else {
                     const card = document.createElement('div');
                     card.className = `card${isFavorite ? ' favorite' : ''}`;
-                    card.innerHTML = `<img src="${imageUrl}" loading="lazy" decoding="async" alt="${item.file.name}">${isFavorite ? '<div class="favorite-star-small">⭐</div>' : ''}`;
+                    card.innerHTML = `<${tag} src="${imageUrl}" loading="lazy" decoding="async" alt="${item.file.name}"></${tag}>${isFavorite ? '<div class="favorite-star-small">⭐</div>' : ''}`;
                     card.onclick = () => openDetailView(globalIdx);
                     fragment.appendChild(card);
                 }
@@ -538,47 +563,62 @@
         }
 
         document.getElementById('folderInput').addEventListener('change', async (e) => {
-            const files = Array.from(e.target.files).filter(f => /\.(png|webp|jpeg|jpg)$/i.test(f.name));
+            const files = Array.from(e.target.files).filter(f => /\.(png|jpg|jpeg|webp|mp4|webm)$/i.test(f.name));
             if(files.length === 0) return;
 
             document.getElementById('welcome').style.display = 'none';
             grid.innerHTML = '';
             grid.className = vMode === 'list' ? 'list-view' : 'grid';
             
-            // Sort by selected option
-            if (sortBy === 'name') {
-                files.sort((a, b) => a.name.localeCompare(b.name));
-            } else if (sortBy === 'created') {
-                files.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
-            } else {
-                files.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
-            }
             allItems = [];
+            dirStructure.clear();
+            currentDirectory = null;
 
             const chunkSize = 15;
             visibleCount = 0; // Reset visible count when loading new folder
             for (let i = 0; i < files.length; i += chunkSize) {
                 const chunk = files.slice(i, i + chunkSize);
-                const results = await Promise.all(chunk.map(processFile));
+                const results = await Promise.all(chunk.map(async (file) => {
+                    // Directory parsing
+                    const path = file.webkitRelativePath;
+                    const dirPath = path.substring(0, path.lastIndexOf('/'));
+                    if (dirPath) {
+                        const parts = dirPath.split('/');
+                        let currentPath = '';
+                        for (const part of parts) {
+                            currentPath = currentPath ? `${currentPath}/${part}` : part;
+                            dirStructure.add(currentPath);
+                        }
+                    }
+                    return processFile(file);
+                }));
                 allItems.push(...results);
-                
-                // Update filteredItems and sort as we go
-                filteredItems = allItems;
-                applySort();
                 
                 // Render initial batch on first chunk, then let scroll handle the rest
                 if (i === 0) {
+                    filteredItems = allItems;
+                    applySort();
                     renderBatch();
                 }
                 
                 document.getElementById('count').innerText = `Scanning ${allItems.length}`;
                 await new Promise(r => setTimeout(r, 0));
             }
-            // Final filter application - this will reset and render properly
+            renderTree();
             applyFilters();
         });
 
         async function processFile(file) {
+            const isVideo = /\.(mp4|webm)$/i.test(file.name);
+            if (isVideo) {
+                return {
+                    file,
+                    url: URL.createObjectURL(file),
+                    pos: "", neg: "", resources: [],
+                    meta: { model: "Video", size: (file.size / 1e6).toFixed(1) + "MB", seed: "?", steps: "?", cfg: "?", sampler: "?" },
+                    isVideo: true
+                };
+            }
             try {
                 let text = "";
                 let buffer = null;
@@ -588,14 +628,15 @@
                 } catch (e) { console.error("Text extraction failed", file.name, e); }
                 
                 const data = parseMetadata(text);
-                return { file, buffer, url: URL.createObjectURL(file), ...data };
+                return { file, buffer, url: URL.createObjectURL(file), ...data, isVideo: false };
             } catch (err) {
                 console.error("Critical failure parsing file:", file.name, err);
                 return { 
                     file, 
                     url: URL.createObjectURL(file), 
                     pos: "", neg: "", resources: [], 
-                    meta: { model: "?", size: "?", seed: "?", steps: "?", cfg: "?", sampler: "?" } 
+                    meta: { model: "?", size: "?", seed: "?", steps: "?", cfg: "?", sampler: "?" },
+                    isVideo: false
                 };
             }
         }
@@ -1161,7 +1202,21 @@
 
         function updateDetailView() {
             if (!currentItem) return;
-            detailImage.src = currentItem.url;
+
+            const mediaContainer = document.getElementById('mediaContainer');
+            mediaContainer.innerHTML = ''; // Clear previous media
+            const tag = currentItem.isVideo ? 'video' : 'img';
+            const mediaElement = document.createElement(tag);
+            mediaElement.src = currentItem.url;
+            mediaElement.style.maxWidth = '100%';
+            mediaElement.style.maxHeight = '100%';
+            mediaElement.style.objectFit = 'contain';
+            if (currentItem.isVideo) {
+                mediaElement.controls = true;
+                mediaElement.autoplay = true;
+            }
+            mediaContainer.appendChild(mediaElement);
+
             document.getElementById('fileName').innerText = currentItem.file.name;
             
             // Update favorite star
@@ -1326,6 +1381,91 @@
             grid.innerHTML = '';
             visibleCount = 0;
             renderBatch();
+        };
+
+       function renderTree() {
+            const treeContainer = document.getElementById('tree');
+            treeContainer.innerHTML = '';
+
+            // Calculate counts for each directory
+            const dirCounts = new Map();
+            for (const item of allItems) {
+                const path = item.file.webkitRelativePath;
+                const dirPath = path.substring(0, path.lastIndexOf('/'));
+                dirCounts.set(dirPath, (dirCounts.get(dirPath) || 0) + 1);
+            }
+
+            // Render "All Files"
+            const allFilesFolder = document.createElement('div');
+            allFilesFolder.className = 'folder active';
+            allFilesFolder.innerHTML = `📁 All Files <span style="color: var(--text-muted); margin-left: auto;">${allItems.length}</span>`;
+            allFilesFolder.onclick = () => {
+                document.querySelectorAll('.folder').forEach(f => f.classList.remove('active'));
+                allFilesFolder.classList.add('active');
+                currentDirectory = null;
+                applyFilters();
+            };
+            treeContainer.appendChild(allFilesFolder);
+
+            // Render other directories
+            const sortedDirs = [...dirStructure].sort();
+            sortedDirs.forEach(path => {
+                const count = dirCounts.get(path) || 0;
+                const folderEl = document.createElement('div');
+                folderEl.className = 'folder';
+                folderEl.innerHTML = `📁 ${path.split('/').pop()} <span style="color: var(--text-muted); margin-left: auto;">${count}</span>`;
+                folderEl.style.paddingLeft = ((path.split('/').length) * 16) + 'px';
+                folderEl.onclick = () => {
+                    document.querySelectorAll('.folder').forEach(f => f.classList.remove('active'));
+                    folderEl.classList.add('active');
+                    currentDirectory = path;
+                    applyFilters();
+                };
+                treeContainer.appendChild(folderEl);
+            });
+        }
+
+        function applySort() {
+            if (sortBy === 'name') {
+                filteredItems.sort((a, b) => {
+                    const cmp = a.file.name.localeCompare(b.file.name);
+                    return sortDirection === 'asc' ? cmp : -cmp;
+                });
+            } else if (sortBy === 'model') {
+                filteredItems.sort((a, b) => {
+                    const modelA = (a.meta?.model || '').toLowerCase();
+                    const modelB = (b.meta?.model || '').toLowerCase();
+                    const cmp = modelA.localeCompare(modelB);
+                    return sortDirection === 'asc' ? cmp : -cmp;
+                });
+            } else if (sortBy === 'modified') {
+                filteredItems.sort((a, b) => {
+                    const cmp = (b.file.lastModified || 0) - (a.file.lastModified || 0);
+                    return sortDirection === 'asc' ? -cmp : cmp;
+                });
+            } else if (sortBy === 'created') {
+                filteredItems.sort((a, b) => {
+                    const cmp = (b.file.lastModified || 0) - (a.file.lastModified || 0);
+                    return sortDirection === 'asc' ? -cmp : cmp;
+                });
+            } else { // date (modified)
+                filteredItems.sort((a, b) => {
+                    const cmp = (b.file.lastModified || 0) - (a.file.lastModified || 0);
+                    return sortDirection === 'asc' ? -cmp : cmp;
+                });
+            }
+        }
+        function sortByColumn(col) {
+            if (sortBy === col) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortBy = col;
+                sortDirection = 'asc';
+            }
+            applySort();
+            grid.innerHTML = '';
+            visibleCount = 0;
+            renderBatch();
         }
         function getSortArrow(col) {
             if (sortBy === col) return sortDirection === 'asc' ? '↑' : '↓';
@@ -1334,19 +1474,19 @@
 
         function applyFilters() {
             const term = document.getElementById('search').value.toLowerCase();
-            if (!term) {
-                filteredItems = allItems.filter(item => {
-                    if (showFavoritesOnly && !favorites.has(item.file.name)) return false;
-                    return true;
-                });
-                applySort();
-                grid.innerHTML = '';
-                visibleCount = 0;
-                renderBatch();
-                return;
-            }
             filteredItems = allItems.filter(item => {
+                // Directory filter
+                if (currentDirectory) {
+                    const itemDir = item.file.webkitRelativePath.substring(0, item.file.webkitRelativePath.lastIndexOf('/'));
+                    if (itemDir !== currentDirectory) {
+                        return false;
+                    }
+                }
+
                 if (showFavoritesOnly && !favorites.has(item.file.name)) return false;
+
+                if (!term) return true; // No search term, passes this filter
+
                 const fileName = item.file.name.toLowerCase();
                 const text = ((item.pos || '') + " " + (item.neg || '')).toLowerCase();
                 const res = (item.resources || []).map(r => r.name.toLowerCase()).join(" ");

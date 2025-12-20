@@ -25,7 +25,16 @@ You can now **organize, sort, move, and fix** your AI generations without ever l
 * **❓ Help System:** Built-in help overlay showing all functions and keyboard shortcuts.
 * **🗑️ Context Menu:** Right-click files and folders for quick actions (delete, etc.).
 
-## 🆕 Latest Improvements (EXIF & Parsing Enhancements)
+## 🆕 Latest Updates (December 2024)
+
+* **🖱️ Clickable Column Sorting:** Click any column header (Name, Model, Date Modified, Date Created) in list view to sort. Click again to reverse direction. Visual indicators (↑/↓) show current sort state.
+* **📋 List View Improvements:** List view is now the default and primary view mode. Images are 10-15% larger for better visibility. Grid view removed for optimal performance.
+* **⭐ Favorite Button in Detail View:** Added favorite star button in the corner of full-size image view for easy favoriting while reviewing images.
+* **🔎 Enhanced Search:** Search now works across file names, positive/negative prompts, model names, samplers, seeds, steps, CFG scale, size, and LoRA resources. Empty search restores folder view.
+* **📊 Updated List Columns:** Changed from "Model, Sampler, Seed" to "Model, Date Modified, Date Created" for more useful file information.
+* **🎨 UI Refinements:** Removed unnecessary view toggle buttons. Streamlined interface for better focus on content.
+
+## 🆕 Previous Improvements (EXIF & Parsing Enhancements)
 
 * **📸 EXIF UserComment Extraction:** Full support for extracting metadata from EXIF UserComment fields in both PNG (`eXIf` chunks) and JPEG (APP1 segments). This enables parsing of Civitai images that store metadata in EXIF format.
 * **🌐 UTF-16 Encoding Support:** Properly decodes UTF-16LE and UTF-16BE encoded EXIF UserComment fields, handling the encoding format commonly used by Civitai and other platforms.

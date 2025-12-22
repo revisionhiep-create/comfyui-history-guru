@@ -20,6 +20,16 @@
         * { box-sizing: border-box; }
         body { margin: 0; background-color: var(--bg); color: var(--text-main); font-family: system-ui, -apple-system, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
+        /* New Layout Styles */
+        .layout { display: flex; flex: 1; overflow: hidden; }
+        .sidebar { width: 240px; background: var(--card-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar-header-folders { padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--text-muted); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .tree { flex: 1; overflow-y: auto; padding: 8px 0; }
+        .folder { padding: 6px 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid transparent; transition: all 0.2s; }
+        .folder:hover { background: var(--hover-bg); color: var(--text-main); }
+        .folder.active { background: rgba(139, 92, 246, 0.15); color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+        .stage { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        
         /* Header */
         header { height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; background: var(--header-bg); backdrop-filter: blur(4px); z-index: 50; gap: 20px; flex-shrink: 0; }
         h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.03em; margin: 0; display: flex; align-items: center; gap: 8px; }
@@ -254,24 +264,34 @@
         </label>
     </header>
 
-    <main id="mainScroll">
-        <div id="welcome" class="welcome">
-            <svg class="welcome-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            <div style="text-align:center">
-            <h2 style="font-size:1.5rem; font-weight:700; margin-bottom:8px; color:var(--text-main);">Ready to Scan</h2>
-                <p>Select your local ComfyUI or A1111 output folder.</p>
-            </div>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="sidebar-header-folders">DIRECTORIES</div>
+            <div id="tree" class="tree"></div>
+        </aside>
+        <div class="stage">
+            <main id="mainScroll">
+                <div id="welcome" class="welcome">
+                    <svg class="welcome-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <div style="text-align:center">
+                        <h2 style="font-size:1.5rem; font-weight:700; margin-bottom:8px; color:var(--text-main);">Ready to Scan</h2>
+                        <p>Select your local ComfyUI or A1111 output folder.</p>
+                    </div>
+                </div>
+                <div id="grid" class="grid"></div>
+                <div id="loader" class="loader">Loading more images...</div>
+            </main>
         </div>
-        <div id="grid" class="grid"></div>
-        <div id="loader" class="loader">Loading more images...</div>
-    </main>
+    </div>
+        </div>
+    </div>
 
     <!-- Detail View: Full Screen Image + Metadata Panel -->
     <div id="detailView" class="detail-view">
         <div class="detail-image-container">
             <button class="back-btn" onclick="closeDetailView()">← Back (Esc)</button>
             <button class="nav-btn nav-prev" onclick="navigateDetail(-1)">‹</button>
-            <img id="detailImage" src="" alt="Detail View">
+            <div id="mediaContainer" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"></div>
             <button class="nav-btn nav-next" onclick="navigateDetail(1)">›</button>
             <div id="detailFavorite" class="favorite-star" onclick="toggleFavoriteCurrent()">☆</div>
         </div>
@@ -346,6 +366,8 @@
         let showFavoritesOnly = false;
         let sortBy = 'date';
         let vMode = 'list'; // View mode: 'grid' or 'list'
+        let dirStructure = new Set();
+        let currentDirectory = null;
         let sortDirection = 'desc';
         const BATCH_SIZE = 50;
         const LORA_REGEX = /<lora:([^:>]+)(?::([^:>]+))?(?::([^:>]+))?>/g;
@@ -454,6 +476,7 @@
             nextBatch.forEach((item, idx) => {
                 const globalIdx = visibleCount + idx;
                 const isFavorite = favorites.has(item.file.name);
+                const tag = item.isVideo ? 'video' : 'img';
                 
                 // Ensure URL is valid - recreate if needed (Firefox may revoke object URLs)
                 let imageUrl = item.url;
@@ -478,7 +501,7 @@
                     const dateModified = item.file.lastModified ? formatDate(item.file.lastModified) : '';
                     const dateCreated = item.file.lastModified ? formatDate(item.file.lastModified) : '';
                     row.innerHTML = `
-                        <img src="${imageUrl}" class="list-img" alt="${item.file.name}">
+                        <${tag} src="${imageUrl}" class="list-img" alt="${item.file.name}"></${tag}>
                         <div>${item.file.name}</div>
                         <div>${item.meta?.model || ''}</div>
                         <div class="date-modified">${dateModified}</div>
@@ -489,7 +512,7 @@
                 } else {
                     const card = document.createElement('div');
                     card.className = `card${isFavorite ? ' favorite' : ''}`;
-                    card.innerHTML = `<img src="${imageUrl}" loading="lazy" decoding="async" alt="${item.file.name}">${isFavorite ? '<div class="favorite-star-small">⭐</div>' : ''}`;
+                    card.innerHTML = `<${tag} src="${imageUrl}" loading="lazy" decoding="async" alt="${item.file.name}"></${tag}>${isFavorite ? '<div class="favorite-star-small">⭐</div>' : ''}`;
                     card.onclick = () => openDetailView(globalIdx);
                     fragment.appendChild(card);
                 }
@@ -542,47 +565,62 @@
         }
 
         document.getElementById('folderInput').addEventListener('change', async (e) => {
-            const files = Array.from(e.target.files).filter(f => /\.(png|webp|jpeg|jpg)$/i.test(f.name));
+            const files = Array.from(e.target.files).filter(f => /\.(png|jpg|jpeg|webp|mp4|webm)$/i.test(f.name));
             if(files.length === 0) return;
 
             document.getElementById('welcome').style.display = 'none';
             grid.innerHTML = '';
             grid.className = vMode === 'list' ? 'list-view' : 'grid';
             
-            // Sort by selected option
-            if (sortBy === 'name') {
-                files.sort((a, b) => a.name.localeCompare(b.name));
-            } else if (sortBy === 'created') {
-                files.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
-            } else {
-                files.sort((a, b) => (b.lastModified || 0) - (a.lastModified || 0));
-            }
             allItems = [];
+            dirStructure.clear();
+            currentDirectory = null;
 
             const chunkSize = 15;
             visibleCount = 0; // Reset visible count when loading new folder
             for (let i = 0; i < files.length; i += chunkSize) {
                 const chunk = files.slice(i, i + chunkSize);
-                const results = await Promise.all(chunk.map(processFile));
+                const results = await Promise.all(chunk.map(async (file) => {
+                    // Directory parsing
+                    const path = file.webkitRelativePath;
+                    const dirPath = path.substring(0, path.lastIndexOf('/'));
+                    if (dirPath) {
+                        const parts = dirPath.split('/');
+                        let currentPath = '';
+                        for (const part of parts) {
+                            currentPath = currentPath ? `${currentPath}/${part}` : part;
+                            dirStructure.add(currentPath);
+                        }
+                    }
+                    return processFile(file);
+                }));
                 allItems.push(...results);
-                
-                // Update filteredItems and sort as we go
-                filteredItems = allItems;
-                applySort();
                 
                 // Render initial batch on first chunk, then let scroll handle the rest
                 if (i === 0) {
+                    filteredItems = allItems;
+                    applySort();
                     renderBatch();
                 }
                 
                 document.getElementById('count').innerText = `Scanning ${allItems.length}`;
                 await new Promise(r => setTimeout(r, 0));
             }
-            // Final filter application - this will reset and render properly
+            renderTree();
             applyFilters();
         });
 
         async function processFile(file) {
+            const isVideo = /\.(mp4|webm)$/i.test(file.name);
+            if (isVideo) {
+                return {
+                    file,
+                    url: URL.createObjectURL(file),
+                    pos: "", neg: "", resources: [],
+                    meta: { model: "Video", size: (file.size / 1e6).toFixed(1) + "MB", seed: "?", steps: "?", cfg: "?", sampler: "?" },
+                    isVideo: true
+                };
+            }
             try {
                 let text = "";
                 let buffer = null;
@@ -592,14 +630,15 @@
                 } catch (e) { console.error("Text extraction failed", file.name, e); }
                 
                 const data = parseMetadata(text);
-                return { file, buffer, url: URL.createObjectURL(file), ...data };
+                return { file, buffer, url: URL.createObjectURL(file), ...data, isVideo: false };
             } catch (err) {
                 console.error("Critical failure parsing file:", file.name, err);
                 return { 
                     file, 
                     url: URL.createObjectURL(file), 
                     pos: "", neg: "", resources: [], 
-                    meta: { model: "?", size: "?", seed: "?", steps: "?", cfg: "?", sampler: "?" } 
+                    meta: { model: "?", size: "?", seed: "?", steps: "?", cfg: "?", sampler: "?" },
+                    isVideo: false
                 };
             }
         }
@@ -908,6 +947,7 @@
                     n = l[0];
                 }
                 if (!n) return "";
+                if (n.class_type === 'ConditioningZeroOut') return null;
                 const inputs = n.inputs || {};
                 if (!inputs && !n.widgets_values) return "";
                 let t = "";
@@ -989,8 +1029,14 @@
                 meta.cfg = inputs.cfg || "?";
                 meta.sampler = inputs.sampler_name || ksampler.class_type || "?";
                 if (inputs.scheduler) meta.sampler += " " + inputs.scheduler;
-                if (inputs.positive) pos = findUpstreamText(inputs.positive);
-                if (inputs.negative) neg = findUpstreamText(inputs.negative);
+                if (inputs.positive) {
+                    const p = findUpstreamText(inputs.positive);
+                    pos = (p === null) ? "" : (p || "");
+                }
+                if (inputs.negative) {
+                    const n = findUpstreamText(inputs.negative);
+                    neg = (n === null) ? "" : (n || "");
+                }
                 if (inputs.model) meta.model = findUpstreamModel(inputs.model).replace(/\.(safetensors|ckpt)$/, "");
             }
 
@@ -1165,7 +1211,21 @@
 
         function updateDetailView() {
             if (!currentItem) return;
-            detailImage.src = currentItem.url;
+
+            const mediaContainer = document.getElementById('mediaContainer');
+            mediaContainer.innerHTML = ''; // Clear previous media
+            const tag = currentItem.isVideo ? 'video' : 'img';
+            const mediaElement = document.createElement(tag);
+            mediaElement.src = currentItem.url;
+            mediaElement.style.maxWidth = '100%';
+            mediaElement.style.maxHeight = '100%';
+            mediaElement.style.objectFit = 'contain';
+            if (currentItem.isVideo) {
+                mediaElement.controls = true;
+                mediaElement.autoplay = true;
+            }
+            mediaContainer.appendChild(mediaElement);
+
             document.getElementById('fileName').innerText = currentItem.file.name;
             
             // Update favorite star
@@ -1330,6 +1390,91 @@
             grid.innerHTML = '';
             visibleCount = 0;
             renderBatch();
+        };
+
+       function renderTree() {
+            const treeContainer = document.getElementById('tree');
+            treeContainer.innerHTML = '';
+
+            // Calculate counts for each directory
+            const dirCounts = new Map();
+            for (const item of allItems) {
+                const path = item.file.webkitRelativePath;
+                const dirPath = path.substring(0, path.lastIndexOf('/'));
+                dirCounts.set(dirPath, (dirCounts.get(dirPath) || 0) + 1);
+            }
+
+            // Render "All Files"
+            const allFilesFolder = document.createElement('div');
+            allFilesFolder.className = 'folder active';
+            allFilesFolder.innerHTML = `📁 All Files <span style="color: var(--text-muted); margin-left: auto;">${allItems.length}</span>`;
+            allFilesFolder.onclick = () => {
+                document.querySelectorAll('.folder').forEach(f => f.classList.remove('active'));
+                allFilesFolder.classList.add('active');
+                currentDirectory = null;
+                applyFilters();
+            };
+            treeContainer.appendChild(allFilesFolder);
+
+            // Render other directories
+            const sortedDirs = [...dirStructure].sort();
+            sortedDirs.forEach(path => {
+                const count = dirCounts.get(path) || 0;
+                const folderEl = document.createElement('div');
+                folderEl.className = 'folder';
+                folderEl.innerHTML = `📁 ${path.split('/').pop()} <span style="color: var(--text-muted); margin-left: auto;">${count}</span>`;
+                folderEl.style.paddingLeft = ((path.split('/').length) * 16) + 'px';
+                folderEl.onclick = () => {
+                    document.querySelectorAll('.folder').forEach(f => f.classList.remove('active'));
+                    folderEl.classList.add('active');
+                    currentDirectory = path;
+                    applyFilters();
+                };
+                treeContainer.appendChild(folderEl);
+            });
+        }
+
+        function applySort() {
+            if (sortBy === 'name') {
+                filteredItems.sort((a, b) => {
+                    const cmp = a.file.name.localeCompare(b.file.name);
+                    return sortDirection === 'asc' ? cmp : -cmp;
+                });
+            } else if (sortBy === 'model') {
+                filteredItems.sort((a, b) => {
+                    const modelA = (a.meta?.model || '').toLowerCase();
+                    const modelB = (b.meta?.model || '').toLowerCase();
+                    const cmp = modelA.localeCompare(modelB);
+                    return sortDirection === 'asc' ? cmp : -cmp;
+                });
+            } else if (sortBy === 'modified') {
+                filteredItems.sort((a, b) => {
+                    const cmp = (b.file.lastModified || 0) - (a.file.lastModified || 0);
+                    return sortDirection === 'asc' ? -cmp : cmp;
+                });
+            } else if (sortBy === 'created') {
+                filteredItems.sort((a, b) => {
+                    const cmp = (b.file.lastModified || 0) - (a.file.lastModified || 0);
+                    return sortDirection === 'asc' ? -cmp : cmp;
+                });
+            } else { // date (modified)
+                filteredItems.sort((a, b) => {
+                    const cmp = (b.file.lastModified || 0) - (a.file.lastModified || 0);
+                    return sortDirection === 'asc' ? -cmp : cmp;
+                });
+            }
+        }
+        function sortByColumn(col) {
+            if (sortBy === col) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortBy = col;
+                sortDirection = 'asc';
+            }
+            applySort();
+            grid.innerHTML = '';
+            visibleCount = 0;
+            renderBatch();
         }
         function getSortArrow(col) {
             if (sortBy === col) return sortDirection === 'asc' ? '↑' : '↓';
@@ -1338,19 +1483,19 @@
 
         function applyFilters() {
             const term = document.getElementById('search').value.toLowerCase();
-            if (!term) {
-                filteredItems = allItems.filter(item => {
-                    if (showFavoritesOnly && !favorites.has(item.file.name)) return false;
-                    return true;
-                });
-                applySort();
-                grid.innerHTML = '';
-                visibleCount = 0;
-                renderBatch();
-                return;
-            }
             filteredItems = allItems.filter(item => {
+                // Directory filter
+                if (currentDirectory) {
+                    const itemDir = item.file.webkitRelativePath.substring(0, item.file.webkitRelativePath.lastIndexOf('/'));
+                    if (itemDir !== currentDirectory) {
+                        return false;
+                    }
+                }
+
                 if (showFavoritesOnly && !favorites.has(item.file.name)) return false;
+
+                if (!term) return true; // No search term, passes this filter
+
                 const fileName = item.file.name.toLowerCase();
                 const text = ((item.pos || '') + " " + (item.neg || '')).toLowerCase();
                 const res = (item.resources || []).map(r => r.name.toLowerCase()).join(" ");

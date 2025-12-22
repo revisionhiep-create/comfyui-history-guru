@@ -29,6 +29,7 @@ You can now **organize, sort, move, and fix** your AI generations without ever l
 - **Infinite Scroll Fix**: checkScroll() mechanism for small row heights.
 - **Duplicate Finder Optimization**: Partial file hashing (first 50KB) for near-instant scans.
 - **Scanning Robustness**: Promise.allSettled() for folder loading.
+- **Firefox Fixes**: Restored `renderTree`, fixed `detailImage` references, and removed duplicate `applySort`.
 
 ### [1.1.0] - 2025-12-21
 - **Substantial Thumbnail Scaling**: Reworked math for 3x larger thumbnails.

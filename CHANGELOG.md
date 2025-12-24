@@ -17,7 +17,7 @@ All notable changes to the Guru Manager project will be documented in this file.
 - Removed duplicate `applySort` function in Firefox Edition.
 - Fixed infinite scroll bug in Firefox Edition where small rows failed to trigger next batch.
 
-## [1.1.0] - 2025-12-21
+## [4.1.0] - 2025-12-21
 
 ### Added
 - **Substantial Thumbnail Scaling**: Reworked the list view scaling math to provide much larger thumbnails when using the slider. The "Large" setting now results in thumbnails that are over 3x bigger than the original fixed size, ensuring a clear visual impact when scaling.

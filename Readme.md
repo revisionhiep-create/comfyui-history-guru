@@ -31,7 +31,7 @@ You can now **organize, sort, move, and fix** your AI generations without ever l
 - **Scanning Robustness**: Promise.allSettled() for folder loading.
 - **Firefox Fixes**: Restored `renderTree`, fixed `detailImage` references, and removed duplicate `applySort`.
 
-### [1.1.0] - 2025-12-21
+### [4.1.0] - 2025-12-21
 - **Substantial Thumbnail Scaling**: Reworked math for 3x larger thumbnails.
 - **Increased Default Thumbnail Size**: Base size increased by 40%.
 - **Enhanced Slider Range**: 20% increments (5 steps).

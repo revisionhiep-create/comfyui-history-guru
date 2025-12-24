@@ -2,6 +2,16 @@
 
 All notable changes to the Guru Manager project will be documented in this file.
 
+## [4.2.1] - 2025-12-24
+
+### Added
+- **📅 US Date Localization**: Updated the timestamp engine to use `MM/DD/YYYY` (en-US) format across both editions.
+- **🕒 First-Seen Persistence**: Implemented a "Date Created" fallback using IndexedDB (Chrome/Edge) or session memory (Firefox) to distinguish the initial file scan from subsequent filesystem modifications.
+
+### Fixed
+- **📊 List View Alignment**: Resolved a major "Header Shift" bug where columns became misaligned when thumbnails were disabled.
+- **📐 Header Synchronization**: Fixed invisible placeholder divs in the List View header to ensure columns (Name, Model, Created, Modified) stay perfectly aligned with their data rows.
+
 ## [4.2.0] - 2025-12-24
 
 ### Added

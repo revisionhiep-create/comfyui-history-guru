@@ -232,7 +232,7 @@
         
         /* List View */
         .list-view { display: flex; flex-direction: column; }
-        .list-head { display: grid; grid-template-columns: 55px 3fr 2fr 1.5fr 1fr; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 0.75rem; color: var(--text-muted); font-weight: 700; position: sticky; top: 0; background: var(--bg); z-index: 10; }
+        .list-head { display: grid; grid-template-columns: 55px 3fr 2fr 1.5fr 1.5fr; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 0.75rem; color: var(--text-muted); font-weight: 700; position: sticky; top: 0; background: var(--bg); z-index: 10; }
         .list-head>div { cursor: pointer; user-select: none; display: flex; align-items: center; gap: 4px; transition: color 0.2s; }
         .list-head>div:hover { color: var(--accent); }
         .list-head>div:first-child { cursor: default; }
@@ -240,14 +240,15 @@
         .list-head>div.sorted { color: var(--accent); }
         .sort-arrow { font-size: 0.7rem; opacity: 0.6; }
         .list-head>div.sorted .sort-arrow { opacity: 1; }
-        .list-row { display: grid; grid-template-columns: calc(var(--thumb-size) / 2.5 + 18px) 3fr 2fr 1.5fr 1fr; gap: 12px; padding: 6px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 0.85rem; cursor: pointer; height: calc(var(--thumb-size) / 2.5 + 18px); transition: background 0.2s; }
+        .list-row { display: grid; grid-template-columns: calc(var(--thumb-size) / 2.5 + 18px) 3fr 2fr 1.5fr 1.5fr; gap: 12px; padding: 6px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 0.85rem; cursor: pointer; height: calc(var(--thumb-size) / 2.5 + 18px); transition: background 0.2s; }
         .list-row:hover { background: var(--hover-bg); }
         .list-img { width: calc(var(--thumb-size) / 2.5); height: calc(var(--thumb-size) / 2.5); border-radius: 4px; object-fit: cover; background: #000; }
 
         /* Thumbnail Toggle */
-        body.no-thumbnails .list-img { display: none; }
+        body.no-thumbnails .list-img,
+        body.no-thumbnails .list-head > div:first-child { display: none; }
         body.no-thumbnails .list-row, 
-        body.no-thumbnails .list-head { grid-template-columns: 3fr 2fr 1.5fr 1fr; }
+        body.no-thumbnails .list-head { grid-template-columns: 3fr 2fr 1.5fr 1.5fr; }
         body.no-thumbnails .list-row { height: 45px; }
         .thumb-btn { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; min-width: 120px; }
         .thumb-dot { font-size: 1.2rem; line-height: 1; }
@@ -675,17 +676,17 @@
                 modelCol.onclick = () => sortByColumn('model');
                 header.appendChild(modelCol);
                 
-                const modifiedCol = document.createElement('div');
-                modifiedCol.className = `sortable ${sortBy==='modified'?'sorted':''}`;
-                modifiedCol.innerHTML = `Date Modified ${getSortArrow('modified')}`;
-                modifiedCol.onclick = () => sortByColumn('modified');
-                header.appendChild(modifiedCol);
-                
                 const createdCol = document.createElement('div');
                 createdCol.className = `sortable ${sortBy==='created'?'sorted':''}`;
                 createdCol.innerHTML = `Date Created ${getSortArrow('created')}`;
                 createdCol.onclick = () => sortByColumn('created');
                 header.appendChild(createdCol);
+
+                const modifiedCol = document.createElement('div');
+                modifiedCol.className = `sortable ${sortBy==='modified'?'sorted':''}`;
+                modifiedCol.innerHTML = `Date Modified ${getSortArrow('modified')}`;
+                modifiedCol.onclick = () => sortByColumn('modified');
+                header.appendChild(modifiedCol);
                 
                 fragment.appendChild(header);
             }
@@ -714,16 +715,16 @@
                     const formatDate = (d) => {
                         if (!d) return '';
                         const dt = new Date(d);
-                        return dt.toLocaleDateString() + ' ' + dt.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+                        return dt.toLocaleDateString('en-US') + ' ' + dt.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
                     };
                     const dateModified = item.file.lastModified ? formatDate(item.file.lastModified) : '';
-                    const dateCreated = item.file.lastModified ? formatDate(item.file.lastModified) : '';
+                    const dateCreated = item.firstSeen ? formatDate(item.firstSeen) : formatDate(item.file.lastModified);
                     row.innerHTML = `
                         <${tag} src="${imageUrl}" class="list-img" alt="${item.file.name}"></${tag}>
                         <div>${item.file.name}</div>
                         <div>${item.meta?.model || ''}</div>
-                        <div class="date-modified">${dateModified}</div>
                         <div class="date-created">${dateCreated}</div>
+                        <div class="date-modified">${dateModified}</div>
                     `;
                     row.onclick = () => openDetailView(globalIdx);
                     fragment.appendChild(row);
@@ -867,7 +868,7 @@
                 } catch (e) { console.error("Text extraction failed", file.name, e); }
                 
                 const data = parseMetadata(text);
-                return { file, buffer, url: URL.createObjectURL(file), ...data, isVideo: false };
+                return { file, buffer, url: URL.createObjectURL(file), ...data, isVideo: false, firstSeen: file.lastModified };
             } catch (err) {
                 console.error("Critical failure parsing file:", file.name, err);
                 return { 

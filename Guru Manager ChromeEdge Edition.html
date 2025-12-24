@@ -28,7 +28,7 @@ h1{font-size:1.1rem;font-weight:800;margin:0;white-space:nowrap}h1 span{color:va
     body.no-thumbnails .thumb-resizer, body.no-thumbnails #viewToggle{display:none}
 .card{aspect-ratio:1;background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden;cursor:pointer;position:relative}
 .card:hover{border-color:var(--acc);transform:translateY(-4px)}.card img,.card video{width:100%;height:100%;object-fit:cover;pointer-events:none}
-.list-head{display:grid;grid-template-columns:55px 3fr 2fr 1.5fr 1fr;gap:12px;padding:10px 16px;border-bottom:1px solid var(--bd);font-size:0.75rem;color:var(--mut);font-weight:700;position:sticky;top:0;background:var(--bg);z-index:10}
+.list-head{display:grid;grid-template-columns:55px 3fr 2fr 1.5fr 1.5fr;gap:12px;padding:10px 16px;border-bottom:1px solid var(--bd);font-size:0.75rem;color:var(--mut);font-weight:700;position:sticky;top:0;background:var(--bg);z-index:10}
 .list-head>div{cursor:pointer;user-select:none;display:flex;align-items:center;gap:4px;transition:color 0.2s}
 .list-head>div:hover{color:var(--acc)}
 .list-head>div:first-child{cursor:default}
@@ -36,10 +36,10 @@ h1{font-size:1.1rem;font-weight:800;margin:0;white-space:nowrap}h1 span{color:va
 .list-head>div.sorted{color:var(--acc)}
 .sort-arrow{font-size:0.7rem;opacity:0.6}
 .list-head>div.sorted .sort-arrow{opacity:1}
-    .list-row{display:grid;grid-template-columns:calc(var(--thumb-size) / 2.5 + 18px) 3fr 2fr 1.5fr 1fr;gap:12px;padding:6px 16px;border-bottom:1px solid var(--bd);align-items:center;font-size:0.85rem;cursor:pointer;height:calc(var(--thumb-size) / 2.5 + 18px)}
+    .list-row{display:grid;grid-template-columns:calc(var(--thumb-size) / 2.5 + 18px) 3fr 2fr 1.5fr 1.5fr;gap:12px;padding:6px 16px;border-bottom:1px solid var(--bd);align-items:center;font-size:0.85rem;cursor:pointer;height:calc(var(--thumb-size) / 2.5 + 18px)}
     .list-row:hover{background:var(--bd)}.list-img{width:calc(var(--thumb-size) / 2.5);height:calc(var(--thumb-size) / 2.5);border-radius:4px;object-fit:cover;background:var(--bg)}
-    .no-thumbnails .list-img{display:none} 
-    .no-thumbnails .list-row, .no-thumbnails .list-head{grid-template-columns:3fr 2fr 1.5fr 1fr}
+    .no-thumbnails .list-img, .no-thumbnails .list-head > div:first-child{display:none} 
+    .no-thumbnails .list-row, .no-thumbnails .list-head{grid-template-columns:3fr 2fr 1.5fr 1.5fr}
     .no-thumbnails .list-row{height:45px}
 .thumb-btn{display:flex;align-items:center;gap:8px;font-size:0.85rem;font-weight:600;min-width:120px;background:transparent;border:1px solid var(--bd);color:var(--mut);border-radius:6px;cursor:pointer}
 .thumb-dot{font-size:1.2rem;line-height:1}
@@ -486,7 +486,7 @@ function parseA1111(text) {
 }
 
 // --- LOGIC ---
-async function proc(h,p){try{const f=await h.getFile(),vid=/\.(mp4|webm)$/i.test(f.name);let m=null;if(vid)m={meta:{model:"Video",size:(f.size/1e6).toFixed(1)+"MB"},resources:[]};else{const b=await f.arrayBuffer(),t=await extractText(b);m=parseMetadata(t)}const i={p,n:f.name,d:f.lastModified,m,v:vid};cache.set(p,i);dPut(i)}catch{}}
+async function proc(h,p){try{const f=await h.getFile(),vid=/\.(mp4|webm)$/i.test(f.name);let m=null;if(vid)m={meta:{model:"Video",size:(f.size/1e6).toFixed(1)+"MB"},resources:[]};else{const b=await f.arrayBuffer(),t=await extractText(b);m=parseMetadata(t)}const i={p,n:f.name,d:f.lastModified,firstSeen:f.lastModified,m,v:vid};cache.set(p,i);dPut(i)}catch{}}
 
 function setView(m){vMode=m;document.getElementById('bStats').classList.toggle('active',m==='stats');const vt=document.getElementById('viewToggle');if(vt)vt.textContent=m==='grid'?'☰':'🔲';rend()}
 function toggleView(){setView(vMode==='grid'?'list':'grid')}
@@ -634,18 +634,40 @@ function rend(){
         return;
     }
     const h=document.createElement('div');h.className='list-head';
-    h.innerHTML=`<div></div><div class="sortable ${sortBy==='name'?'sorted':''}" onclick="sortByColumn('name')">Name ${getSortArrow('name')}</div><div class="sortable ${sortBy==='model'?'sorted':''}" onclick="sortByColumn('model')">Model ${getSortArrow('model')}</div><div class="sortable ${sortBy==='modified'?'sorted':''}" onclick="sortByColumn('modified')">Date Modified ${getSortArrow('modified')}</div><div class="sortable ${sortBy==='created'?'sorted':''}" onclick="sortByColumn('created')">Date Created ${getSortArrow('created')}</div>`;
+    h.innerHTML=`<div></div>
+        <div class="sortable ${sortBy==='name'?'sorted':''}" onclick="sortByColumn('name')">Name ${getSortArrow('name')}</div>
+        <div class="sortable ${sortBy==='model'?'sorted':''}" onclick="sortByColumn('model')">Model ${getSortArrow('model')}</div>
+        <div class="sortable ${sortBy==='created'?'sorted':''}" onclick="sortByColumn('created')">Date Created ${getSortArrow('created')}</div>
+        <div class="sortable ${sortBy==='modified'?'sorted':''}" onclick="sortByColumn('modified')">Date Modified ${getSortArrow('modified')}</div>`;
     c.appendChild(h);
     cFiles.forEach((f,i)=>{
         const mt=cache.get(f.p)||{},mm=(mt.m&&mt.m.meta)?mt.m.meta:{},div=document.createElement('div');
         div.draggable=true;
         div.ondragstart=e=>{e.dataTransfer.setData("text", getDragData(f.p));e.dataTransfer.effectAllowed="move"};
         const isSelected=selectedItems.has(f.p);
-        const formatDate=(d)=>{if(!d)return"";const dt=new Date(d);return dt.toLocaleDateString()+" "+dt.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})};
+        const formatDate=(d)=>{if(!d)return"";const dt=new Date(d);return dt.toLocaleDateString('en-US')+" "+dt.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})};
         const dateModified=f.d?formatDate(f.d):"";
         let dateCreated="";
-        if(f.created){dateCreated=formatDate(f.created)}else{dateCreated="Loading...";f.h.getFile().then(x=>{f.created=x.lastModified;const createdCell=div.querySelector('.date-created');if(createdCell)createdCell.textContent=formatDate(f.created)})}
-        div.className=`list-row${isSelected?' selected':''}`;if(isSelected)div.style.backgroundColor='rgba(139,92,246,0.2)';const tag=mt.v?'video':'img';div.innerHTML=`<${tag} class="list-img"></${tag}><div>${f.h.name}</div><div>${mm.model||""}</div><div class="date-modified">${dateModified}</div><div class="date-created">${dateCreated}</div>`;f.h.getFile().then(x=>{const u=URL.createObjectURL(x);objURLs.add(u);div.querySelector(tag).src=u});
+        const cacheEntry = cache.get(f.p);
+        // We use the date from when the file was FIRST seen as 'Date Created'
+        // and the current filesystem date as 'Date Modified'
+        const firstSeen = cacheEntry?.firstSeen || f.d;
+        dateCreated = firstSeen ? formatDate(firstSeen) : "Loading...";
+        
+        div.className=`list-row${isSelected?' selected':''}`;
+        if(isSelected) div.style.backgroundColor='rgba(139,92,246,0.2)';
+        const tag=mt.v?'video':'img';
+        div.innerHTML=`<${tag} class="list-img"></${tag}><div>${f.h.name}</div><div>${mm.model||""}</div><div class="date-created">${dateCreated}</div><div class="date-modified">${dateModified}</div>`;
+        f.h.getFile().then(x=>{
+            const u=URL.createObjectURL(x);
+            objURLs.add(u);
+            div.querySelector(tag).src=u;
+            // Update the modified date cell with live data if it differs from cache
+            if(x.lastModified !== f.d) {
+                const modCell = div.querySelector('.date-modified');
+                if(modCell) modCell.textContent = formatDate(x.lastModified);
+            }
+        });
         div.onclick=(e)=>{
             if(e.ctrlKey){
                 selectedItems.has(f.p)?selectedItems.delete(f.p):selectedItems.add(f.p);

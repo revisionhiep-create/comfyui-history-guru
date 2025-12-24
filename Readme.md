@@ -1,4 +1,4 @@
-# History Guru 🧘‍♂️ v4.2 (The Architect Update)
+# History Guru 🧘‍♂️ v4.2.1 (The Alignment Fix)
 
 > **The 100% Offline, Single-File File Manager & Metadata Viewer for AI Images.**
 
@@ -80,6 +80,11 @@ MIT License - Free to use, modify, and distribute for the AI art community.
 
 ## 🚀 Version History
 
+### [4.2.1] - 2025-12-24
+- **US Date Format**: Switched to `MM/DD/YYYY` localization.
+- **List Alignment**: Fixed "Header Shift" bug when thumbnails are off.
+- **First-Seen Engine**: Cached initial scan dates to separate "Created" from "Modified".
+
 ### [4.2.0] - 2025-12-24
 - **Direct Overwrite**: "Fix & Save" now overwrites original files in Chrome/Edge.
 - **Multi-Selection**: Added `Shift+Click` and `Ctrl+Click` support.
@@ -102,4 +107,5 @@ MIT License - Free to use, modify, and distribute for the AI art community.
 
 ---
 **Made with ❤️ for the AI art community**
+
 

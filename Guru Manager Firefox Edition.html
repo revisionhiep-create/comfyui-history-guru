@@ -22,6 +22,26 @@
             --chip-model-txt: #93c5fd;
             --badge-bg: rgba(0, 0, 0, 0.3);
             --thumb-size: 252px;
+            --sel-bg: rgba(139, 92, 246, 0.25);
+        }
+        
+        [data-theme="light"] {
+            --bg: #ffffff;
+            --header-bg: rgba(255, 255, 255, 0.95);
+            --card-bg: #f5f5f5;
+            --border: #e5e5e5;
+            --accent: #7c3aed;
+            --text-main: #18181b;
+            --text-muted: #52525b;
+            --input-bg: #ffffff;
+            --hover-bg: #f3f4f6;
+            --btn-bg: #e5e7eb;
+            --chip-lora-bg: rgba(124, 58, 237, 0.1);
+            --chip-lora-txt: #6d28d9;
+            --chip-model-bg: rgba(59, 130, 246, 0.1);
+            --chip-model-txt: #1d4ed8;
+            --badge-bg: rgba(0, 0, 0, 0.05);
+            --sel-bg: rgba(124, 58, 237, 0.15);
         }
         * { box-sizing: border-box; }
         body { margin: 0; background-color: var(--bg); color: var(--text-main); font-family: system-ui, -apple-system, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
@@ -40,7 +60,7 @@
         header { height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; background: var(--header-bg); backdrop-filter: blur(4px); z-index: 50; gap: 20px; flex-shrink: 0; }
         h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.03em; margin: 0; display: flex; align-items: center; gap: 8px; }
         h1 span { color: var(--accent); }
-        .version { font-size: 0.7rem; background: rgba(139, 92, 246, 0.1); color: #c4b5fd; padding: 2px 6px; border-radius: 4px; font-weight: 600; letter-spacing: 0.05em; }
+        .version { font-size: 0.7rem; background: var(--chip-lora-bg); color: var(--chip-lora-txt); padding: 2px 6px; border-radius: 4px; font-weight: 600; letter-spacing: 0.05em; }
 
         /* Search */
         .search-container { flex: 1; max-width: 600px; position: relative; }
@@ -203,7 +223,7 @@
         .btn-icon:hover { background: var(--hover-bg); border-color: var(--accent); }
         
         /* Help Overlay */
-        .help-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: all 0.3s; }
+        .help-overlay { position: fixed; inset: 0; background: var(--header-bg); backdrop-filter: blur(8px); z-index: 5000; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: all 0.3s; }
         .help-overlay.active { visibility: visible; opacity: 1; }
         .help-content { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 30px; max-width: 900px; max-height: 85vh; overflow-y: auto; width: 90%; }
         
@@ -223,7 +243,6 @@
         .list-row { display: grid; grid-template-columns: calc(var(--thumb-size) / 2.5 + 18px) 3fr 2fr 1.5fr 1fr; gap: 12px; padding: 6px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 0.85rem; cursor: pointer; height: calc(var(--thumb-size) / 2.5 + 18px); transition: background 0.2s; }
         .list-row:hover { background: var(--hover-bg); }
         .list-img { width: calc(var(--thumb-size) / 2.5); height: calc(var(--thumb-size) / 2.5); border-radius: 4px; object-fit: cover; background: #000; }
-        .list-row.selected { background: rgba(139, 92, 246, 0.2) !important; }
 
         /* Thumbnail Toggle */
         body.no-thumbnails .list-img { display: none; }
@@ -232,6 +251,28 @@
         body.no-thumbnails .list-row { height: 45px; }
         .thumb-btn { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; min-width: 120px; }
         .thumb-dot { font-size: 1.2rem; line-height: 1; }
+
+        /* LoRA Manager Styles */
+        .lora-item { display: flex; align-items: center; gap: 8px; background: var(--input-bg); border: 1px solid var(--border); padding: 8px; border-radius: 10px; margin-bottom: 8px; }
+        .lora-item input { background: transparent; border: 1px solid var(--border); color: var(--text-main); border-radius: 6px; padding: 4px 8px; font-size: 0.8rem; outline: none; }
+        .lora-item input:focus { border-color: var(--accent); }
+        .lora-item .lora-name { flex: 1; }
+        .lora-item .lora-strength { width: 70px; }
+        .lora-btn { padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; border: 1px solid var(--border); background: var(--btn-bg); color: var(--text-main); transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+        .lora-btn:hover { background: var(--hover-bg); border-color: var(--accent); }
+        
+        .overlay-welcome {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 5000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            text-align: center;
+        }
         
         /* Light Theme */
         [data-theme="light"] {
@@ -283,6 +324,7 @@
         </button>
         <button class="btn-icon" id="themeToggle" title="Toggle Theme">🌙</button>
         <button class="btn-icon" id="helpBtn" title="Help">❓</button>
+        <button class="btn-icon" id="dupBtn" onclick="findDuplicates()" title="Find Duplicates">🔍</button>
         <button class="btn-icon" id="favFilterBtn" title="Show Only Favorites">⭐</button>
 
         <label class="btn">
@@ -333,11 +375,13 @@
         </div>
         <aside id="sidebar">
             <div class="sidebar-header">
-                <div class="sidebar-title-group">
+                <div class="sidebar-title-group" style="flex:1; min-width:0;">
                     <span class="sidebar-title">Metadata Inspector</span>
-                    <span id="fileName" class="file-name">filename.png</span>
+                    <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
+                        <span id="fileName" class="file-name" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">filename.png</span>
+                    </div>
                 </div>
-                <button class="close-btn" onclick="closeDetailView()">✕</button>
+                <button class="close-btn" style="flex-shrink:0; margin-left:10px;" onclick="closeDetailView()">✕</button>
             </div>
             <div class="sidebar-content">
 
@@ -354,7 +398,7 @@
                 <div class="prompt-header">
                     <span class="prompt-label pos-label"><span class="dot"></span> Positive</span>
                 </div>
-                <textarea id="posPrompt" class="prompt-text" spellcheck="false"></textarea>
+                <textarea id="posPrompt" class="prompt-text" spellcheck="false" oninput="syncLorasFromPrompt()"></textarea>
             </div>
 
             <div class="prompt-group">
@@ -365,7 +409,15 @@
             </div>
 
             <div class="prompt-group">
-                <div class="prompt-header"><span class="prompt-label" style="color:#c4b5fd">Resources</span></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                    <span class="prompt-label" style="color:var(--accent)">LoRA Manager</span>
+                    <button class="lora-btn" onclick="addLora()">+ Add LoRA</button>
+                </div>
+                <div id="loraEditor"></div>
+            </div>
+
+            <div class="prompt-group">
+                <div class="prompt-header"><span class="prompt-label" style="color:var(--accent)">Resources</span></div>
                 <div id="resourceTags" class="chips-container"></div>
             </div>
 
@@ -392,6 +444,12 @@
         </div>
     </div>
 
+    <div id="wel" class="overlay-welcome">
+        <h2 style="font-size:2rem;margin-bottom:10px;">History Guru Firefox Edition</h2>
+        <p style="color:var(--text-muted);margin-bottom:30px;font-size:1.1rem;">Welcome Creator</p>
+        <button class="btn" onclick="document.getElementById('folderInput').click()" style="padding:15px 30px;font-size:1.1rem;">Open Folder</button>
+    </div>
+
     <script>
         let allItems = [];
         let filteredItems = [];
@@ -405,8 +463,93 @@
         let dirStructure = new Set();
         let currentDirectory = null;
         let sortDirection = 'desc';
+        let currentLoras = [];
+        let objURLs = new Set();
         const BATCH_SIZE = 50;
-        const LORA_REGEX = /<lora:([^:>]+)(?::([^:>]+))?(?::([^:>]+))?>/g;
+        const loraPattern = /<lora:([^:>]+)(?::([^:>]+))?(?::([^:>]+))?>/g;
+
+        function clearURLs() { if(objURLs.size > 100) { objURLs.forEach(u=>URL.revokeObjectURL(u)); objURLs.clear() } }
+
+        // LORA PARSER & BUILDER
+        function parsePromptMetadata(fullPrompt) {
+            const loras = [];
+            if (!fullPrompt) return { promptText: "", loraList: [] };
+            const cleanPrompt = fullPrompt.replace(loraPattern, (match, name, strength1, strength2) => {
+                loras.push({
+                    original: match,
+                    name: name.trim(),
+                    strength_model: strength1 ? parseFloat(strength1) : 1.0,
+                    strength_clip: strength2 ? parseFloat(strength2) : undefined
+                });
+                return "";
+            });
+            const finalPromptText = cleanPrompt.replace(/,\s*,/g, ',').replace(/\s+/g, ' ').trim();
+            return { promptText: finalPromptText, loraList: loras };
+        }
+
+        function rebuildPrompt(promptText, loraList) {
+            if (!loraList || loraList.length === 0) return promptText;
+            const loraString = loraList.map(l => {
+                if (l.strength_clip) return `<lora:${l.name}:${l.strength_model}:${l.strength_clip}>`;
+                return `<lora:${l.name}:${l.strength_model}>`;
+            }).join(' ');
+            return `${promptText} ${loraString}`.trim();
+        }
+
+        // LORA EDITOR
+        function renderLoraEditor() {
+            const container = document.getElementById('loraEditor');
+            container.innerHTML = '';
+            currentLoras.forEach((lora, idx) => {
+                const div = document.createElement('div');
+                div.className = 'lora-item';
+                div.innerHTML = `
+                    <input class="lora-name" value="${lora.name}" onchange="updateLora(${idx}, 'name', this.value)">
+                    <input class="lora-strength" type="number" step="0.05" value="${lora.strength_model}" onchange="updateLora(${idx}, 'strength_model', this.value)">
+                    <button class="lora-btn" onclick="moveLora(${idx}, -1)">↑</button>
+                    <button class="lora-btn" onclick="moveLora(${idx}, 1)">↓</button>
+                    <button class="lora-btn" style="color:#f87171" onclick="removeLora(${idx})">✕</button>
+                `;
+                container.appendChild(div);
+            });
+            syncPromptFromLoras();
+        }
+
+        function addLora() {
+            currentLoras.push({ name: "New_Lora", strength_model: 1.0 });
+            renderLoraEditor();
+        }
+
+        function removeLora(idx) {
+            currentLoras.splice(idx, 1);
+            renderLoraEditor();
+        }
+
+        function moveLora(idx, dir) {
+            const target = idx + dir;
+            if (target >= 0 && target < currentLoras.length) {
+                [currentLoras[idx], currentLoras[target]] = [currentLoras[target], currentLoras[idx]];
+                renderLoraEditor();
+            }
+        }
+
+        function updateLora(idx, key, val) {
+            if (key === 'strength_model') val = parseFloat(val);
+            currentLoras[idx][key] = val;
+            syncPromptFromLoras();
+        }
+
+        function syncPromptFromLoras() {
+            const promptArea = document.getElementById('posPrompt');
+            const { promptText } = parsePromptMetadata(promptArea.value);
+            promptArea.value = rebuildPrompt(promptText, currentLoras);
+        }
+
+        function syncLorasFromPrompt() {
+            const { loraList } = parsePromptMetadata(document.getElementById('posPrompt').value);
+            currentLoras = loraList;
+            renderLoraEditor();
+        }
         
         // Load favorites and preferences
         (function() {
@@ -558,6 +701,7 @@
                     try {
                         imageUrl = URL.createObjectURL(item.file);
                         item.url = imageUrl;
+                        objURLs.add(imageUrl);
                     } catch (e) {
                         console.warn('Failed to create object URL for', item.file.name, e);
                         return;
@@ -609,6 +753,7 @@
             grid.className = mode === 'list' ? 'list-view' : 'grid';
             grid.innerHTML = '';
             visibleCount = 0;
+            clearURLs(); // Clean up memory when switching views
             renderBatch();
         }
 
@@ -660,6 +805,7 @@
             if(files.length === 0) return;
 
             document.getElementById('welcome').style.display = 'none';
+            if(document.getElementById('wel')) document.getElementById('wel').style.display = 'none';
             clearOldData();
             grid.className = vMode === 'list' ? 'list-view' : 'grid';
             
@@ -1178,8 +1324,8 @@
             text = text.replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F]/g, '');
 
             let match;
-            LORA_REGEX.lastIndex = 0;
-            while ((match = LORA_REGEX.exec(text)) !== null) {
+            loraPattern.lastIndex = 0;
+            while ((match = loraPattern.exec(text)) !== null) {
                 resources.push({ type: 'LoRA', name: match[1], str: match[2] || "1.0" });
             }
 
@@ -1292,12 +1438,22 @@
             currentIndex = index;
             currentItem = filteredItems[index];
             updateDetailView();
+            document.body.classList.remove('mode-list');
+            document.body.classList.add('mode-detail');
             detailView.classList.add('active');
         }
 
         function closeDetailView() {
+            document.body.classList.remove('mode-detail');
+            document.body.classList.add('mode-list');
             detailView.classList.remove('active');
             currentIndex = -1;
+        }
+
+        function refreshGridOnly() {
+            grid.innerHTML = '';
+            visibleCount = 0;
+            renderBatch();
         }
 
         function updateDetailView() {
@@ -1333,6 +1489,25 @@
             document.getElementById('posPrompt').value = currentItem.pos || "";
             document.getElementById('negPrompt').value = currentItem.neg || "";
 
+            // LoRA Manager & "Un-Baking" Logic
+            const { loraList } = parsePromptMetadata(currentItem.pos || "");
+            currentLoras = loraList;
+            
+            if(currentItem.resources) {
+                currentItem.resources.forEach(res => {
+                    if(res.type === 'LoRA') {
+                        const exists = currentLoras.some(l => l.name === res.name);
+                        if(!exists) {
+                            currentLoras.push({
+                                name: res.name,
+                                strength_model: res.str !== undefined ? parseFloat(res.str) : 1.0
+                            });
+                        }
+                    }
+                });
+            }
+            renderLoraEditor();
+
             // Resource Chips
             const tagContainer = document.getElementById('resourceTags');
             tagContainer.innerHTML = '';
@@ -1367,7 +1542,19 @@
             }
             localStorage.setItem('guru-favorites', JSON.stringify([...favorites]));
             updateDetailView();
-            renderBatch(); // Re-render to update star icons
+            refreshGridOnly(); 
+        }
+
+        function showToast(message, type='info') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `position:fixed; bottom:20px; right:20px; background:var(--card-bg); border:1px solid var(--border); border-left:4px solid ${type==='success'?'#4ade80':'#8b5cf6'}; border-radius:8px; padding:12px 20px; z-index:10000; display:flex; align-items:center; gap:12px; color:var(--text-main); font-size:0.9rem; box-shadow:0 4px 12px rgba(0,0,0,0.3); animation:toastSlide 0.3s ease;`;
+            toast.innerText = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
 
         // Theme Toggle
@@ -1413,6 +1600,41 @@
             document.getElementById('helpOverlay').classList.remove('active');
         }
         document.getElementById('helpBtn').onclick = showHelp;
+
+        async function findDuplicates() {
+            showToast('Scanning for duplicates...', 'info');
+            const hashMap = new Map();
+            const duplicates = [];
+            let processed = 0;
+            
+            for (const item of allItems) {
+                try {
+                    const buffer = item.buffer || await item.file.arrayBuffer();
+                    // Faster check: size first, then hash
+                    const slice = buffer.slice(0, 50000);
+                    let hash = 0;
+                    const view = new Uint8Array(slice);
+                    for (let i = 0; i < view.length; i++) {
+                        hash = ((hash << 5) - hash + view[i]) & 0xffffffff;
+                    }
+                    const key = `${item.file.size}_${hash.toString(16)}`;
+                    if (hashMap.has(key)) {
+                        duplicates.push({key, files: [hashMap.get(key), {name: item.file.name, size: item.file.size}]});
+                    } else {
+                        hashMap.set(key, {name: item.file.name, size: item.file.size});
+                    }
+                    processed++;
+                    if (processed % 20 === 0) showToast(`Scanned ${processed} files...`, 'info');
+                } catch (e) { console.warn('Error hashing:', item.file.name, e); }
+            }
+            
+            if (duplicates.length === 0) {
+                showToast('No duplicates found!', 'success');
+            } else {
+                showToast(`Found ${duplicates.length} duplicate group(s). Check console.`, 'error');
+                console.log('Duplicates:', duplicates);
+            }
+        }
 
         // Favorites Filter
         document.getElementById('favFilterBtn').onclick = function() {
@@ -1537,6 +1759,7 @@
             applySort();
             grid.innerHTML = '';
             visibleCount = 0;
+            clearURLs(); // Memory safety during filtering
             grid.className = vMode === 'list' ? 'list-view' : 'grid';
             renderBatch();
             checkScroll();
@@ -1551,27 +1774,32 @@
 
         // Keyboard Shortcuts
         document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                if (e.key === 'Escape') {
-                    e.target.blur();
-                    hideHelp();
+            if (e.key === 'Escape') {
+                if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+                    document.activeElement.blur();
+                    return;
                 }
+                if (detailView.classList.contains('active')) {
+                    closeDetailView();
+                    return;
+                }
+                hideHelp();
                 return;
             }
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            
             if (detailView.classList.contains('active')) {
                 if (e.key === 'ArrowLeft') navigateDetail(-1);
                 if (e.key === 'ArrowRight') navigateDetail(1);
-                if (e.key === 'Escape') closeDetailView();
                 return;
             }
-            if (e.key === 'Escape') hideHelp();
             if (e.key === '?' || e.key === '/') { e.preventDefault(); showHelp(); }
             if (e.key === 't' || e.key === 'T') { if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); document.getElementById('themeToggle').click(); } }
             if (e.key === 'f' || e.key === 'F') { if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); document.getElementById('search').focus(); } }
             if (e.key === 'r' || e.key === 'R') { if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); refreshFolder(); } }
         });
 
-        function downloadSidecar() {
+        async function downloadSidecar() {
             if (!currentItem) return;
             const data = {
                 filename: currentItem.file.name,
@@ -1586,12 +1814,35 @@
                     size: document.getElementById('metaSize').value
                 }
             };
-            const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+            const jsonStr = JSON.stringify(data, null, 2);
+            const fileName = currentItem.file.name.replace(/\.[^/.]+$/, "") + ".json";
+
+            // 1. Try modern File System Access API (Works in Chrome/Edge even in this edition)
+            if (window.showSaveFilePicker) {
+                try {
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: fileName,
+                        types: [{ description: 'JSON Metadata', accept: { 'application/json': ['.json'] } }]
+                    });
+                    const writable = await handle.createWritable();
+                    await writable.write(jsonStr);
+                    await writable.close();
+                    showToast("Metadata saved!", "success");
+                    return;
+                } catch (e) { if (e.name === 'AbortError') return; }
+            }
+
+            // 2. Fallback (Firefox / Safari / Mobile)
+            const blob = new Blob([jsonStr], {type: "application/octet-stream"});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = currentItem.file.name.replace(/\.[^/.]+$/, "") + ".json";
+            a.download = fileName;
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("Download triggered", "info");
         }
 
         // --- INTELLIGENT TRANSPLANT ENGINE ---
@@ -1601,7 +1852,7 @@
                 return;
             }
 
-            const pos = document.getElementById('posPrompt').value.replace(/\n/g, " "); // Convert newlines to spaces to prevent mangling
+            const pos = document.getElementById('posPrompt').value.replace(/\n/g, " ");
             const neg = document.getElementById('negPrompt').value.replace(/\n/g, " ");
             const steps = document.getElementById('metaSteps').value;
             const sampler = document.getElementById('metaSampler').value;
@@ -1709,13 +1960,46 @@
             const iend = new Uint8Array([0,0,0,0, 0x49,0x45,0x4E,0x44, 0xAE,0x42,0x60,0x82]);
             newChunks.push(iend);
 
-            // 5. Download
-            const blob = new Blob(newChunks, {type: 'image/png'});
+            // 5. Save/Download Logic
+            const finalName = currentItem.file.name.replace(/\.(webp|jpeg|jpg)$/i, ".png");
+
+            // Strategy A: Modern File System Access API (Chrome/Edge)
+            if (window.showSaveFilePicker) {
+                try {
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: finalName,
+                        types: [{ description: 'PNG Image', accept: { 'image/png': ['.png'] } }]
+                    });
+                    const writable = await handle.createWritable();
+                    await writable.write(new Blob(newChunks, {type: 'image/png'}));
+                    await writable.close();
+                    showToast("File saved successfully!", "success");
+                    return;
+                } catch (e) {
+                    if (e.name === 'AbortError') return;
+                    console.error("Save Picker Error:", e);
+                    // Fallback to Strategy B
+                }
+            }
+
+            // Strategy B: Traditional Download Fallback (Firefox/Safari)
+            // We use application/octet-stream to encourage a "Save As" prompt
+            const blob = new Blob(newChunks, {type: 'application/octet-stream'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
+            a.style.display = 'none';
             a.href = url;
-            a.download = "fixed_" + currentItem.file.name.replace(/\.(webp|jpeg|jpg)$/i, ".png");
+            a.download = finalName;
+            document.body.appendChild(a);
             a.click();
+            
+            // Cleanup
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+
+            showToast("Download triggered. Check downloads folder or 'Save As' window.", "info");
         }
 
         function convertToPng(imageUrl) {
